@@ -11004,7 +11004,7 @@
       document.body.style.overflow = '';
     }
 
-    function renderEvents(){} function renderNews(){ try { if (typeof renderNewsList === 'function') renderNewsList(); } catch(e){} } function renderNewsList(){
+    function renderEvents(){} function renderCommunity(){} function renderInsights(){} function renderPodcast(){} function renderClub(){} function renderMore(){} function renderAibot(){} function renderAskAction(){} function renderBriefing(){} function renderMorningBrief(){} function renderSectorReports(){} function renderMessages(){} function renderPartnerships(){} function renderNews(){ try { if (typeof renderNewsList === 'function') renderNewsList(); } catch(e){} } function renderNewsList(){
       const wrap = $('#news-list');
       wrap.innerHTML = NEWS_LIST.map(n => {
         const cat = currentLang === 'ar' ? n.cat_ar : n.cat_en;
