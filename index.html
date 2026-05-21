@@ -12019,7 +12019,40 @@
       lucide.createIcons();
     }
 
-    function handleAuthSubmit() {
+    // ═══════════════════════════════════════════════════════════════
+    // CAIRO BUSINESS — BACKEND API CONFIG
+    // ═══════════════════════════════════════════════════════════════
+    const CB_API = {
+      BASE_URL: 'https://cairo-business-backend-cairobusiness-projects.vercel.app',
+      TOKEN_KEY: 'cb_auth_token',
+      USER_KEY: 'cb_auth_user',
+    };
+
+    function cbGetToken()  { try { return localStorage.getItem(CB_API.TOKEN_KEY); } catch(e){ return null; } }
+    function cbGetUser()   { try { return JSON.parse(localStorage.getItem(CB_API.USER_KEY) || 'null'); } catch(e){ return null; } }
+    function cbSetAuth(token, user) {
+      try {
+        localStorage.setItem(CB_API.TOKEN_KEY, token);
+        localStorage.setItem(CB_API.USER_KEY, JSON.stringify(user));
+      } catch(e){}
+    }
+    function cbClearAuth() {
+      try {
+        localStorage.removeItem(CB_API.TOKEN_KEY);
+        localStorage.removeItem(CB_API.USER_KEY);
+      } catch(e){}
+    }
+    async function cbApi(path, options = {}) {
+      const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+      const token = cbGetToken();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      const res = await fetch(CB_API.BASE_URL + path, { ...options, headers });
+      let data = null;
+      try { data = await res.json(); } catch(e) {}
+      return { ok: res.ok, status: res.status, data };
+    }
+
+    async function handleAuthSubmit() {
       const t = AUTH_TEXT[currentLang];
       const errEl = document.getElementById('auth-error');
       const successEl = document.getElementById('auth-success');
@@ -12039,21 +12072,101 @@
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = t.errEmail; errEl.classList.remove('hidden'); return; }
       if (pass.length < 6) { errEl.textContent = t.errPass; errEl.classList.remove('hidden'); return; }
 
-      // Simulate loading
+      // Loading state
       btnText.classList.add('hidden');
       spinner.classList.remove('hidden');
       btn.disabled = true;
 
-      setTimeout(() => {
+      try {
+        if (authMode === 'register') {
+          // 1) Create user
+          const reg = await cbApi('/api/auth/register', {
+            method: 'POST',
+            body: JSON.stringify({ name, email, password: pass, lang: currentLang }),
+          });
+          if (!reg.ok) {
+            const msg = reg.data?.error === 'User already exists'
+              ? (currentLang === 'ar' ? 'هذا البريد مسجّل بالفعل' : 'This email is already registered')
+              : (reg.data?.error || (currentLang === 'ar' ? 'حدث خطأ، حاول مرة أخرى' : 'Something went wrong, please try again'));
+            throw new Error(msg);
+          }
+          // 2) Auto sign-in after register
+          const si = await cbApi('/api/auth/signin', {
+            method: 'POST',
+            body: JSON.stringify({ email, password: pass }),
+          });
+          if (si.ok && si.data?.data?.token) {
+            cbSetAuth(si.data.data.token, si.data.data.user);
+          }
+          successEl.textContent = t.successRegister;
+          successEl.classList.remove('hidden');
+        } else {
+          // Login flow
+          const si = await cbApi('/api/auth/signin', {
+            method: 'POST',
+            body: JSON.stringify({ email, password: pass }),
+          });
+          if (!si.ok) {
+            const msg = si.data?.error === 'Invalid email or password'
+              ? (currentLang === 'ar' ? 'البريد أو كلمة المرور غير صحيحة' : 'Invalid email or password')
+              : (si.data?.error || (currentLang === 'ar' ? 'تعذّر تسجيل الدخول' : 'Sign-in failed'));
+            throw new Error(msg);
+          }
+          cbSetAuth(si.data.data.token, si.data.data.user);
+          successEl.textContent = t.successLogin;
+          successEl.classList.remove('hidden');
+        }
+
+        // Update UI to reflect logged-in state
+        if (typeof updateAuthHeaderUI === 'function') updateAuthHeaderUI();
+
+        // Auto-close on success
+        setTimeout(() => { closeAuthModal(); }, 1500);
+      } catch (err) {
+        errEl.textContent = err.message || (currentLang === 'ar' ? 'حدث خطأ، حاول مرة أخرى' : 'Something went wrong');
+        errEl.classList.remove('hidden');
+      } finally {
         btnText.classList.remove('hidden');
         spinner.classList.add('hidden');
         btn.disabled = false;
-        successEl.textContent = authMode === 'login' ? t.successLogin : t.successRegister;
-        successEl.classList.remove('hidden');
-        // Auto close after success
-        setTimeout(() => { closeAuthModal(); }, 2500);
-      }, 1800);
+      }
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // AUTH HEADER UI — show user name/avatar when logged in
+    // ═══════════════════════════════════════════════════════════════
+    function updateAuthHeaderUI() {
+      const user = cbGetUser();
+      // Find all login buttons in the header and replace with user chip if logged in
+      const loginButtons = document.querySelectorAll('[data-i18n="header.login"]');
+      loginButtons.forEach(btn => {
+        if (user && user.name) {
+          btn.innerHTML = '<i data-lucide="user" class="w-4 h-4"></i> ' +
+            (user.name.length > 14 ? user.name.slice(0, 14) + '…' : user.name);
+          btn.onclick = (e) => { e.preventDefault(); cbHandleLogout(); };
+          btn.setAttribute('title', currentLang === 'ar' ? 'انقر لتسجيل الخروج' : 'Click to sign out');
+        } else {
+          btn.textContent = currentLang === 'ar' ? 'دخول' : 'Sign in';
+          btn.onclick = (e) => { e.preventDefault(); openAuthModal('login'); };
+          btn.removeAttribute('title');
+        }
+      });
+      if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+    }
+
+    function cbHandleLogout() {
+      const msg = currentLang === 'ar' ? 'هل تريد تسجيل الخروج؟' : 'Sign out of your account?';
+      if (!confirm(msg)) return;
+      cbClearAuth();
+      updateAuthHeaderUI();
+    }
+
+    // Run on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      try { updateAuthHeaderUI(); } catch(e){}
+    });
+    // Also run after a short delay in case header renders dynamically
+    setTimeout(() => { try { updateAuthHeaderUI(); } catch(e){} }, 500);
 
     // Forgot password handler
     document.addEventListener('click', (e) => {
