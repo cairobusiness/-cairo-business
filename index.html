@@ -1,5 +1,4 @@
 <!doctype html>
-<script defer>(function(){function s(){try{if(typeof applyLang==="function")applyLang(typeof currentLang!=="undefined"?currentLang:"ar");}catch(e){}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",function(){setTimeout(s,500);setTimeout(s,1500);});else{setTimeout(s,500);setTimeout(s,1500);}})();</script>
 <html lang="ar" dir="rtl" data-theme="dark">
 <head>
   <meta charset="utf-8" />
@@ -11005,7 +11004,24 @@
       document.body.style.overflow = '';
     }
 
-    function renderEvents(){} function renderCommunity(){} function renderInsights(){} function renderPodcast(){} function renderClub(){} function renderMore(){} function renderAibot(){} function renderAskAction(){} function renderBriefing(){} function renderMorningBrief(){} function renderSectorReports(){} function renderMessages(){} function renderPartnerships(){} function renderNews(){ try { if (typeof renderNewsList === 'function') renderNewsList(); } catch(e){} } function renderNewsList(){
+    // Stub functions (originals were removed during file fix earlier — these prevent applyLang errors)
+    function renderEvents(){ /* events section data was truncated; safe no-op */ }
+    function renderNews(){ try { if (typeof renderNewsList === 'function') renderNewsList(); } catch(e){} }
+    function renderCommunity(){ /* stub */ }
+    function renderInsights(){ /* stub */ }
+    function renderPodcast(){ /* stub */ }
+    function renderClub(){ /* stub */ }
+    function renderMore(){ /* stub */ }
+    function renderAibot(){ /* stub */ }
+    function renderAskAction(){ /* stub */ }
+    function renderFooter(){ /* stub */ }
+    function renderBriefing(){ /* stub */ }
+    function renderMorningBrief(){ /* stub */ }
+    function renderSectorReports(){ /* stub */ }
+    function renderMessages(){ /* stub */ }
+    function renderPartnerships(){ /* stub */ }
+
+    function renderNewsList(){
       const wrap = $('#news-list');
       wrap.innerHTML = NEWS_LIST.map(n => {
         const cat = currentLang === 'ar' ? n.cat_ar : n.cat_en;
@@ -14461,6 +14477,21 @@
         topics_ar:['العاصمة الإدارية الجديدة','الساحل الشمالي','التمويل العقاري','تقنيات البناء الحديثة'], topics_en:['New Administrative Capital','North Coast','Real Estate Finance','Modern Construction Tech'],
         price:'$50', website:'#' },
     ];
+
+    // Ensure i18n + render functions run on load (init code was lost during earlier file fix)
+    (function bootstrapApp() {
+      function safeApply() {
+        try { if (typeof applyLang === 'function') applyLang(typeof currentLang !== 'undefined' ? currentLang : 'ar'); } catch(e) {}
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', safeApply);
+      } else {
+        safeApply();
+      }
+      setTimeout(safeApply, 50);
+      setTimeout(safeApply, 300);
+      setTimeout(safeApply, 1000);
+    })();
   </script>
 </body>
 </html>
