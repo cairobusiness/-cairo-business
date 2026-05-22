@@ -14735,6 +14735,29 @@
     async function pullHomepageDataFromApi() {
       const BASE = 'https://cairo-business-backend.vercel.app/api';
       try {
+        // Briefing fetched separately (different shape)
+        try {
+          const bRes = await fetch(BASE + '/morning-briefing', { cache: 'no-store' });
+          const bJson = await bRes.json();
+          if (bJson?.success && bJson.data) {
+            const items = JSON.parse(bJson.data.items || '[]');
+            const rates = JSON.parse(bJson.data.rates || '[]');
+            const dod = bJson.data.dealOfDay ? JSON.parse(bJson.data.dealOfDay) : null;
+            if (typeof MORNING_BRIEFING !== 'undefined') {
+              if (items.length) MORNING_BRIEFING.items = items;
+              if (dod) MORNING_BRIEFING.dealOfDay = dod;
+              MORNING_BRIEFING.date = new Date(bJson.data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+              if (typeof renderMorningBriefing === 'function') try { renderMorningBriefing(); } catch(_){}
+              if (typeof renderBriefing === 'function') try { renderBriefing(); } catch(_){}
+            }
+            if (typeof DASHBOARD_DATA !== 'undefined' && rates.length) {
+              DASHBOARD_DATA.length = 0;
+              DASHBOARD_DATA.push(...rates.map(r => ({ ...r, value: typeof r.value === 'string' && /^\d/.test(r.value) ? parseFloat(r.value) : r.value, change: Number(r.change) || 0 })));
+              if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(_){}
+            }
+          }
+        } catch (e) { console.warn('briefing fetch failed:', e); }
+
         const [pp, deals, re, co] = await Promise.allSettled([
           fetch(BASE + '/businessmen?limit=50', { cache: 'no-store' }).then(r => r.json()),
           fetch(BASE + '/deals?limit=30', { cache: 'no-store' }).then(r => r.json()),
