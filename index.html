@@ -14907,7 +14907,30 @@
         } catch (e) { console.warn('Twelve Data indices fetch failed:', e); }
       }
 
-      // 4) Re-render dashboard
+      // 4) Sync to TICKER_ITEMS (the visible scrolling ticker)
+      if (typeof TICKER_ITEMS !== 'undefined' && typeof DASHBOARD_DATA !== 'undefined') {
+        const tickerMap = {
+          'USD/EGP': 'دولار/جنيه',
+          'EGX30': 'EGX30',
+          'Gold': 'ذهب 24',
+          'Brent': 'برنت',
+          'EUR/EGP': 'يورو/جنيه',
+        };
+        Object.entries(tickerMap).forEach(([symbol, arabicKey]) => {
+          const dashItem = DASHBOARD_DATA.find(d => d.symbol === symbol);
+          if (!dashItem || dashItem.value == null) return;
+          const tickerItem = TICKER_ITEMS.find(t => t.k_ar === arabicKey || t.k_en === symbol);
+          if (!tickerItem) return;
+          const valNum = typeof dashItem.value === 'number' ? dashItem.value : parseFloat(String(dashItem.value).replace(/,/g,''));
+          tickerItem.v = symbol === 'EGX30' || symbol === 'Gold' ? Math.round(valNum).toLocaleString() : valNum.toFixed(2);
+          const changeNum = Number(dashItem.change) || 0;
+          tickerItem.d = (changeNum >= 0 ? '+' : '') + changeNum.toFixed(2) + '%';
+          tickerItem.up = changeNum >= 0;
+        });
+        if (typeof renderTicker === 'function') try { renderTicker(); } catch(_){}
+      }
+
+      // 5) Re-render dashboard (country switcher)
       if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(_){}
     }
 
