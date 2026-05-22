@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Block admin from indexing
+Disallow: /admin.html
+Disallow: /admin-app.js
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://cairobusiness.net/sitemap.xml
