@@ -14796,6 +14796,96 @@
     }
 
 
+
+    /* ============== WORLD BANK API (annual macro data) ==============
+       Free, no key needed. Updates GDP growth + inflation (CPI) for 12 Arab countries.
+       Cached in localStorage for 24 hours since World Bank data updates yearly. */
+    async function fetchWorldBankData() {
+      const CACHE_KEY = 'cb_worldbank_cache_v1';
+      const ONE_DAY = 24 * 60 * 60 * 1000;
+      const cached = (() => {
+        try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch { return null; }
+      })();
+      if (cached && cached.ts && (Date.now() - cached.ts < ONE_DAY) && cached.data) {
+        applyWorldBank(cached.data);
+        return;
+      }
+      // Map our country codes to ISO-3 used by World Bank
+      const iso3 = { eg:'EGY', sa:'SAU', ae:'ARE', kw:'KWT', qa:'QAT', bh:'BHR', om:'OMN', jo:'JOR', lb:'LBN', ma:'MAR', tn:'TUN', dz:'DZA' };
+      const codes = Object.values(iso3).join(';');
+      const fetchInd = async (indicator) => {
+        try {
+          const url = 'https://api.worldbank.org/v2/country/' + codes + '/indicator/' + indicator + '?format=json&per_page=300&date=2020:2024';
+          const r = await fetch(url, { cache: 'no-store' });
+          if (!r.ok) return {};
+          const j = await r.json();
+          if (!Array.isArray(j) || !Array.isArray(j[1])) return {};
+          // Build map { 'EGY': latest non-null value }
+          const out = {};
+          for (const row of j[1]) {
+            const c = row.countryiso3code || (row.country && row.country.id);
+            if (!c || row.value == null) continue;
+            if (!out[c] || row.date > out[c].date) out[c] = { value: row.value, date: row.date };
+          }
+          return out;
+        } catch (e) { console.warn('WB indicator fetch failed:', indicator, e); return {}; }
+      };
+      try {
+        const [gdpGrowth, cpi] = await Promise.all([
+          fetchInd('NY.GDP.MKTP.KD.ZG'),  // GDP growth (annual %)
+          fetchInd('FP.CPI.TOTL.ZG'),      // Inflation, consumer prices (annual %)
+        ]);
+        const data = {};
+        Object.entries(iso3).forEach(([localCode, iso]) => {
+          data[localCode] = {
+            gdpGrowth: gdpGrowth[iso] || null,
+            inflation: cpi[iso] || null,
+          };
+        });
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch {}
+        applyWorldBank(data);
+      } catch (e) { console.warn('World Bank fetch failed:', e); }
+    }
+
+    function applyWorldBank(data) {
+      if (typeof COUNTRIES_DATA === 'undefined') return;
+      Object.entries(data).forEach(([code, vals]) => {
+        const c = COUNTRIES_DATA[code];
+        if (!c) return;
+        // Update brief.macro entries
+        if (c.brief && Array.isArray(c.brief.macro)) {
+          const gdp = c.brief.macro.find(m => m.labKey === 'dashboard.m.gdp');
+          if (gdp && vals.gdpGrowth) {
+            const v = vals.gdpGrowth.value;
+            gdp.value = v.toFixed(1) + '%';
+            gdp.trend = v > 0 ? 'up' : v < 0 ? 'down' : 'flat';
+          }
+          const cpi = c.brief.macro.find(m => m.labKey === 'dashboard.m.cpi');
+          if (cpi && vals.inflation) {
+            const v = vals.inflation.value;
+            cpi.value = v.toFixed(1) + '%';
+            cpi.trend = v > 5 ? 'down' : 'flat'; // high inflation = bad
+          }
+        }
+        // Update pulse.vitals (inflation + growth)
+        if (c.pulse && Array.isArray(c.pulse.vitals)) {
+          const infl = c.pulse.vitals.find(v => v.labKey === 'dashboard.vital.inflation');
+          if (infl && vals.inflation) {
+            const iv = vals.inflation.value;
+            infl.value = iv.toFixed(1) + '%';
+            infl.percent = Math.max(0, Math.min(100, 100 - iv * 2));
+          }
+          const grw = c.pulse.vitals.find(v => v.labKey === 'dashboard.vital.growth');
+          if (grw && vals.gdpGrowth) {
+            const gv = vals.gdpGrowth.value;
+            grw.value = gv.toFixed(1) + '%';
+            grw.percent = Math.max(0, Math.min(100, 50 + gv * 8));
+          }
+        }
+      });
+      if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(_){}
+    }
+
     /* ============== LIVE MARKET DATA (auto-refresh every 5 min) ==============
        Free APIs (no key needed):
          - CoinGecko        → crypto prices
@@ -14936,6 +15026,7 @@
 
     setTimeout(fetchLiveMarketData, 1500);
     setInterval(fetchLiveMarketData, 5 * 60 * 1000);
+    setTimeout(fetchWorldBankData, 2500);
 
     /* Bootstrap on page load */
     (function bootstrapApp() {
