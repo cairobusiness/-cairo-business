@@ -14627,112 +14627,76 @@
       const heroWrap = document.getElementById('crypto-hero');
       const bodyWrap = document.getElementById('crypto-table-body');
       if (!heroWrap || !bodyWrap) return;
-
-      /* Filter set */
+      const trendDir = (n) => n > 0 ? 'up' : n < 0 ? 'down' : 'flat';
       let filtered = CRYPTO_DATA;
-      if (CRYPTO_FILTER === 'gainers') {
-        filtered = CRYPTO_DATA.slice().filter(c => !c.stable).sort((a, b) => b.h24 - a.h24);
-      } else if (CRYPTO_FILTER === 'losers') {
-        filtered = CRYPTO_DATA.slice().filter(c => !c.stable).sort((a, b) => a.h24 - b.h24);
-      } else if (CRYPTO_FILTER === 'stable') {
-        filtered = CRYPTO_DATA.filter(c => c.stable);
-      }
-
-      /* HERO: top 4 by rank (always shown regardless of filter) */
+      if (CRYPTO_FILTER === 'gainers') filtered = CRYPTO_DATA.slice().filter(c => !c.stable).sort((a,b) => b.h24 - a.h24);
+      else if (CRYPTO_FILTER === 'losers') filtered = CRYPTO_DATA.slice().filter(c => !c.stable).sort((a,b) => a.h24 - b.h24);
+      else if (CRYPTO_FILTER === 'stable') filtered = CRYPTO_DATA.filter(c => c.stable);
       const heroes = CRYPTO_DATA.slice(0, 4);
       heroWrap.innerHTML = heroes.map(c => {
         const name = isAr ? c.name_ar : c.name_en;
-        const dir = trendDir(c.h24);
-        return '' +
-        '<article class="crypto-hero" style="--cc:' + c.color + '">' +
-          '<div class="crypto-hero-head">' +
-            '<div class="crypto-hero-logo">' + c.sym + '</div>' +
-            '<div class="crypto-hero-id">' +
-              '<div class="crypto-hero-symbol">' + c.sym + '/USD</div>' +
-              '<div class="crypto-hero-name">' + name + '</div>' +
-            '</div>' +
-            '<span class="crypto-hero-rank">#' + c.rank + '</span>' +
-          '</div>' +
-          '<div class="crypto-hero-price">' + fmtPrice(c.price) + '</div>' +
-          '<div class="crypto-hero-delta ' + dir + '">' + trendArrow(c.h24) + ' ' + fmtChange(c.h24) + ' · 24h</div>' +
-          '<div class="crypto-hero-spark">' + cryptoSpark(c.spark, c.color, 220, 44) + '</div>' +
-          '<div class="crypto-hero-foot">' +
-            '<span><span style="opacity:.55">' + t('crypto.col.cap') + '</span> <span class="crypto-hero-foot-num">' + c.cap + '</span></span>' +
-            '<span><span style="opacity:.55">7d</span> <span class="crypto-hero-foot-num ' + (c.d7 >= 0 ? 'crypto-delta up' : 'crypto-delta down') + '" style="display:inline">' + fmtChange(c.d7) + '</span></span>' +
-          '</div>' +
-        '</article>';
+        const sign = c.h24 >= 0 ? '+' : '';
+        return '<article class="crypto-hero" style="--cc:' + c.color + '">' +
+          '<div class="crypto-hero-head"><div class="crypto-hero-logo">' + c.sym + '</div>' +
+          '<div class="crypto-hero-id"><div class="crypto-hero-symbol">' + c.sym + '/USD</div><div class="crypto-hero-name">' + name + '</div></div></div>' +
+          '<div class="crypto-hero-price num">$' + c.price.toLocaleString() + '</div>' +
+          '<div class="crypto-hero-change ' + (c.h24 >= 0 ? 'up' : 'down') + ' num">' + sign + c.h24.toFixed(2) + '%</div>' +
+          '</article>';
       }).join('');
-
-      /* TABLE: filtered list */
-      if (!filtered.length) {
-        bodyWrap.innerHTML = '<div class="crypto-empty">' + t('crypto.empty') + '</div>';
-      } else {
-        bodyWrap.innerHTML = filtered.map(c => {
-          const name = isAr ? c.name_ar : c.name_en;
-          const d24 = trendDir(c.h24);
-          const d7  = trendDir(c.d7);
-          return '' +
-          '<div class="crypto-row" style="--cc:' + c.color + '">' +
-            '<div class="crypto-rank">' + c.rank + '</div>' +
-            '<div class="crypto-row-id">' +
-              '<div class="crypto-logo-sm">' + c.sym + '</div>' +
-              '<div class="crypto-row-id-text">' +
-                '<span class="crypto-row-name">' + name + '</span>' +
-                '<span class="crypto-row-symbol">' + c.sym + '</span>' +
-              '</div>' +
-            '</div>' +
-            '<div class="crypto-num">' + fmtPrice(c.price) + '</div>' +
-            '<div class="crypto-delta ' + d24 + '">' + trendArrow(c.h24) + ' ' + fmtChange(c.h24) + '</div>' +
-            '<div class="crypto-delta ' + d7 + '">' + trendArrow(c.d7) + ' ' + fmtChange(c.d7) + '</div>' +
-            '<div class="crypto-num" style="font-weight:600;color:rgba(255,255,255,0.78)">' + c.cap + '</div>' +
-            '<div class="crypto-row-spark">' + cryptoSpark(c.spark, c.color, 140, 36) + '</div>' +
-          '</div>';
-        }).join('');
-      }
-
-      /* Wire filter buttons */
-      document.querySelectorAll('#crypto-filters .crypto-filter').forEach(b => {
-        b.classList.toggle('is-active', b.dataset.filter === CRYPTO_FILTER);
-        if (!b.dataset.bound) {
-          b.dataset.bound = '1';
-          b.addEventListener('click', () => {
-            CRYPTO_FILTER = b.dataset.filter;
-            renderCrypto();
-          });
-        }
-      });
-
-      if (window.lucide) lucide.createIcons();
+      bodyWrap.innerHTML = filtered.map((c, i) => {
+        const name = isAr ? c.name_ar : c.name_en;
+        const sign = c.h24 >= 0 ? '+' : '';
+        return '<div class="crypto-row"><div class="num">' + (i+1) + '</div>' +
+          '<div class="crypto-name"><span class="crypto-sym" style="background:' + c.color + '">' + c.sym + '</span>' +
+          '<div><div>' + name + '</div><div class="text-white/50 text-xs">' + c.sym + '</div></div></div>' +
+          '<div class="num">$' + c.price.toLocaleString() + '</div>' +
+          '<div class="num ' + (c.h24 >= 0 ? 'text-emerald-400' : 'text-red-400') + '">' + sign + c.h24.toFixed(2) + '%</div>' +
+          '<div class="num text-white/60">$' + (c.cap || 0).toLocaleString() + 'B</div></div>';
+      }).join('');
     }
 
-    // ===== EVENTS DATA =====
-    let activeEventFilter = 'all';
-    const EVENT_FILTERS = [
-      { key:'all', label_ar:'كل الفعاليات', label_en:'All Events' },
-      { key:'egypt', label_ar:'مصر', label_en:'Egypt' },
-      { key:'saudi', label_ar:'السعودية', label_en:'Saudi Arabia' },
-      { key:'uae', label_ar:'الإمارات', label_en:'UAE' },
-      { key:'qatar', label_ar:'قطر', label_en:'Qatar' },
-    ];
-    const EVENTS = [
-      { id:'ev1', country:'egypt', title_ar:'مؤتمر مصر الاقتصادي', title_en:'Egypt Economic Conference', loc_ar:'القاهرة، مصر', loc_en:'Cairo, Egypt', date:'Apr 22-24, 2026', type_ar:'حضوري', type_en:'In Person', attendees:'8,000', gradient:'from-gold-400 to-amber-700', flag:'🇪🇬',
-        desc_ar:'المؤتمر الاقتصادي الأبرز في مصر. يجمع صنّاع القرار والمستثمرين ورؤساء الشركات لمناقشة مستقبل الاقتصاد المصري وفرص الاستثمار في القطاعات الحيوية.', desc_en:'Egypt\u2019s premier economic conference. Brings together decision-makers, investors, and CEOs to discuss the future of the Egyptian economy and investment opportunities in key sectors.',
-        speakers_ar:['وزير المالية','رئيس البورصة المصرية','رئيس هيئة الاستثمار'], speakers_en:['Minister of Finance','Chairman of EGX','Head of Investment Authority'],
-        topics_ar:['الإصلاحات الاقتصادية','فرص الاستثمار الأجنبي','التحول الرقمي','رؤية مصر 2030'], topics_en:['Economic Reforms','FDI Opportunities','Digital Transformation','Egypt Vision 2030'],
-        price:'$500', website:'#' },
-      { id:'ev2', country:'egypt', title_ar:'Cairo ICT 2026', title_en:'Cairo ICT 2026', loc_ar:'القاهرة، مصر', loc_en:'Cairo, Egypt', date:'Nov 17-20, 2026', type_ar:'هجين', type_en:'Hybrid', attendees:'45,000', gradient:'from-blue-400 to-indigo-700', flag:'🇪🇬',
-        desc_ar:'أكبر معرض تكنولوجي في الشرق الأوسط وأفريقيا. يعرض أحدث الابتكارات في الذكاء الاصطناعي والحوسبة السحابية والأمن السيبراني والتحول الرقمي.', desc_en:'The largest tech exhibition in the Middle East and Africa. Showcases the latest innovations in AI, cloud computing, cybersecurity, and digital transformation.',
-        speakers_ar:['وزير الاتصالات','رئيس جهاز تنظيم الاتصالات','قادة شركات التكنولوجيا'], speakers_en:['Minister of Communications','Head of NTRA','Tech Company Leaders'],
-        topics_ar:['الذكاء الاصطناعي','الأمن السيبراني','التكنولوجيا المالية','المدن الذكية'], topics_en:['Artificial Intelligence','Cybersecurity','FinTech','Smart Cities'],
-        price:'Free', website:'#' },
-      { id:'ev3', country:'egypt', title_ar:'Cityscape Egypt 2026', title_en:'Cityscape Egypt 2026', loc_ar:'القاهرة، مصر', loc_en:'Cairo, Egypt', date:'Sep 10-13, 2026', type_ar:'حضوري', type_en:'In Person', attendees:'25,000', gradient:'from-rose-400 to-red-700', flag:'🇪🇬',
-        desc_ar:'المعرض العقاري الأكبر في مصر. يضم أحدث المشاريع العقارية من كبار المطورين مع عروض حصرية وخطط تقسيط مميزة وجولات افتراضية.', desc_en:'Egypt\u2019s largest real estate exhibition. Features latest projects from top developers with exclusive offers, installment plans, and virtual tours.',
-        speakers_ar:['رؤساء شركات التطوير العقاري','محللو السوق العقاري','خبراء التمويل العقاري'], speakers_en:['Real Estate Developer CEOs','Market Analysts','Mortgage Finance Experts'],
-        topics_ar:['العاصمة الإدارية الجديدة','الساحل الشمالي','التمويل العقاري','تقنيات البناء الحديثة'], topics_en:['New Administrative Capital','North Coast','Real Estate Finance','Modern Construction Tech'],
-        price:'$50', website:'#' },
-    ];
+    /* ============== API DATA OVERRIDES ============== */
+    async function pullHomepageDataFromApi() {
+      const BASE = 'https://cairo-business-backend.vercel.app/api';
+      try {
+        const [pp, deals, re, co] = await Promise.allSettled([
+          fetch(BASE + '/businessmen?limit=50', { cache: 'no-store' }).then(r => r.json()),
+          fetch(BASE + '/deals?limit=30', { cache: 'no-store' }).then(r => r.json()),
+          fetch(BASE + '/realestate?limit=30', { cache: 'no-store' }).then(r => r.json()),
+          fetch(BASE + '/companies?limit=100', { cache: 'no-store' }).then(r => r.json()),
+        ]);
+        if (typeof POWER_PEOPLE !== 'undefined' && pp.status === 'fulfilled' && pp.value?.success && Array.isArray(pp.value.data) && pp.value.data.length) {
+          const m = pp.value.data.map(b => ({ id: b.id, name_ar: b.nameAr, name_en: b.nameEn, sector_ar: b.sectorAr, sector_en: b.sectorEn, wealthValue: b.netWorth || 0, wealthLabel_ar: '$' + (b.netWorth || 0).toFixed(1) + 'B', wealthLabel_en: '$' + (b.netWorth || 0).toFixed(1) + 'B', country_ar: b.flag || '—', country_en: b.flag || '—', rank: b.rank || 0, isOutlier: false, gradient: b.gradient || 'from-amber-400 to-orange-500' }));
+          POWER_PEOPLE.length = 0; POWER_PEOPLE.push(...m);
+          if (typeof renderPowerPeople === 'function') try { renderPowerPeople(); } catch(_) {}
+          if (typeof renderBusinessmen === 'function') try { renderBusinessmen(); } catch(_) {}
+        }
+        if (typeof DEALS !== 'undefined' && deals.status === 'fulfilled' && deals.value?.success && Array.isArray(deals.value.data) && deals.value.data.length) {
+          const m = deals.value.data.map(d => ({ id: d.id, type_ar: d.type, type_en: d.type, name_ar: d.titleAr, name_en: d.titleEn, title_ar: d.titleAr, title_en: d.titleEn, location_ar: d.locationAr, location_en: d.locationEn, value_ar: '$' + (d.value || 0).toLocaleString() + 'M', value_en: '$' + (d.value || 0).toLocaleString() + 'M', deadline_ar: new Date(d.deadline).toLocaleDateString('ar-EG'), deadline_en: new Date(d.deadline).toLocaleDateString('en-US'), desc_ar: d.descriptionAr, desc_en: d.descriptionEn, description_ar: d.descriptionAr, description_en: d.descriptionEn, isHot: d.isHot, score: 90 }));
+          DEALS.length = 0; DEALS.push(...m);
+          if (typeof renderDeals === 'function') try { renderDeals(); } catch(_) {}
+        }
+        if (typeof REAL_ESTATE !== 'undefined' && re.status === 'fulfilled' && re.value?.success && Array.isArray(re.value.data) && re.value.data.length) {
+          const m = re.value.data.map(r => ({ id: r.id, title_ar: r.titleAr, title_en: r.titleEn, name_ar: r.titleAr, name_en: r.titleEn, area: r.area, area_ar: r.area, area_en: r.area, price: r.price, size: r.size, beds: r.beds || 0, baths: r.baths || 0, type: r.type, type_ar: r.type, type_en: r.type, developer: r.developer || '', developer_ar: r.developer || '', developer_en: r.developer || '', aiScore: r.aiScore || 0, score: r.aiScore || 0, features: r.features ? r.features.split(',') : [], features_ar: r.features ? r.features.split(',') : [], features_en: r.features ? r.features.split(',') : [], desc_ar: r.description || '', desc_en: r.description || '', description_ar: r.description || '', description_en: r.description || '' }));
+          REAL_ESTATE.length = 0; REAL_ESTATE.push(...m);
+          if (typeof renderRealEstate === 'function') try { renderRealEstate(); } catch(_) {}
+        }
+        if (typeof TOP10_DATA !== 'undefined' && co.status === 'fulfilled' && co.value?.success && Array.isArray(co.value.data) && co.value.data.length) {
+          const sk = { banking: 'banking', bank: 'banking', 'real estate': 'realestate', realestate: 'realestate', telecom: 'telecom', energy: 'energy', oil: 'energy', tech: 'tech', technology: 'tech', retail: 'retail', food: 'food', healthcare: 'healthcare', automotive: 'auto', auto: 'auto', logistics: 'logistics' };
+          const g = {};
+          co.value.data.forEach(c => { const k = sk[(c.sectorEn || '').toLowerCase()] || (c.sectorEn || '').toLowerCase(); if (!g[k]) g[k] = []; g[k].push(c); });
+          Object.keys(g).forEach(s => {
+            if (g[s].length >= 3 && TOP10_DATA[s]) {
+              const sorted = g[s].sort((a, b) => (b.revenue || 0) - (a.revenue || 0)).slice(0, 10);
+              TOP10_DATA[s] = sorted.map((c, i) => ({ rank: i + 1, name_ar: c.nameAr, name_en: c.nameEn, country_ar: c.country, country_en: c.country, rev: '$' + (c.revenue || 0).toFixed(1) + 'B', growth: '+' + (c.growth || 0).toFixed(0) + '%', score: c.aiScore || 85 }));
+            }
+          });
+          if (typeof CURRENT_TOP10 !== 'undefined' && typeof renderTop10 === 'function') try { renderTop10(CURRENT_TOP10); } catch(_) {}
+        }
+      } catch (e) { console.warn('[homepage] data pull failed:', e); }
+    }
 
-    // Ensure i18n + render functions run on load (init code was lost during earlier file fix)
+    /* Bootstrap on page load */
     (function bootstrapApp() {
       function safeApply() {
         try { if (typeof applyLang === 'function') applyLang(typeof currentLang !== 'undefined' ? currentLang : 'ar'); } catch(e) {}
@@ -14745,6 +14709,7 @@
       setTimeout(safeApply, 50);
       setTimeout(safeApply, 300);
       setTimeout(safeApply, 1000);
+      setTimeout(pullHomepageDataFromApi, 800);
     })();
   </script>
 </body>
