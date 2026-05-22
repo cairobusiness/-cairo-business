@@ -10,6 +10,68 @@ function escapeHtml(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g,
 function formatDate(d) { try { return new Date(d).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric' }); } catch(e){ return ''; } }
 function nowLocalISO() { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,16); }
 
+
+/* Image picker that resizes + compresses on the client and stores as base64 data URL.
+   Requires no backend or storage service. Default max dimensions 1600x900, quality 0.82. */
+async function pickAndCompressImage(targetInputId, maxW, maxH, quality) {
+  maxW = maxW || 1600; maxH = maxH || 900; quality = quality || 0.82;
+  return new Promise((resolve, reject) => {
+    const fi = document.createElement('input');
+    fi.type = 'file';
+    fi.accept = 'image/jpeg,image/png,image/webp,image/gif';
+    fi.onchange = async () => {
+      const file = fi.files && fi.files[0];
+      if (!file) return resolve(null);
+      const statusEl = document.getElementById(targetInputId + '-status');
+      if (statusEl) statusEl.textContent = 'جاري المعالجة...';
+      try {
+        const dataUrl = await new Promise((res, rej) => {
+          const fr = new FileReader();
+          fr.onload = () => res(fr.result);
+          fr.onerror = rej;
+          fr.readAsDataURL(file);
+        });
+        const img = await new Promise((res, rej) => {
+          const i = new Image();
+          i.onload = () => res(i);
+          i.onerror = rej;
+          i.src = dataUrl;
+        });
+        let w = img.width, h = img.height;
+        if (w > maxW || h > maxH) {
+          const r = Math.min(maxW / w, maxH / h);
+          w = Math.round(w * r);
+          h = Math.round(h * r);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0a0e1a';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        const finalDataUrl = canvas.toDataURL('image/jpeg', quality);
+        const sizeKB = Math.round(finalDataUrl.length * 0.75 / 1024);
+        const input = document.getElementById(targetInputId);
+        if (input) {
+          input.value = finalDataUrl;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        const preview = document.getElementById(targetInputId + '-preview');
+        if (preview) {
+          preview.innerHTML = '<img src="' + finalDataUrl + '" style="max-width:200px;max-height:120px;border-radius:8px;border:1px solid var(--border);" />';
+        }
+        if (statusEl) statusEl.textContent = '✓ تم معالجة الصورة (' + w + '×' + h + ', ' + sizeKB + 'KB)';
+        resolve(finalDataUrl);
+      } catch (e) {
+        if (statusEl) statusEl.textContent = '✗ خطأ في معالجة الصورة';
+        reject(e);
+      }
+    };
+    fi.click();
+  });
+}
+
 async function api(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   const t = getToken();
@@ -410,6 +472,20 @@ function buildFormFields() {
     const step = f.step ? ' step="' + f.step + '"' : '';
     const min = f.min != null ? ' min="' + f.min + '"' : '';
     const max = f.max != null ? ' max="' + f.max + '"' : '';
+    // Image fields get a file picker + preview
+    const isImage = /imageUrl$|^logo$/i.test(f.id) || f.type === 'image';
+    if (isImage) {
+      const realType = f.type === 'image' ? 'url' : f.type;
+      return '<div class="field' + fullClass + '">'
+        + '<label>' + escapeHtml(f.label) + '</label>'
+        + '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">'
+        +   '<button type="button" class="btn btn-ghost btn-sm" onclick="pickAndCompressImage(\'' + id + '\')">📷 رفع من جهازي</button>'
+        +   '<span style="font-size:11px;color:var(--text-3);" id="' + id + '-status">أو الصق رابط أدناه</span>'
+        + '</div>'
+        + '<input id="' + id + '" type="' + realType + '"' + dir + placeholder + ' />'
+        + '<div id="' + id + '-preview" style="margin-top:8px;"></div>'
+        + '</div>';
+    }
     return '<div class="field' + fullClass + '"><label>' + escapeHtml(f.label) + '</label><input id="' + id + '" type="' + f.type + '"' + dir + placeholder + step + min + max + ' /></div>';
   }).join('');
 }
@@ -420,6 +496,12 @@ function setFieldValue(field, value) {
   if (field.type === 'checkbox') el.checked = !!value;
   else if (field.type === 'datetime-local' && value) el.value = new Date(value).toISOString().slice(0, 16);
   else el.value = value == null ? '' : value;
+  // Refresh preview for image fields when loading existing data
+  const isImg = /imageUrl$|^logo$/i.test(field.id) || field.type === 'image';
+  if (isImg && value) {
+    const preview = document.getElementById('f-' + field.id + '-preview');
+    if (preview) preview.innerHTML = '<img src="' + value + '" style="max-width:200px;max-height:120px;border-radius:8px;border:1px solid var(--border);" onerror="this.style.display=\'none\'" />';
+  }
 }
 
 function getFieldValue(field) {
