@@ -14802,6 +14802,11 @@
          - Currency-API     → USD/EGP, EUR/EGP, etc.
        Optional (set window.TWELVE_DATA_KEY): Twelve Data → EGX30, TASI, ADX
     */
+    /* Twelve Data API key — for stock indices, gold, silver, oil.
+       To rotate this key, log into twelvedata.com → API Keys, generate a new one,
+       and replace the value below. */
+    window.TWELVE_DATA_KEY = 'e18d20c723ee43c18a695a979566fd3d';
+
     async function fetchLiveMarketData() {
       // 1) Currency rates
       try {
@@ -14851,17 +14856,46 @@
         }
       } catch (e) { console.warn('Crypto fetch failed:', e); }
 
-      // 3) Stock indices via Twelve Data (only if key is set globally)
+      // 3) Twelve Data: Gold, Silver, Oil (free tier supports these reliably)
       if (window.TWELVE_DATA_KEY) {
         try {
-          const res = await fetch('https://api.twelvedata.com/quote?symbol=EGX30,TASI,ADX&apikey=' + window.TWELVE_DATA_KEY, { cache: 'no-store' });
+          // Symbols mapped to what Twelve Data accepts
+          const symbolMap = {
+            'Gold':   'XAU/USD',
+            'Silver': 'XAG/USD',
+            'Brent':  'BRENT',
+          };
+          const symbols = Object.values(symbolMap).join(',');
+          const res = await fetch('https://api.twelvedata.com/quote?symbol=' + encodeURIComponent(symbols) + '&apikey=' + window.TWELVE_DATA_KEY, { cache: 'no-store' });
           if (res.ok) {
             const j = await res.json();
             if (typeof DASHBOARD_DATA !== 'undefined') {
-              ['EGX30','TASI','ADX','EGX70'].forEach(sym => {
-                const live = j[sym];
+              Object.entries(symbolMap).forEach(([localSym, apiSym]) => {
+                const live = j[apiSym] || (j.symbol === apiSym ? j : null);
                 if (live && live.close) {
-                  const d = DASHBOARD_DATA.find(x => x.symbol === sym);
+                  const d = DASHBOARD_DATA.find(x => x.symbol === localSym);
+                  if (d) {
+                    d.value = parseFloat(live.close);
+                    d.change = parseFloat(live.percent_change) || 0;
+                  }
+                }
+              });
+            }
+          }
+        } catch (e) { console.warn('Twelve Data fetch failed:', e); }
+
+        // 3b) EGX30 + TASI + ADX (may not be in Basic plan — fail silently)
+        try {
+          const indexSymbols = 'EGX30:EGX,TASI:Tadawul,ADXGI:ADX';
+          const res2 = await fetch('https://api.twelvedata.com/quote?symbol=' + encodeURIComponent(indexSymbols) + '&apikey=' + window.TWELVE_DATA_KEY, { cache: 'no-store' });
+          if (res2.ok) {
+            const j2 = await res2.json();
+            if (typeof DASHBOARD_DATA !== 'undefined') {
+              [['EGX30',['EGX30:EGX','EGX30']],['TASI',['TASI:Tadawul','TASI']],['ADX',['ADXGI:ADX','ADX','ADXGI']]].forEach(([localSym, candidates]) => {
+                let live = null;
+                for (const c of candidates) { if (j2[c] && j2[c].close) { live = j2[c]; break; } }
+                if (live) {
+                  const d = DASHBOARD_DATA.find(x => x.symbol === localSym);
                   if (d) {
                     d.value = parseFloat(live.close).toLocaleString();
                     d.change = parseFloat(live.percent_change) || 0;
@@ -14870,7 +14904,7 @@
               });
             }
           }
-        } catch (e) { console.warn('Twelve Data fetch failed:', e); }
+        } catch (e) { console.warn('Twelve Data indices fetch failed:', e); }
       }
 
       // 4) Re-render dashboard
