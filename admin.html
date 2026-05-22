@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>لوحة التحكم — Cairo Business</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --bg-2: #111827;
+      --card: #1a2238;
+      --card-2: #22304d;
+      --border: rgba(255,255,255,0.08);
+      --border-2: rgba(255,255,255,0.15);
+      --text: #f3f4f6;
+      --text-2: #9ca3af;
+      --text-3: #6b7280;
+      --gold: #D4AF37;
+      --gold-2: #b8941f;
+      --green: #10b981;
+      --red: #ef4444;
+      --blue: #3b82f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Cairo', 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0a0e1a 0%, #111827 100%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    a { color: var(--gold); text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+    input, textarea, select {
+      font-family: inherit;
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 10px 14px;
+      width: 100%;
+      transition: border-color 0.2s, background 0.2s;
+      font-size: 14px;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--gold);
+      background: rgba(212,175,55,0.05);
+    }
+    textarea { min-height: 80px; resize: vertical; }
+
+    /* Header */
+    header {
+      background: rgba(17, 24, 39, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 18px;
+    }
+    .brand-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #0a0e1a;
+      font-weight: 900;
+      font-size: 14px;
+    }
+    .header-actions { display: flex; align-items: center; gap: 16px; }
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 14px;
+      background: rgba(212,175,55,0.1);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 9999px;
+      font-size: 13px;
+    }
+    .btn {
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #0a0e1a;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(212,175,55,0.3); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-2);
+      border: 1px solid var(--border-2);
+    }
+    .btn-ghost:hover { background: var(--card); color: var(--text); }
+    .btn-danger {
+      background: rgba(239,68,68,0.1);
+      color: var(--red);
+      border: 1px solid rgba(239,68,68,0.3);
+    }
+    .btn-danger:hover { background: rgba(239,68,68,0.2); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+
+    /* Layout */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* Login screen */
+    .login-screen {
+      min-height: calc(100vh - 80px);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+    .login-card h1 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .login-card p { color: var(--text-2); margin-bottom: 24px; font-size: 14px; }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-2);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .msg {
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .msg-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .msg-success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+
+    /* News list */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .toolbar h2 { font-size: 24px; font-weight: 800; }
+    .toolbar .actions { display: flex; gap: 10px; align-items: center; }
+    .search-box {
+      width: 280px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .stat-label { color: var(--text-2); font-size: 12px; margin-bottom: 6px; }
+    .stat-value { font-size: 24px; font-weight: 800; color: var(--gold); }
+
+    .news-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .news-row {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      transition: border-color 0.2s;
+    }
+    .news-row:hover { border-color: var(--border-2); }
+    .news-thumb {
+      width: 80px;
+      height: 80px;
+      border-radius: 10px;
+      background: var(--card-2);
+      object-fit: cover;
+      display: grid;
+      place-items: center;
+      color: var(--text-3);
+      font-size: 11px;
+    }
+    .news-meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+    .pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(212,175,55,0.1);
+      color: var(--gold);
+      border: 1px solid rgba(212,175,55,0.3);
+    }
+    .pill-featured { background: rgba(16,185,129,0.12); color: var(--green); border-color: rgba(16,185,129,0.3); }
+    .news-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .news-excerpt { color: var(--text-2); font-size: 13px; }
+    .news-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 24px;
+      overflow-y: auto;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 720px;
+      padding: 28px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h3 { font-size: 20px; font-weight: 800; }
+    .close-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: var(--card-2);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+    .close-btn:hover { background: rgba(239,68,68,0.2); color: var(--red); }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .form-grid .field-full { grid-column: 1 / -1; }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .checkbox-row input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--gold);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-2);
+    }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state .title { font-size: 16px; color: var(--text); margin-bottom: 6px; font-weight: 600; }
+
+    .loading {
+      display: grid;
+      place-items: center;
+      padding: 60px;
+      color: var(--text-2);
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 720px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .news-row { grid-template-columns: 1fr; }
+      .news-actions { justify-content: flex-end; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .search-box { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header (visible after login) -->
+  <header id="app-header" style="display:none;">
+    <div class="brand">
+      <div class="brand-mark">CB</div>
+      <span>لوحة تحكم Cairo Business</span>
+    </div>
+    <div class="header-actions">
+      <div class="user-chip" id="user-chip">
+        <span id="user-name">—</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">خروج</button>
+    </div>
+  </header>
+
+  <!-- Login screen -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <h1>🔐 لوحة التحكم</h1>
+      <p>سجّل دخول بحساب الأدمن للوصول إلى لوحة التحكم.</p>
+      <div id="login-msg"></div>
+      <div class="field">
+        <label>البريد الإلكتروني</label>
+        <input id="login-email" type="email" placeholder="admin@cairobusiness.net" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label>كلمة المرور</label>
+        <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn btn-primary" style="width:100%;" id="login-btn" onclick="doLogin()">تسجيل الدخول</button>
+    </div>
+  </div>
+
+  <!-- App (visible after login) -->
+  <div id="app" class="container" style="display:none;">
+    <!-- Stats -->
+    <div class="stats" id="stats-section">
+      <div class="stat"><div class="stat-label">إجمالي الأخبار</div><div class="stat-value" id="stat-total">—</div></div>
+      <div class="stat"><div class="stat-label">المميّز</div><div class="stat-value" id="stat-featured">—</div></div>
+      <div class="stat"><div class="stat-label">آخر إضافة</div><div class="stat-value" id="stat-latest" style="font-size:14px;line-height:1.4;">—</div></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <h2>📰 إدارة الأخبار</h2>
+      <div class="actions">
+        <input class="search-box" id="search-input" type="text" placeholder="ابحث عن خبر..." oninput="onSearch()" />
+        <button class="btn btn-primary" onclick="openCreateModal()">+ خبر جديد</button>
+      </div>
+    </div>
+
+    <!-- News list -->
+    <div id="news-list-container">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div class="modal-overlay" id="news-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">خبر جديد</h3>
+        <button class="close-btn" onclick="closeModal()">×</button>
+      </div>
+      <div id="modal-msg"></div>
+      <div class="form-grid">
+        <div class="field">
+          <label>العنوان بالعربية *</label>
+          <input id="f-titleAr" type="text" placeholder="مثال: إعمار تستحوذ على شركة..." />
+        </div>
+        <div class="field">
+          <label>Title in English *</label>
+          <input id="f-titleEn" type="text" placeholder="e.g., Emaar acquires..." dir="ltr" />
+        </div>
+        <div class="field field-full">
+          <label>الملخص بالعربية *</label>
+          <textarea id="f-excerptAr" placeholder="ملخص قصير عن الخبر بالعربية..."></textarea>
+        </div>
+        <div class="field field-full">
+          <label>Excerpt in English *</label>
+          <textarea id="f-excerptEn" placeholder="Short summary in English..." dir="ltr"></textarea>
+        </div>
+        <div class="field">
+          <label>التصنيف *</label>
+          <select id="f-category">
+            <option value="business">أعمال</option>
+            <option value="markets">أسواق</option>
+            <option value="realestate">عقارات</option>
+            <option value="tech">تكنولوجيا</option>
+            <option value="energy">طاقة</option>
+            <option value="banking">بنوك</option>
+            <option value="startups">شركات ناشئة</option>
+            <option value="ma">صفقات واستحواذات</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>الكاتب *</label>
+          <input id="f-author" type="text" placeholder="فريق التحرير" />
+        </div>
+        <div class="field">
+          <label>تاريخ النشر</label>
+          <input id="f-publishedAt" type="datetime-local" />
+        </div>
+        <div class="field">
+          <label>رابط الصورة (اختياري)</label>
+          <input id="f-imageUrl" type="url" placeholder="https://..." dir="ltr" />
+        </div>
+        <div class="field field-full">
+          <label class="checkbox-row">
+            <input id="f-isFeatured" type="checkbox" />
+            <span>خبر مميّز (Featured) — يظهر في القسم الرئيسي</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+        <button class="btn btn-primary" id="save-btn" onclick="saveArticle()">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://cairo-business-backend.vercel.app';
+    const TOKEN_KEY = 'cb_auth_token';
+    const USER_KEY = 'cb_auth_user';
+
+    function getToken() { return localStorage.getItem(TOKEN_KEY); }
+    function getUser() { try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch(e){ return null; } }
+    function setAuth(t, u) { localStorage.setItem(TOKEN_KEY, t); localStorage.setItem(USER_KEY, JSON.stringify(u)); }
+    function clearAuth() { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); }
+
+    async function api(path, options = {}) {
+      const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+      const t = getToken();
+      if (t) headers['Authorization'] = 'Bearer ' + t;
+      const res = await fetch(API_BASE + path, { ...options, headers });
+      let data = null;
+      try { data = await res.json(); } catch(e) {}
+      return { ok: res.ok, status: res.status, data };
+    }
+
+    // ─── Login ─────────────────────────────
+    async function doLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const msg = document.getElementById('login-msg');
+      const btn = document.getElementById('login-btn');
+      msg.innerHTML = '';
+      if (!email || !password) {
+        msg.innerHTML = '<div class="msg msg-error">يرجى إدخال البريد وكلمة المرور</div>';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'جاري التحقق...';
+      try {
+        const r = await api('/api/auth/signin', { method: 'POST', body: JSON.stringify({ email, password }) });
+        if (!r.ok || !r.data?.data?.token) {
+          msg.innerHTML = '<div class="msg msg-error">البريد أو كلمة المرور غير صحيحة</div>';
+          return;
+        }
+        const user = r.data.data.user;
+        if (user.role !== 'ADMIN') {
+          msg.innerHTML = '<div class="msg msg-error">⚠️ هذا الحساب ليس له صلاحيات الأدمن</div>';
+          return;
+        }
+        setAuth(r.data.data.token, user);
+        msg.innerHTML = '<div class="msg msg-success">✓ تم تسجيل الدخول بنجاح</div>';
+        setTimeout(() => boot(), 600);
+      } catch (e) {
+        msg.innerHTML = '<div class="msg msg-error">حدث خطأ أثناء الاتصال بالخادم</div>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'تسجيل الدخول';
+      }
+    }
+
+    function logout() {
+      if (!confirm('هل تريد تسجيل الخروج؟')) return;
+      clearAuth();
+      location.reload();
+    }
+
+    // ─── Boot ──────────────────────────────
+    async function boot() {
+      const u = getUser();
+      const t = getToken();
+      if (!t || !u) {
+        document.getElementById('login-screen').style.display = 'grid';
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('app-header').style.display = 'none';
+        return;
+      }
+      if (u.role !== 'ADMIN') {
+        clearAuth();
+        document.getElementById('login-screen').style.display = 'grid';
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('app-header').style.display = 'none';
+        return;
+      }
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('app-header').style.display = 'flex';
+      document.getElementById('user-name').textContent = u.name || u.email;
+      await loadNews();
+    }
+
+    // ─── News list ─────────────────────────
+    let currentNews = [];
+    let searchTimer = null;
+
+    function onSearch() {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(loadNews, 300);
+    }
+
+    async function loadNews() {
+      const container = document.getElementById('news-list-container');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      const search = document.getElementById('search-input').value.trim();
+      const qs = search ? '?search=' + encodeURIComponent(search) + '&limit=100' : '?limit=100';
+      const r = await api('/api/admin/news' + qs);
+      if (!r.ok) {
+        container.innerHTML = '<div class="msg msg-error">تعذّر تحميل الأخبار: ' + (r.data?.error || 'خطأ') + '</div>';
+        return;
+      }
+      currentNews = r.data.data || [];
+      const total = r.data.meta?.total || currentNews.length;
+      const featuredCount = currentNews.filter(n => n.isFeatured).length;
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-featured').textContent = featuredCount;
+      document.getElementById('stat-latest').textContent = currentNews[0] ? (currentNews[0].titleAr || currentNews[0].titleEn).slice(0, 30) + '...' : 'لا يوجد';
+      renderNews();
+    }
+
+    function renderNews() {
+      const container = document.getElementById('news-list-container');
+      if (!currentNews.length) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">📰</div><div class="title">لا توجد أخبار بعد</div><div>دوس "خبر جديد" لإضافة أول خبر.</div></div>';
+        return;
+      }
+      const html = currentNews.map(n => `
+        <div class="news-row">
+          <div class="news-thumb">${n.imageUrl ? `<img src="${escapeHtml(n.imageUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" onerror="this.style.display='none'" />` : '📰'}</div>
+          <div>
+            <div class="news-meta">
+              <span class="pill">${escapeHtml(n.category)}</span>
+              ${n.isFeatured ? '<span class="pill pill-featured">⭐ مميّز</span>' : ''}
+              <span>${escapeHtml(n.author)}</span>
+              <span>•</span>
+              <span>${formatDate(n.publishedAt)}</span>
+            </div>
+            <div class="news-title">${escapeHtml(n.titleAr)}</div>
+            <div class="news-excerpt">${escapeHtml((n.excerptAr || '').slice(0, 140))}${n.excerptAr && n.excerptAr.length > 140 ? '...' : ''}</div>
+          </div>
+          <div class="news-actions">
+            <button class="btn btn-ghost btn-sm" onclick="editArticle('${n.id}')">✏️ تعديل</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteArticle('${n.id}')">🗑️ حذف</button>
+          </div>
+        </div>
+      `).join('');
+      container.innerHTML = '<div class="news-grid">' + html + '</div>';
+    }
+
+    function escapeHtml(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function formatDate(d) { try { return new Date(d).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric' }); } catch(e){ return ''; } }
+
+    // ─── Create / Edit ─────────────────────
+    let editingId = null;
+
+    function openCreateModal() {
+      editingId = null;
+      document.getElementById('modal-title').textContent = 'خبر جديد';
+      document.getElementById('f-titleAr').value = '';
+      document.getElementById('f-titleEn').value = '';
+      document.getElementById('f-excerptAr').value = '';
+      document.getElementById('f-excerptEn').value = '';
+      document.getElementById('f-category').value = 'business';
+      document.getElementById('f-author').value = 'فريق التحرير';
+      document.getElementById('f-publishedAt').value = new Date().toISOString().slice(0, 16);
+      document.getElementById('f-imageUrl').value = '';
+      document.getElementById('f-isFeatured').checked = false;
+      document.getElementById('modal-msg').innerHTML = '';
+      document.getElementById('news-modal').classList.add('open');
+    }
+
+    function editArticle(id) {
+      const n = currentNews.find(x => x.id === id);
+      if (!n) return;
+      editingId = id;
+      document.getElementById('modal-title').textContent = 'تعديل الخبر';
+      document.getElementById('f-titleAr').value = n.titleAr || '';
+      document.getElementById('f-titleEn').value = n.titleEn || '';
+      document.getElementById('f-excerptAr').value = n.excerptAr || '';
+      document.getElementById('f-excerptEn').value = n.excerptEn || '';
+      document.getElementById('f-category').value = n.category || 'business';
+      document.getElementById('f-author').value = n.author || '';
+      document.getElementById('f-publishedAt').value = n.publishedAt ? new Date(n.publishedAt).toISOString().slice(0, 16) : '';
+      document.getElementById('f-imageUrl').value = n.imageUrl || '';
+      document.getElementById('f-isFeatured').checked = !!n.isFeatured;
+      document.getElementById('modal-msg').innerHTML = '';
+      document.getElementById('news-modal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('news-modal').classList.remove('open');
+    }
+
+    async function saveArticle() {
+      const msg = document.getElementById('modal-msg');
+      const btn = document.getElementById('save-btn');
+      msg.innerHTML = '';
+
+      const payload = {
+        titleAr: document.getElementById('f-titleAr').value.trim(),
+        titleEn: document.getElementById('f-titleEn').value.trim(),
+        excerptAr: document.getElementById('f-excerptAr').value.trim(),
+        excerptEn: document.getElementById('f-excerptEn').value.trim(),
+        category: document.getElementById('f-category').value,
+        author: document.getElementById('f-author').value.trim(),
+        publishedAt: document.getElementById('f-publishedAt').value || new Date().toISOString(),
+        imageUrl: document.getElementById('f-imageUrl').value.trim() || null,
+        isFeatured: document.getElementById('f-isFeatured').checked,
+      };
+      if (!payload.titleAr || !payload.titleEn || !payload.excerptAr || !payload.excerptEn || !payload.author) {
+        msg.innerHTML = '<div class="msg msg-error">يرجى ملء كل الحقول المطلوبة (*)</div>';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'جاري الحفظ...';
+      try {
+        const r = editingId
+          ? await api('/api/admin/news/' + editingId, { method: 'PUT', body: JSON.stringify(payload) })
+          : await api('/api/admin/news', { method: 'POST', body: JSON.stringify(payload) });
+        if (!r.ok) {
+          msg.innerHTML = '<div class="msg msg-error">' + (r.data?.error || 'فشل الحفظ') + '</div>';
+          return;
+        }
+        closeModal();
+        await loadNews();
+      } catch (e) {
+        msg.innerHTML = '<div class="msg msg-error">حدث خطأ في الاتصال</div>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'حفظ';
+      }
+    }
+
+    async function deleteArticle(id) {
+      const n = currentNews.find(x => x.id === id);
+      if (!confirm('هل أنت متأكد من حذف الخبر "' + (n?.titleAr || '') + '"؟ لا يمكن التراجع.')) return;
+      const r = await api('/api/admin/news/' + id, { method: 'DELETE' });
+      if (!r.ok) {
+        alert('فشل الحذف: ' + (r.data?.error || 'خطأ'));
+        return;
+      }
+      await loadNews();
+    }
+
+    // Allow Enter to submit login
+    document.getElementById('login-password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+
+    boot();
+  </script>
+</body>
+</html>
