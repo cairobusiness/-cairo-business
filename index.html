@@ -5511,27 +5511,27 @@
       </div>
 
       <div class="grid lg:grid-cols-3 gap-6">
-        <!-- Hero story -->
-        <article class="lg:col-span-2 card glass-light border border-white/10 rounded-3xl overflow-hidden">
+        <!-- Hero story (populated by renderNewsList from API) -->
+        <article id="news-hero" class="lg:col-span-2 card glass-light border border-white/10 rounded-3xl overflow-hidden">
           <div class="relative h-64 lg:h-80 bg-gradient-to-br from-navy-600 to-navy-800 overflow-hidden">
             <div class="absolute inset-0" style="background:
               radial-gradient(circle at 30% 40%, rgba(201,162,39,0.35), transparent 50%),
               radial-gradient(circle at 70% 60%, rgba(54,92,178,0.4), transparent 50%);">
             </div>
             <div class="absolute top-4 start-4 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider" data-i18n="news.breaking">عاجل</div>
-            <div class="absolute top-4 end-4 bg-gold-500 text-navy-900 text-[10px] font-bold px-2 py-1 rounded-full">AI Score <span class="num">92</span></div>
+            <div class="absolute top-4 end-4 bg-gold-500 text-navy-900 text-[10px] font-bold px-2 py-1 rounded-full">AI Score <span class="num" id="news-hero-score">92</span></div>
             <svg class="absolute bottom-4 end-4 w-20 h-20 text-white/10" viewBox="0 0 100 100" fill="currentColor"><path d="M50 10 L10 90 L90 90 Z"/></svg>
           </div>
           <div class="p-6 lg:p-8">
             <div class="flex items-center gap-3 text-xs text-white/50 mb-3">
-              <span class="text-gold-400 font-semibold" data-i18n="news.cat.markets">الأسواق</span>
+              <span class="text-gold-400 font-semibold" id="news-hero-cat">الأسواق</span>
               <span>•</span>
-              <span class="num">2h</span>
+              <span class="num" id="news-hero-time">2h</span>
               <span>•</span>
-              <span data-i18n="news.author1">محمد الغمراوي</span>
+              <span id="news-hero-author">فريق التحرير</span>
             </div>
-            <h3 class="font-display text-2xl lg:text-3xl font-black text-white mb-3" data-i18n="news.hero.title">البنك المركزي يثبّت أسعار الفائدة — إشارة خضراء للمطورين العقاريين</h3>
-            <p class="text-white/60 clamp-3" data-i18n="news.hero.excerpt">قرار لجنة السياسة النقدية بتثبيت الفائدة يضع ضغطاً على البنوك لإعادة إطلاق برامج التمويل العقاري المجمّد، ويفتح نافذة نادرة لمطوري المدن الجديدة قبل نهاية الربع الثالث.</p>
+            <h3 class="font-display text-2xl lg:text-3xl font-black text-white mb-3" id="news-hero-title">جاري التحميل...</h3>
+            <p class="text-white/60 clamp-3" id="news-hero-excerpt">نقوم بتحميل أحدث الأخبار من الخادم.</p>
             <div class="mt-5 flex items-center gap-3">
               <button class="inline-flex items-center gap-2 bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/30 text-gold-400 text-xs font-semibold px-3 py-2 rounded-full">
                 <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
@@ -11021,8 +11021,123 @@
     function renderMessages(){ /* stub */ }
     function renderPartnerships(){ /* stub */ }
 
-    function renderNewsList(){
+    /* ============== NEWS FROM BACKEND API ============== */
+    const NEWS_API_URL = 'https://cairo-business-backend.vercel.app/api/news?limit=20';
+    let NEWS_FROM_API = null; // cache so language switch doesn't re-fetch
+    let NEWS_FETCH_IN_FLIGHT = null;
+
+    // Translate raw category slug → display label per language
+    const NEWS_CAT_LABELS = {
+      ar: {
+        realestate:'عقارات', banking:'بنوك', tech:'تكنولوجيا', markets:'أسواق',
+        energy:'طاقة', ma:'استحواذ', startups:'ستارت اب', business:'أعمال',
+        economy:'اقتصاد', auto:'سيارات', healthcare:'صحة', logistics:'لوجستيات'
+      },
+      en: {
+        realestate:'Real Estate', banking:'Banking', tech:'Tech', markets:'Markets',
+        energy:'Energy', ma:'M&A', startups:'Startups', business:'Business',
+        economy:'Economy', auto:'Auto', healthcare:'Healthcare', logistics:'Logistics'
+      }
+    };
+
+    // Human-readable "time ago" string from ISO date
+    function newsTimeAgo(iso, lang){
+      if (!iso) return '';
+      const then = new Date(iso).getTime();
+      const diff = Math.max(0, Date.now() - then);
+      const m = Math.floor(diff / 60000);
+      const h = Math.floor(diff / 3600000);
+      const d = Math.floor(diff / 86400000);
+      if (lang === 'ar'){
+        if (d > 0) return `منذ ${d} ${d === 1 ? 'يوم' : 'أيام'}`;
+        if (h > 0) return `منذ ${h} ${h === 1 ? 'ساعة' : 'ساعات'}`;
+        if (m > 0) return `منذ ${m} دقيقة`;
+        return 'الآن';
+      } else {
+        if (d > 0) return `${d}d ago`;
+        if (h > 0) return `${h}h ago`;
+        if (m > 0) return `${m}m ago`;
+        return 'now';
+      }
+    }
+
+    // Deterministic AI score from id so each article has a stable badge
+    function newsAiScore(item){
+      const seed = (item.id || item.titleEn || '').toString();
+      let h = 0;
+      for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
+      return 65 + Math.abs(h) % 31; // 65..95
+    }
+
+    async function fetchNewsOnce(){
+      if (NEWS_FROM_API) return NEWS_FROM_API;
+      if (NEWS_FETCH_IN_FLIGHT) return NEWS_FETCH_IN_FLIGHT;
+      NEWS_FETCH_IN_FLIGHT = (async () => {
+        try {
+          const res = await fetch(NEWS_API_URL, { cache: 'no-store' });
+          if (!res.ok) throw new Error('news fetch failed: ' + res.status);
+          const json = await res.json();
+          if (!json || !json.success || !Array.isArray(json.data)) throw new Error('bad shape');
+          NEWS_FROM_API = json.data;
+          return NEWS_FROM_API;
+        } catch (err) {
+          console.warn('[news] API fetch failed, falling back to local list:', err);
+          NEWS_FROM_API = null;
+          return null;
+        } finally {
+          NEWS_FETCH_IN_FLIGHT = null;
+        }
+      })();
+      return NEWS_FETCH_IN_FLIGHT;
+    }
+
+    function paintHeroFromApi(item){
+      if (!item) return;
+      const isAr = currentLang === 'ar';
+      const catSlug = (item.category || '').toLowerCase();
+      const cat = (NEWS_CAT_LABELS[isAr ? 'ar' : 'en'][catSlug]) || item.category || '';
+      const titleEl = document.getElementById('news-hero-title');
+      const excerptEl = document.getElementById('news-hero-excerpt');
+      const catEl = document.getElementById('news-hero-cat');
+      const timeEl = document.getElementById('news-hero-time');
+      const authorEl = document.getElementById('news-hero-author');
+      const scoreEl = document.getElementById('news-hero-score');
+      if (titleEl) titleEl.textContent = isAr ? (item.titleAr || item.titleEn) : (item.titleEn || item.titleAr);
+      if (excerptEl) excerptEl.textContent = isAr ? (item.excerptAr || item.excerptEn || '') : (item.excerptEn || item.excerptAr || '');
+      if (catEl) catEl.textContent = cat;
+      if (timeEl) timeEl.textContent = newsTimeAgo(item.publishedAt, currentLang);
+      if (authorEl) authorEl.textContent = item.author || (isAr ? 'فريق التحرير' : 'Editorial Team');
+      if (scoreEl) scoreEl.textContent = newsAiScore(item);
+    }
+
+    function paintListFromApi(items){
       const wrap = $('#news-list');
+      if (!wrap) return;
+      const isAr = currentLang === 'ar';
+      wrap.innerHTML = items.map(n => {
+        const catSlug = (n.category || '').toLowerCase();
+        const cat = (NEWS_CAT_LABELS[isAr ? 'ar' : 'en'][catSlug]) || n.category || '';
+        const title = isAr ? (n.titleAr || n.titleEn) : (n.titleEn || n.titleAr);
+        const time = newsTimeAgo(n.publishedAt, currentLang);
+        const score = newsAiScore(n);
+        return `
+          <a href="#" class="card glass-light border border-white/10 rounded-2xl p-4 flex gap-4 hover:border-gold-500/50 transition">
+            <div class="shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-navy-600 to-navy-800 grid place-items-center text-gold-400 font-black text-sm num border border-white/10">${score}</div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 text-[11px] text-white/50 mb-1">
+                <span class="text-gold-400 font-semibold">${cat}</span>
+                <span>•</span>
+                <span class="num">${time}</span>
+              </div>
+              <h4 class="text-sm font-bold text-white clamp-2">${title}</h4>
+            </div>
+          </a>`;
+      }).join('');
+    }
+
+    function paintListFromFallback(){
+      const wrap = $('#news-list');
+      if (!wrap) return;
       wrap.innerHTML = NEWS_LIST.map(n => {
         const cat = currentLang === 'ar' ? n.cat_ar : n.cat_en;
         const title = currentLang === 'ar' ? n.title_ar : n.title_en;
@@ -11039,6 +11154,44 @@
             </div>
           </a>`;
       }).join('');
+    }
+
+    function paintHeroFromFallback(){
+      // Use first item from NEWS_LIST as a hero stand-in when API is down
+      const n = NEWS_LIST && NEWS_LIST[0];
+      if (!n) return;
+      const isAr = currentLang === 'ar';
+      const titleEl = document.getElementById('news-hero-title');
+      const excerptEl = document.getElementById('news-hero-excerpt');
+      const catEl = document.getElementById('news-hero-cat');
+      const timeEl = document.getElementById('news-hero-time');
+      const authorEl = document.getElementById('news-hero-author');
+      const scoreEl = document.getElementById('news-hero-score');
+      if (titleEl) titleEl.textContent = isAr ? n.title_ar : n.title_en;
+      if (excerptEl) excerptEl.textContent = isAr
+        ? 'تحليل اقتصادي عاجل ومتابعة لحركة السوق على مدار اليوم.'
+        : 'Breaking economic analysis and intraday market tracking.';
+      if (catEl) catEl.textContent = isAr ? n.cat_ar : n.cat_en;
+      if (timeEl) timeEl.textContent = n.time;
+      if (authorEl) authorEl.textContent = isAr ? 'فريق التحرير' : 'Editorial Team';
+      if (scoreEl) scoreEl.textContent = n.score;
+    }
+
+    async function renderNewsList(){
+      const items = await fetchNewsOnce();
+      if (items && items.length){
+        // Pick a featured story for the hero (fallback to first item)
+        const hero = items.find(x => x.isFeatured) || items[0];
+        paintHeroFromApi(hero);
+        // Show up to 4 other items in the side list (exclude the hero)
+        const rest = items.filter(x => x.id !== hero.id).slice(0, 4);
+        paintListFromApi(rest);
+      } else {
+        // Backend unreachable — show hardcoded fallback so the section is never empty
+        paintHeroFromFallback();
+        paintListFromFallback();
+      }
+      if (window.lucide) try { lucide.createIcons(); } catch(_){}
     }
 
     function renderTop10Tabs(){
