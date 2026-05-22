@@ -7115,29 +7115,8 @@
           <p class="mt-3 text-white/60 max-w-2xl" data-i18n="events.subtitle">تقويم شامل بكل الفعاليات الاقتصادية والمؤتمرات والمعارض في مصر.</p>
         </div>
       </div>
-      <!-- Calendar wrapper -->
-      <div class="ev-cal-wrap">
-        <div class="ev-cal-toolbar">
-          <div class="ev-cal-nav">
-            <button type="button" class="ev-cal-navbtn" id="ev-cal-prev" aria-label="Previous month"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-            <div class="ev-cal-month-label" id="ev-cal-label">—</div>
-            <button type="button" class="ev-cal-navbtn" id="ev-cal-next" aria-label="Next month"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-            <button type="button" class="ev-cal-today" id="ev-cal-today" data-i18n="events.cal.today">Today</button>
-          </div>
-          <div class="ev-cal-filters" id="events-filters"></div>
-        </div>
-        <div class="ev-cal-grid">
-          <div class="ev-cal-weekdays" id="ev-cal-weekdays"></div>
-          <div class="ev-cal-days" id="ev-cal-days"></div>
-        </div>
-        <div class="ev-cal-legend">
-          <span class="ev-leg" style="--lc:#34d399"><span class="ev-leg-dot"></span><span data-i18n="events.cal.legendTech">Tech</span></span>
-          <span class="ev-leg" style="--lc:#f4d03f"><span class="ev-leg-dot"></span><span data-i18n="events.cal.legendConf">Conference</span></span>
-          <span class="ev-leg" style="--lc:#60a5fa"><span class="ev-leg-dot"></span><span data-i18n="events.cal.legendTrade">Trade fair</span></span>
-          <span class="ev-leg" style="--lc:#ec4899"><span class="ev-leg-dot"></span><span data-i18n="events.cal.legendRealestate">Real estate</span></span>
-          <span class="ev-leg" style="--lc:#a78bfa"><span class="ev-leg-dot"></span><span data-i18n="events.cal.legendInvest">Investment</span></span>
-        </div>
-      </div>
+      <!-- Events grid (populated by renderEvents from API) -->
+      <div id="events-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
       <!-- Hidden legacy container so old hooks don't crash -->
       <div class="hidden" id="events-cards" aria-hidden="true"></div>
     </div>
@@ -11004,8 +10983,108 @@
       document.body.style.overflow = '';
     }
 
-    // Stub functions (originals were removed during file fix earlier — these prevent applyLang errors)
-    function renderEvents(){ /* events section data was truncated; safe no-op */ }
+    /* ============== EVENTS FROM BACKEND API ============== */
+    const EVENTS_API_URL = 'https://cairo-business-backend.vercel.app/api/events?limit=12';
+    let EVENTS_FROM_API = null;
+    let EVENTS_FETCH_IN_FLIGHT = null;
+    const EVENT_TYPE_LABELS = {
+      ar: { conference:'مؤتمر', summit:'قمة', workshop:'ورشة', seminar:'ندوة', networking:'تواصل', exhibition:'معرض', launch:'إطلاق' },
+      en: { conference:'Conference', summit:'Summit', workshop:'Workshop', seminar:'Seminar', networking:'Networking', exhibition:'Exhibition', launch:'Launch' }
+    };
+    const COUNTRY_LABELS = {
+      ar: { EG:'مصر', SA:'السعودية', AE:'الإمارات', KW:'الكويت', QA:'قطر', BH:'البحرين', OM:'عُمان', JO:'الأردن', LB:'لبنان', MA:'المغرب', TN:'تونس' },
+      en: { EG:'Egypt', SA:'Saudi Arabia', AE:'UAE', KW:'Kuwait', QA:'Qatar', BH:'Bahrain', OM:'Oman', JO:'Jordan', LB:'Lebanon', MA:'Morocco', TN:'Tunisia' }
+    };
+
+    async function fetchEventsOnce() {
+      if (EVENTS_FROM_API) return EVENTS_FROM_API;
+      if (EVENTS_FETCH_IN_FLIGHT) return EVENTS_FETCH_IN_FLIGHT;
+      EVENTS_FETCH_IN_FLIGHT = (async () => {
+        try {
+          const r = await fetch(EVENTS_API_URL, { cache: 'no-store' });
+          if (!r.ok) throw new Error('events fetch failed');
+          const j = await r.json();
+          if (!j || !j.success || !Array.isArray(j.data)) throw new Error('bad shape');
+          EVENTS_FROM_API = j.data;
+          return EVENTS_FROM_API;
+        } catch (e) { console.warn('[events] API fetch failed:', e); EVENTS_FROM_API = null; return null; }
+        finally { EVENTS_FETCH_IN_FLIGHT = null; }
+      })();
+      return EVENTS_FETCH_IN_FLIGHT;
+    }
+
+    function formatEventDate(iso, lang) {
+      const d = new Date(iso);
+      if (lang === 'ar') {
+        return d.toLocaleDateString('ar-EG', { day:'numeric', month:'long', year:'numeric' });
+      }
+      return d.toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' });
+    }
+
+    async function renderEvents() {
+      const grid = document.getElementById('events-grid');
+      if (!grid) return;
+      const isAr = currentLang === 'ar';
+      const items = await fetchEventsOnce();
+      if (!items || !items.length) {
+        // Empty state — no events in DB yet
+        grid.innerHTML = `<div class="col-span-full text-center py-16 px-6 glass-light border border-white/10 rounded-3xl">
+          <div class="text-5xl mb-3 opacity-50">📅</div>
+          <div class="text-white font-bold text-lg mb-2">${isAr ? 'لا توجد فعاليات قادمة حالياً' : 'No upcoming events yet'}</div>
+          <div class="text-white/60 text-sm">${isAr ? 'ترقّب جدول فعالياتنا قريباً — أو أضف فعالية من لوحة التحكم.' : 'Stay tuned for our event lineup — or add one from the admin panel.'}</div>
+        </div>`;
+        return;
+      }
+      grid.innerHTML = items.map(e => {
+        const title = isAr ? (e.titleAr || e.titleEn) : (e.titleEn || e.titleAr);
+        const location = isAr ? (e.locationAr || e.locationEn) : (e.locationEn || e.locationAr);
+        const desc = isAr ? (e.descriptionAr || '') : (e.descriptionEn || '');
+        const typeKey = (e.type || '').toLowerCase();
+        const typeLabel = (EVENT_TYPE_LABELS[isAr ? 'ar' : 'en'][typeKey]) || e.type || '';
+        const countryLabel = (COUNTRY_LABELS[isAr ? 'ar' : 'en'][e.country]) || e.country || '';
+        const priceLabel = Number(e.price) > 0
+          ? `$${Number(e.price).toLocaleString()}`
+          : (isAr ? 'مجاني' : 'Free');
+        const typeColors = {
+          conference: 'from-amber-400/30 to-amber-600/30 text-amber-300 border-amber-400/40',
+          summit: 'from-purple-400/30 to-purple-600/30 text-purple-300 border-purple-400/40',
+          workshop: 'from-emerald-400/30 to-emerald-600/30 text-emerald-300 border-emerald-400/40',
+          seminar: 'from-cyan-400/30 to-cyan-600/30 text-cyan-300 border-cyan-400/40',
+          networking: 'from-pink-400/30 to-pink-600/30 text-pink-300 border-pink-400/40',
+          exhibition: 'from-blue-400/30 to-blue-600/30 text-blue-300 border-blue-400/40',
+          launch: 'from-rose-400/30 to-rose-600/30 text-rose-300 border-rose-400/40'
+        };
+        const colors = typeColors[typeKey] || 'from-gold-400/30 to-gold-600/30 text-gold-300 border-gold-400/40';
+        return `
+          <article class="card glass-light border border-white/10 rounded-3xl overflow-hidden hover:border-gold-500/40 transition group">
+            <div class="relative h-40 bg-gradient-to-br ${colors} grid place-items-center overflow-hidden">
+              <div class="text-5xl opacity-80">📅</div>
+              <div class="absolute top-3 start-3 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-black/40 border border-white/20 backdrop-blur">${typeLabel}</div>
+              <div class="absolute top-3 end-3 px-3 py-1 rounded-full text-[10px] font-black bg-gold-500 text-navy-900">${priceLabel}</div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center gap-2 text-xs text-white/50 mb-2">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5"></i><span>${location || '—'}</span>
+                <span>•</span>
+                <span class="text-gold-400 font-semibold">${countryLabel}</span>
+              </div>
+              <h3 class="font-display text-lg font-black text-white mb-2 clamp-2">${title}</h3>
+              ${desc ? `<p class="text-white/60 text-xs clamp-2 mb-3">${desc}</p>` : ''}
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5 text-white/60">
+                  <i data-lucide="calendar" class="w-3.5 h-3.5 text-gold-400"></i>
+                  <span>${formatEventDate(e.date, currentLang)}</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-white/60">
+                  <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                  <span class="num">${e.attendees || 0}</span>
+                </div>
+              </div>
+            </div>
+          </article>`;
+      }).join('');
+      if (window.lucide) try { lucide.createIcons(); } catch(_){}
+    }
     function renderNews(){ try { if (typeof renderNewsList === 'function') renderNewsList(); } catch(e){} }
     function renderCommunity(){ /* stub */ }
     function renderInsights(){ /* stub */ }
