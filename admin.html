@@ -52,7 +52,6 @@
     }
     textarea { min-height: 80px; resize: vertical; }
 
-    /* Header */
     header {
       background: rgba(17, 24, 39, 0.8);
       backdrop-filter: blur(12px);
@@ -65,22 +64,13 @@
       top: 0;
       z-index: 100;
     }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      font-size: 18px;
-    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; }
     .brand-mark {
       width: 32px; height: 32px;
       background: linear-gradient(135deg, var(--gold), var(--gold-2));
       border-radius: 8px;
-      display: grid;
-      place-items: center;
-      color: #0a0e1a;
-      font-weight: 900;
-      font-size: 14px;
+      display: grid; place-items: center;
+      color: #0a0e1a; font-weight: 900; font-size: 14px;
     }
     .header-actions { display: flex; align-items: center; gap: 16px; }
     .user-chip {
@@ -103,37 +93,18 @@
       color: #0a0e1a;
     }
     .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(212,175,55,0.3); }
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-2);
-      border: 1px solid var(--border-2);
-    }
+    .btn-ghost { background: transparent; color: var(--text-2); border: 1px solid var(--border-2); }
     .btn-ghost:hover { background: var(--card); color: var(--text); }
-    .btn-danger {
-      background: rgba(239,68,68,0.1);
-      color: var(--red);
-      border: 1px solid rgba(239,68,68,0.3);
-    }
+    .btn-danger { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
     .btn-danger:hover { background: rgba(239,68,68,0.2); }
     .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
 
-    /* Layout */
-    .container {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 32px 24px;
-    }
+    .container { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
 
-    /* Login screen */
-    .login-screen {
-      min-height: calc(100vh - 80px);
-      display: grid;
-      place-items: center;
-      padding: 24px;
-    }
+    /* Login */
+    .login-screen { min-height: calc(100vh - 80px); display: grid; place-items: center; padding: 24px; }
     .login-card {
-      width: 100%;
-      max-width: 420px;
+      width: 100%; max-width: 420px;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 18px;
@@ -143,23 +114,40 @@
     .login-card h1 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
     .login-card p { color: var(--text-2); margin-bottom: 24px; font-size: 14px; }
     .field { margin-bottom: 16px; }
-    .field label {
-      display: block;
-      font-size: 12px;
-      color: var(--text-2);
-      margin-bottom: 6px;
-      font-weight: 600;
-    }
-    .msg {
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 13px;
-      margin-bottom: 12px;
-    }
+    .field label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 6px; font-weight: 600; }
+    .msg { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 12px; }
     .msg-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
     .msg-success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
 
-    /* News list */
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    .tab {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-2);
+      background: transparent;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .tab:hover { color: var(--text); background: var(--card-2); }
+    .tab.active {
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #0a0e1a;
+    }
+    .tab-icon { margin-inline-end: 6px; }
+
+    /* Toolbar */
     .toolbar {
       display: flex;
       justify-content: space-between;
@@ -170,11 +158,7 @@
     }
     .toolbar h2 { font-size: 24px; font-weight: 800; }
     .toolbar .actions { display: flex; gap: 10px; align-items: center; }
-    .search-box {
-      width: 280px;
-      padding: 8px 12px;
-      font-size: 13px;
-    }
+    .search-box { width: 280px; padding: 8px 12px; font-size: 13px; }
 
     .stats {
       display: grid;
@@ -191,11 +175,8 @@
     .stat-label { color: var(--text-2); font-size: 12px; margin-bottom: 6px; }
     .stat-value { font-size: 24px; font-weight: 800; color: var(--gold); }
 
-    .news-grid {
-      display: grid;
-      gap: 14px;
-    }
-    .news-row {
+    .item-grid { display: grid; gap: 14px; }
+    .item-row {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -206,8 +187,8 @@
       align-items: center;
       transition: border-color 0.2s;
     }
-    .news-row:hover { border-color: var(--border-2); }
-    .news-thumb {
+    .item-row:hover { border-color: var(--border-2); }
+    .item-thumb {
       width: 80px;
       height: 80px;
       border-radius: 10px;
@@ -216,9 +197,11 @@
       display: grid;
       place-items: center;
       color: var(--text-3);
-      font-size: 11px;
+      font-size: 30px;
+      overflow: hidden;
     }
-    .news-meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+    .item-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+    .item-meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
     .pill {
       display: inline-block;
       padding: 3px 10px;
@@ -229,15 +212,15 @@
       color: var(--gold);
       border: 1px solid rgba(212,175,55,0.3);
     }
-    .pill-featured { background: rgba(16,185,129,0.12); color: var(--green); border-color: rgba(16,185,129,0.3); }
-    .news-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .news-excerpt { color: var(--text-2); font-size: 13px; }
-    .news-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .pill-green { background: rgba(16,185,129,0.12); color: var(--green); border-color: rgba(16,185,129,0.3); }
+    .pill-blue { background: rgba(59,130,246,0.12); color: var(--blue); border-color: rgba(59,130,246,0.3); }
+    .item-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .item-excerpt { color: var(--text-2); font-size: 13px; }
+    .item-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
     /* Modal */
     .modal-overlay {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background: rgba(0,0,0,0.7);
       backdrop-filter: blur(8px);
       z-index: 200;
@@ -271,16 +254,11 @@
       border-radius: 8px;
       background: var(--card-2);
       color: var(--text);
-      display: grid;
-      place-items: center;
+      display: grid; place-items: center;
       font-size: 18px;
     }
     .close-btn:hover { background: rgba(239,68,68,0.2); color: var(--red); }
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .form-grid .field-full { grid-column: 1 / -1; }
     .modal-footer {
       display: flex;
@@ -290,32 +268,14 @@
       padding-top: 18px;
       border-top: 1px solid var(--border);
     }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; }
+    .checkbox-row input { width: 18px; height: 18px; accent-color: var(--gold); }
 
-    .checkbox-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .checkbox-row input {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--gold);
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-2);
-    }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-2); }
     .empty-state .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
     .empty-state .title { font-size: 16px; color: var(--text); margin-bottom: 6px; font-weight: 600; }
 
-    .loading {
-      display: grid;
-      place-items: center;
-      padding: 60px;
-      color: var(--text-2);
-    }
+    .loading { display: grid; place-items: center; padding: 60px; color: var(--text-2); }
     .spinner {
       width: 28px; height: 28px;
       border: 3px solid var(--border);
@@ -327,29 +287,25 @@
 
     @media (max-width: 720px) {
       .form-grid { grid-template-columns: 1fr; }
-      .news-row { grid-template-columns: 1fr; }
-      .news-actions { justify-content: flex-end; }
+      .item-row { grid-template-columns: 1fr; }
+      .item-actions { justify-content: flex-end; }
       .toolbar { flex-direction: column; align-items: stretch; }
       .search-box { width: 100%; }
     }
   </style>
 </head>
 <body>
-  <!-- Header (visible after login) -->
   <header id="app-header" style="display:none;">
     <div class="brand">
       <div class="brand-mark">CB</div>
       <span>لوحة تحكم Cairo Business</span>
     </div>
     <div class="header-actions">
-      <div class="user-chip" id="user-chip">
-        <span id="user-name">—</span>
-      </div>
+      <div class="user-chip" id="user-chip"><span id="user-name">—</span></div>
       <button class="btn btn-ghost btn-sm" onclick="logout()">خروج</button>
     </div>
   </header>
 
-  <!-- Login screen -->
   <div id="login-screen" class="login-screen">
     <div class="login-card">
       <h1>🔐 لوحة التحكم</h1>
@@ -367,90 +323,37 @@
     </div>
   </div>
 
-  <!-- App (visible after login) -->
   <div id="app" class="container" style="display:none;">
+    <!-- Tabs -->
+    <div class="tabs" id="tabs"></div>
+
     <!-- Stats -->
-    <div class="stats" id="stats-section">
-      <div class="stat"><div class="stat-label">إجمالي الأخبار</div><div class="stat-value" id="stat-total">—</div></div>
-      <div class="stat"><div class="stat-label">المميّز</div><div class="stat-value" id="stat-featured">—</div></div>
-      <div class="stat"><div class="stat-label">آخر إضافة</div><div class="stat-value" id="stat-latest" style="font-size:14px;line-height:1.4;">—</div></div>
-    </div>
+    <div class="stats" id="stats-section"></div>
 
     <!-- Toolbar -->
     <div class="toolbar">
-      <h2>📰 إدارة الأخبار</h2>
+      <h2 id="page-title">—</h2>
       <div class="actions">
-        <input class="search-box" id="search-input" type="text" placeholder="ابحث عن خبر..." oninput="onSearch()" />
-        <button class="btn btn-primary" onclick="openCreateModal()">+ خبر جديد</button>
+        <input class="search-box" id="search-input" type="text" placeholder="ابحث..." oninput="onSearch()" />
+        <button class="btn btn-primary" onclick="openCreateModal()">+ <span id="create-label">جديد</span></button>
       </div>
     </div>
 
-    <!-- News list -->
-    <div id="news-list-container">
-      <div class="loading"><div class="spinner"></div></div>
-    </div>
+    <div id="list-container"><div class="loading"><div class="spinner"></div></div></div>
   </div>
 
-  <!-- Create/Edit Modal -->
-  <div class="modal-overlay" id="news-modal">
+  <!-- Generic create/edit modal -->
+  <div class="modal-overlay" id="item-modal">
     <div class="modal">
       <div class="modal-header">
-        <h3 id="modal-title">خبر جديد</h3>
+        <h3 id="modal-title">جديد</h3>
         <button class="close-btn" onclick="closeModal()">×</button>
       </div>
       <div id="modal-msg"></div>
-      <div class="form-grid">
-        <div class="field">
-          <label>العنوان بالعربية *</label>
-          <input id="f-titleAr" type="text" placeholder="مثال: إعمار تستحوذ على شركة..." />
-        </div>
-        <div class="field">
-          <label>Title in English *</label>
-          <input id="f-titleEn" type="text" placeholder="e.g., Emaar acquires..." dir="ltr" />
-        </div>
-        <div class="field field-full">
-          <label>الملخص بالعربية *</label>
-          <textarea id="f-excerptAr" placeholder="ملخص قصير عن الخبر بالعربية..."></textarea>
-        </div>
-        <div class="field field-full">
-          <label>Excerpt in English *</label>
-          <textarea id="f-excerptEn" placeholder="Short summary in English..." dir="ltr"></textarea>
-        </div>
-        <div class="field">
-          <label>التصنيف *</label>
-          <select id="f-category">
-            <option value="business">أعمال</option>
-            <option value="markets">أسواق</option>
-            <option value="realestate">عقارات</option>
-            <option value="tech">تكنولوجيا</option>
-            <option value="energy">طاقة</option>
-            <option value="banking">بنوك</option>
-            <option value="startups">شركات ناشئة</option>
-            <option value="ma">صفقات واستحواذات</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>الكاتب *</label>
-          <input id="f-author" type="text" placeholder="فريق التحرير" />
-        </div>
-        <div class="field">
-          <label>تاريخ النشر</label>
-          <input id="f-publishedAt" type="datetime-local" />
-        </div>
-        <div class="field">
-          <label>رابط الصورة (اختياري)</label>
-          <input id="f-imageUrl" type="url" placeholder="https://..." dir="ltr" />
-        </div>
-        <div class="field field-full">
-          <label class="checkbox-row">
-            <input id="f-isFeatured" type="checkbox" />
-            <span>خبر مميّز (Featured) — يظهر في القسم الرئيسي</span>
-          </label>
-        </div>
-      </div>
+      <div class="form-grid" id="form-fields"></div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
-        <button class="btn btn-primary" id="save-btn" onclick="saveArticle()">حفظ</button>
+        <button class="btn btn-primary" id="save-btn" onclick="saveItem()">حفظ</button>
       </div>
     </div>
   </div>
@@ -464,6 +367,9 @@
     function getUser() { try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch(e){ return null; } }
     function setAuth(t, u) { localStorage.setItem(TOKEN_KEY, t); localStorage.setItem(USER_KEY, JSON.stringify(u)); }
     function clearAuth() { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); }
+    function escapeHtml(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function formatDate(d) { try { return new Date(d).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric' }); } catch(e){ return ''; } }
+    function nowLocalISO() { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,16); }
 
     async function api(path, options = {}) {
       const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
@@ -475,17 +381,154 @@
       return { ok: res.ok, status: res.status, data };
     }
 
-    // ─── Login ─────────────────────────────
+    /* ═══════════════════════════════════════════════════════════
+       ENTITY CONFIG — each tab is a row here
+       ═════════════════════════════════════════════════════════ */
+    const ENTITIES = {
+      news: {
+        key: 'news', icon: '📰', nameAr: 'الأخبار', singularAr: 'خبر',
+        endpoint: '/api/admin/news',
+        fields: [
+          { id: 'titleAr', label: 'العنوان بالعربية *', type: 'text', required: true },
+          { id: 'titleEn', label: 'Title in English *', type: 'text', required: true, dir: 'ltr' },
+          { id: 'excerptAr', label: 'الملخص بالعربية *', type: 'textarea', required: true, full: true },
+          { id: 'excerptEn', label: 'Excerpt in English *', type: 'textarea', required: true, full: true, dir: 'ltr' },
+          { id: 'category', label: 'التصنيف *', type: 'select', required: true, options: [
+            ['business','أعمال'],['markets','أسواق'],['realestate','عقارات'],['tech','تكنولوجيا'],
+            ['energy','طاقة'],['banking','بنوك'],['startups','شركات ناشئة'],['ma','صفقات واستحواذات']
+          ]},
+          { id: 'author', label: 'الكاتب *', type: 'text', required: true, default: 'فريق التحرير' },
+          { id: 'publishedAt', label: 'تاريخ النشر', type: 'datetime-local', default: () => nowLocalISO() },
+          { id: 'imageUrl', label: 'رابط الصورة (اختياري)', type: 'url', dir: 'ltr', nullable: true },
+          { id: 'isFeatured', label: 'خبر مميّز — يظهر في القسم الرئيسي', type: 'checkbox', full: true }
+        ],
+        list: {
+          title: n => n.titleAr,
+          excerpt: n => (n.excerptAr || '').slice(0, 140) + ((n.excerptAr || '').length > 140 ? '...' : ''),
+          thumb: n => n.imageUrl,
+          emoji: '📰',
+          badges: n => [
+            { text: n.category, kind: 'gold' },
+            ...(n.isFeatured ? [{ text: '⭐ مميّز', kind: 'green' }] : []),
+          ],
+          meta: n => [n.author, formatDate(n.publishedAt)]
+        },
+        stats: items => ({
+          'إجمالي الأخبار': items.length,
+          'المميّز': items.filter(n => n.isFeatured).length,
+          'آخر إضافة': items[0] ? (items[0].titleAr || items[0].titleEn).slice(0, 30) + '...' : 'لا يوجد'
+        })
+      },
+
+      events: {
+        key: 'events', icon: '📅', nameAr: 'الفعاليات', singularAr: 'فعالية',
+        endpoint: '/api/admin/events',
+        fields: [
+          { id: 'titleAr', label: 'العنوان بالعربية *', type: 'text', required: true },
+          { id: 'titleEn', label: 'Title in English *', type: 'text', required: true, dir: 'ltr' },
+          { id: 'locationAr', label: 'المكان بالعربية *', type: 'text', required: true },
+          { id: 'locationEn', label: 'Location in English *', type: 'text', required: true, dir: 'ltr' },
+          { id: 'date', label: 'التاريخ والوقت *', type: 'datetime-local', required: true, default: () => nowLocalISO() },
+          { id: 'type', label: 'نوع الفعالية *', type: 'select', required: true, options: [
+            ['conference','مؤتمر'],['summit','قمة'],['workshop','ورشة عمل'],['seminar','ندوة'],
+            ['networking','تواصل'],['exhibition','معرض'],['launch','إطلاق']
+          ]},
+          { id: 'country', label: 'الدولة *', type: 'select', required: true, options: [
+            ['EG','مصر'],['SA','السعودية'],['AE','الإمارات'],['KW','الكويت'],['QA','قطر'],
+            ['BH','البحرين'],['OM','عُمان'],['JO','الأردن'],['LB','لبنان'],['MA','المغرب'],['TN','تونس']
+          ]},
+          { id: 'attendees', label: 'عدد الحضور المتوقع', type: 'number', default: 0 },
+          { id: 'price', label: 'سعر التذكرة (USD)', type: 'number', default: 0 },
+          { id: 'descriptionAr', label: 'الوصف بالعربية', type: 'textarea', full: true, nullable: true },
+          { id: 'descriptionEn', label: 'Description in English', type: 'textarea', full: true, dir: 'ltr', nullable: true },
+          { id: 'speakers', label: 'المتحدثون (مفصول بفاصلة)', type: 'text', nullable: true },
+          { id: 'topics', label: 'المواضيع (مفصول بفاصلة)', type: 'text', nullable: true }
+        ],
+        list: {
+          title: e => e.titleAr,
+          excerpt: e => (e.descriptionAr || '').slice(0, 140) + ((e.descriptionAr || '').length > 140 ? '...' : ''),
+          emoji: '📅',
+          badges: e => [
+            { text: e.type, kind: 'gold' },
+            { text: e.country, kind: 'blue' },
+            ...(Number(e.price) > 0 ? [{ text: e.price + ' USD', kind: 'green' }] : [{ text: 'مجاني', kind: 'green' }])
+          ],
+          meta: e => [e.locationAr, formatDate(e.date), (e.attendees || 0) + ' حاضر']
+        },
+        stats: items => ({
+          'إجمالي الفعاليات': items.length,
+          'قادمة': items.filter(e => new Date(e.date) > new Date()).length,
+          'أقرب فعالية': (() => {
+            const upcoming = items.filter(e => new Date(e.date) > new Date()).sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
+            return upcoming ? (upcoming.titleAr || '').slice(0, 30) + '...' : 'لا يوجد';
+          })()
+        })
+      },
+
+      companies: {
+        key: 'companies', icon: '🏢', nameAr: 'الشركات', singularAr: 'شركة',
+        endpoint: '/api/admin/companies',
+        fields: [
+          { id: 'nameAr', label: 'الاسم بالعربية *', type: 'text', required: true },
+          { id: 'nameEn', label: 'Name in English *', type: 'text', required: true, dir: 'ltr' },
+          { id: 'sectorAr', label: 'القطاع بالعربية *', type: 'text', required: true, placeholder: 'مثل: عقارات' },
+          { id: 'sectorEn', label: 'Sector in English *', type: 'text', required: true, dir: 'ltr', placeholder: 'e.g., Real Estate' },
+          { id: 'country', label: 'الدولة *', type: 'select', required: true, options: [
+            ['EG','مصر'],['SA','السعودية'],['AE','الإمارات'],['KW','الكويت'],['QA','قطر'],
+            ['BH','البحرين'],['OM','عُمان'],['JO','الأردن'],['LB','لبنان'],['MA','المغرب'],['TN','تونس']
+          ]},
+          { id: 'hq', label: 'المقر الرئيسي', type: 'text', nullable: true, placeholder: 'القاهرة، مصر' },
+          { id: 'revenue', label: 'الإيرادات (مليون $)', type: 'number', nullable: true, step: '0.01' },
+          { id: 'growth', label: 'نسبة النمو (%)', type: 'number', nullable: true, step: '0.01' },
+          { id: 'employees', label: 'عدد الموظفين', type: 'number', nullable: true },
+          { id: 'marketCap', label: 'القيمة السوقية (مليون $)', type: 'number', nullable: true, step: '0.01' },
+          { id: 'founded', label: 'سنة التأسيس', type: 'number', nullable: true, placeholder: '1985' },
+          { id: 'aiScore', label: 'AI Score (0-100)', type: 'number', default: 0, step: '0.1', min: 0, max: 100 },
+          { id: 'logo', label: 'رابط الشعار', type: 'url', dir: 'ltr', nullable: true },
+          { id: 'description', label: 'الوصف', type: 'textarea', full: true, nullable: true }
+        ],
+        list: {
+          title: c => c.nameAr,
+          excerpt: c => (c.description || '').slice(0, 140) + ((c.description || '').length > 140 ? '...' : ''),
+          thumb: c => c.logo,
+          emoji: '🏢',
+          badges: c => [
+            { text: c.sectorAr || c.sectorEn, kind: 'gold' },
+            { text: c.country, kind: 'blue' },
+            ...(c.aiScore ? [{ text: 'Score ' + c.aiScore, kind: 'green' }] : [])
+          ],
+          meta: c => [
+            c.hq || '—',
+            ...(c.revenue ? ['Rev: $' + c.revenue + 'M'] : []),
+            ...(c.employees ? [c.employees + ' موظف'] : [])
+          ]
+        },
+        stats: items => ({
+          'إجمالي الشركات': items.length,
+          'إجمالي الإيرادات': '$' + items.reduce((s,c)=>s+(c.revenue||0),0).toLocaleString() + 'M',
+          'إجمالي الموظفين': items.reduce((s,c)=>s+(c.employees||0),0).toLocaleString()
+        })
+      }
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       Runtime state
+       ═════════════════════════════════════════════════════════ */
+    let currentEntityKey = 'news';
+    let currentItems = [];
+    let editingId = null;
+    let searchTimer = null;
+
+    function currentEntity() { return ENTITIES[currentEntityKey]; }
+
+    /* ─── Login ─────────────────────────────────────────── */
     async function doLogin() {
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
       const msg = document.getElementById('login-msg');
       const btn = document.getElementById('login-btn');
       msg.innerHTML = '';
-      if (!email || !password) {
-        msg.innerHTML = '<div class="msg msg-error">يرجى إدخال البريد وكلمة المرور</div>';
-        return;
-      }
+      if (!email || !password) { msg.innerHTML = '<div class="msg msg-error">يرجى إدخال البريد وكلمة المرور</div>'; return; }
       btn.disabled = true;
       btn.textContent = 'جاري التحقق...';
       try {
@@ -516,18 +559,11 @@
       location.reload();
     }
 
-    // ─── Boot ──────────────────────────────
+    /* ─── Boot ──────────────────────────────────────────── */
     async function boot() {
-      const u = getUser();
-      const t = getToken();
-      if (!t || !u) {
-        document.getElementById('login-screen').style.display = 'grid';
-        document.getElementById('app').style.display = 'none';
-        document.getElementById('app-header').style.display = 'none';
-        return;
-      }
-      if (u.role !== 'ADMIN') {
-        clearAuth();
+      const u = getUser(); const t = getToken();
+      if (!t || !u || u.role !== 'ADMIN') {
+        if (!u || u.role !== 'ADMIN') clearAuth();
         document.getElementById('login-screen').style.display = 'grid';
         document.getElementById('app').style.display = 'none';
         document.getElementById('app-header').style.display = 'none';
@@ -537,143 +573,220 @@
       document.getElementById('app').style.display = 'block';
       document.getElementById('app-header').style.display = 'flex';
       document.getElementById('user-name').textContent = u.name || u.email;
-      await loadNews();
+      renderTabs();
+      await switchEntity('news');
     }
 
-    // ─── News list ─────────────────────────
-    let currentNews = [];
-    let searchTimer = null;
+    /* ─── Tabs ──────────────────────────────────────────── */
+    function renderTabs() {
+      const wrap = document.getElementById('tabs');
+      wrap.innerHTML = Object.values(ENTITIES).map(e => `
+        <button class="tab ${e.key === currentEntityKey ? 'active' : ''}"
+                onclick="switchEntity('${e.key}')">
+          <span class="tab-icon">${e.icon}</span>${e.nameAr}
+        </button>
+      `).join('');
+    }
 
+    async function switchEntity(key) {
+      if (!ENTITIES[key]) return;
+      currentEntityKey = key;
+      document.getElementById('search-input').value = '';
+      renderTabs();
+      const ent = currentEntity();
+      document.getElementById('page-title').textContent = ent.icon + ' إدارة ' + ent.nameAr;
+      document.getElementById('create-label').textContent = ent.singularAr + ' جديد';
+      await loadList();
+    }
+
+    /* ─── Load + render list ────────────────────────────── */
     function onSearch() {
       if (searchTimer) clearTimeout(searchTimer);
-      searchTimer = setTimeout(loadNews, 300);
+      searchTimer = setTimeout(loadList, 300);
     }
 
-    async function loadNews() {
-      const container = document.getElementById('news-list-container');
+    async function loadList() {
+      const container = document.getElementById('list-container');
       container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      const ent = currentEntity();
       const search = document.getElementById('search-input').value.trim();
       const qs = search ? '?search=' + encodeURIComponent(search) + '&limit=100' : '?limit=100';
-      const r = await api('/api/admin/news' + qs);
+      const r = await api(ent.endpoint + qs);
       if (!r.ok) {
-        container.innerHTML = '<div class="msg msg-error">تعذّر تحميل الأخبار: ' + (r.data?.error || 'خطأ') + '</div>';
+        container.innerHTML = '<div class="msg msg-error">تعذّر التحميل: ' + (r.data?.error || 'خطأ') + '</div>';
         return;
       }
-      currentNews = r.data.data || [];
-      const total = r.data.meta?.total || currentNews.length;
-      const featuredCount = currentNews.filter(n => n.isFeatured).length;
-      document.getElementById('stat-total').textContent = total;
-      document.getElementById('stat-featured').textContent = featuredCount;
-      document.getElementById('stat-latest').textContent = currentNews[0] ? (currentNews[0].titleAr || currentNews[0].titleEn).slice(0, 30) + '...' : 'لا يوجد';
-      renderNews();
+      currentItems = r.data.data || [];
+      renderStats();
+      renderList();
     }
 
-    function renderNews() {
-      const container = document.getElementById('news-list-container');
-      if (!currentNews.length) {
-        container.innerHTML = '<div class="empty-state"><div class="icon">📰</div><div class="title">لا توجد أخبار بعد</div><div>دوس "خبر جديد" لإضافة أول خبر.</div></div>';
-        return;
-      }
-      const html = currentNews.map(n => `
-        <div class="news-row">
-          <div class="news-thumb">${n.imageUrl ? `<img src="${escapeHtml(n.imageUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" onerror="this.style.display='none'" />` : '📰'}</div>
-          <div>
-            <div class="news-meta">
-              <span class="pill">${escapeHtml(n.category)}</span>
-              ${n.isFeatured ? '<span class="pill pill-featured">⭐ مميّز</span>' : ''}
-              <span>${escapeHtml(n.author)}</span>
-              <span>•</span>
-              <span>${formatDate(n.publishedAt)}</span>
-            </div>
-            <div class="news-title">${escapeHtml(n.titleAr)}</div>
-            <div class="news-excerpt">${escapeHtml((n.excerptAr || '').slice(0, 140))}${n.excerptAr && n.excerptAr.length > 140 ? '...' : ''}</div>
-          </div>
-          <div class="news-actions">
-            <button class="btn btn-ghost btn-sm" onclick="editArticle('${n.id}')">✏️ تعديل</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteArticle('${n.id}')">🗑️ حذف</button>
-          </div>
+    function renderStats() {
+      const ent = currentEntity();
+      const stats = ent.stats(currentItems);
+      document.getElementById('stats-section').innerHTML = Object.entries(stats).map(([label, value]) => `
+        <div class="stat">
+          <div class="stat-label">${escapeHtml(label)}</div>
+          <div class="stat-value" style="${String(value).length > 12 ? 'font-size:14px;line-height:1.4;' : ''}">${escapeHtml(String(value))}</div>
         </div>
       `).join('');
-      container.innerHTML = '<div class="news-grid">' + html + '</div>';
     }
 
-    function escapeHtml(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function formatDate(d) { try { return new Date(d).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric' }); } catch(e){ return ''; } }
+    function renderList() {
+      const container = document.getElementById('list-container');
+      const ent = currentEntity();
+      if (!currentItems.length) {
+        container.innerHTML = `<div class="empty-state">
+          <div class="icon">${ent.list.emoji}</div>
+          <div class="title">لا توجد ${ent.nameAr} بعد</div>
+          <div>دوس "+ ${ent.singularAr} جديد" لإضافة أول واحدة.</div>
+        </div>`;
+        return;
+      }
+      const html = currentItems.map(item => {
+        const title = ent.list.title(item) || '—';
+        const excerpt = ent.list.excerpt(item) || '';
+        const thumbUrl = ent.list.thumb ? ent.list.thumb(item) : null;
+        const badges = ent.list.badges(item).map(b => `<span class="pill ${b.kind === 'green' ? 'pill-green' : b.kind === 'blue' ? 'pill-blue' : ''}">${escapeHtml(b.text)}</span>`).join('');
+        const metaItems = ent.list.meta(item).filter(Boolean);
+        const metaHtml = metaItems.map((m, i) => `${i > 0 ? '<span>•</span>' : ''}<span>${escapeHtml(m)}</span>`).join('');
+        const thumb = thumbUrl
+          ? `<div class="item-thumb"><img src="${escapeHtml(thumbUrl)}" onerror="this.parentElement.innerHTML='${ent.list.emoji}'" /></div>`
+          : `<div class="item-thumb">${ent.list.emoji}</div>`;
+        return `
+          <div class="item-row">
+            ${thumb}
+            <div>
+              <div class="item-meta">${badges}${metaItems.length ? '<span>•</span>' : ''}${metaHtml}</div>
+              <div class="item-title">${escapeHtml(title)}</div>
+              ${excerpt ? `<div class="item-excerpt">${escapeHtml(excerpt)}</div>` : ''}
+            </div>
+            <div class="item-actions">
+              <button class="btn btn-ghost btn-sm" onclick="editItem('${item.id}')">✏️ تعديل</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteItem('${item.id}')">🗑️ حذف</button>
+            </div>
+          </div>`;
+      }).join('');
+      container.innerHTML = '<div class="item-grid">' + html + '</div>';
+    }
 
-    // ─── Create / Edit ─────────────────────
-    let editingId = null;
+    /* ─── Create / Edit modal ───────────────────────────── */
+    function buildFormFields() {
+      const ent = currentEntity();
+      const wrap = document.getElementById('form-fields');
+      wrap.innerHTML = ent.fields.map(f => {
+        const fullClass = f.full ? ' field-full' : '';
+        const dir = f.dir ? ` dir="${f.dir}"` : '';
+        const placeholder = f.placeholder ? ` placeholder="${escapeHtml(f.placeholder)}"` : '';
+        const id = 'f-' + f.id;
+        if (f.type === 'checkbox') {
+          return `<div class="field${fullClass}">
+            <label class="checkbox-row">
+              <input id="${id}" type="checkbox" />
+              <span>${escapeHtml(f.label)}</span>
+            </label>
+          </div>`;
+        }
+        if (f.type === 'textarea') {
+          return `<div class="field${fullClass}">
+            <label>${escapeHtml(f.label)}</label>
+            <textarea id="${id}"${dir}${placeholder}></textarea>
+          </div>`;
+        }
+        if (f.type === 'select') {
+          const opts = (f.options || []).map(o => `<option value="${escapeHtml(o[0])}">${escapeHtml(o[1])}</option>`).join('');
+          return `<div class="field${fullClass}">
+            <label>${escapeHtml(f.label)}</label>
+            <select id="${id}">${opts}</select>
+          </div>`;
+        }
+        const step = f.step ? ` step="${f.step}"` : '';
+        const min = f.min != null ? ` min="${f.min}"` : '';
+        const max = f.max != null ? ` max="${f.max}"` : '';
+        return `<div class="field${fullClass}">
+          <label>${escapeHtml(f.label)}</label>
+          <input id="${id}" type="${f.type}"${dir}${placeholder}${step}${min}${max} />
+        </div>`;
+      }).join('');
+    }
+
+    function setFieldValue(field, value) {
+      const el = document.getElementById('f-' + field.id);
+      if (!el) return;
+      if (field.type === 'checkbox') el.checked = !!value;
+      else if (field.type === 'datetime-local' && value) el.value = new Date(value).toISOString().slice(0, 16);
+      else el.value = value == null ? '' : value;
+    }
+
+    function getFieldValue(field) {
+      const el = document.getElementById('f-' + field.id);
+      if (!el) return null;
+      if (field.type === 'checkbox') return el.checked;
+      if (field.type === 'number') {
+        const v = el.value.trim();
+        return v === '' ? null : Number(v);
+      }
+      if (field.type === 'datetime-local') return el.value || null;
+      const v = el.value.trim();
+      if (field.nullable && v === '') return null;
+      return v;
+    }
 
     function openCreateModal() {
       editingId = null;
-      document.getElementById('modal-title').textContent = 'خبر جديد';
-      document.getElementById('f-titleAr').value = '';
-      document.getElementById('f-titleEn').value = '';
-      document.getElementById('f-excerptAr').value = '';
-      document.getElementById('f-excerptEn').value = '';
-      document.getElementById('f-category').value = 'business';
-      document.getElementById('f-author').value = 'فريق التحرير';
-      document.getElementById('f-publishedAt').value = new Date().toISOString().slice(0, 16);
-      document.getElementById('f-imageUrl').value = '';
-      document.getElementById('f-isFeatured').checked = false;
+      const ent = currentEntity();
+      document.getElementById('modal-title').textContent = ent.singularAr + ' جديد';
+      buildFormFields();
+      ent.fields.forEach(f => {
+        const def = typeof f.default === 'function' ? f.default() : f.default;
+        setFieldValue(f, def != null ? def : (f.type === 'checkbox' ? false : ''));
+      });
       document.getElementById('modal-msg').innerHTML = '';
-      document.getElementById('news-modal').classList.add('open');
+      document.getElementById('item-modal').classList.add('open');
     }
 
-    function editArticle(id) {
-      const n = currentNews.find(x => x.id === id);
-      if (!n) return;
+    function editItem(id) {
+      const item = currentItems.find(x => x.id === id);
+      if (!item) return;
       editingId = id;
-      document.getElementById('modal-title').textContent = 'تعديل الخبر';
-      document.getElementById('f-titleAr').value = n.titleAr || '';
-      document.getElementById('f-titleEn').value = n.titleEn || '';
-      document.getElementById('f-excerptAr').value = n.excerptAr || '';
-      document.getElementById('f-excerptEn').value = n.excerptEn || '';
-      document.getElementById('f-category').value = n.category || 'business';
-      document.getElementById('f-author').value = n.author || '';
-      document.getElementById('f-publishedAt').value = n.publishedAt ? new Date(n.publishedAt).toISOString().slice(0, 16) : '';
-      document.getElementById('f-imageUrl').value = n.imageUrl || '';
-      document.getElementById('f-isFeatured').checked = !!n.isFeatured;
+      const ent = currentEntity();
+      document.getElementById('modal-title').textContent = 'تعديل ' + ent.singularAr;
+      buildFormFields();
+      ent.fields.forEach(f => setFieldValue(f, item[f.id]));
       document.getElementById('modal-msg').innerHTML = '';
-      document.getElementById('news-modal').classList.add('open');
+      document.getElementById('item-modal').classList.add('open');
     }
 
-    function closeModal() {
-      document.getElementById('news-modal').classList.remove('open');
-    }
+    function closeModal() { document.getElementById('item-modal').classList.remove('open'); }
 
-    async function saveArticle() {
+    async function saveItem() {
       const msg = document.getElementById('modal-msg');
       const btn = document.getElementById('save-btn');
       msg.innerHTML = '';
-
-      const payload = {
-        titleAr: document.getElementById('f-titleAr').value.trim(),
-        titleEn: document.getElementById('f-titleEn').value.trim(),
-        excerptAr: document.getElementById('f-excerptAr').value.trim(),
-        excerptEn: document.getElementById('f-excerptEn').value.trim(),
-        category: document.getElementById('f-category').value,
-        author: document.getElementById('f-author').value.trim(),
-        publishedAt: document.getElementById('f-publishedAt').value || new Date().toISOString(),
-        imageUrl: document.getElementById('f-imageUrl').value.trim() || null,
-        isFeatured: document.getElementById('f-isFeatured').checked,
-      };
-      if (!payload.titleAr || !payload.titleEn || !payload.excerptAr || !payload.excerptEn || !payload.author) {
-        msg.innerHTML = '<div class="msg msg-error">يرجى ملء كل الحقول المطلوبة (*)</div>';
+      const ent = currentEntity();
+      const payload = {};
+      const missing = [];
+      ent.fields.forEach(f => {
+        const v = getFieldValue(f);
+        payload[f.id] = v;
+        if (f.required && (v == null || v === '')) missing.push(f.label.replace(/\s*\*\s*$/, ''));
+      });
+      if (missing.length) {
+        msg.innerHTML = '<div class="msg msg-error">يرجى ملء: ' + escapeHtml(missing.join('، ')) + '</div>';
         return;
       }
-
       btn.disabled = true;
       btn.textContent = 'جاري الحفظ...';
       try {
         const r = editingId
-          ? await api('/api/admin/news/' + editingId, { method: 'PUT', body: JSON.stringify(payload) })
-          : await api('/api/admin/news', { method: 'POST', body: JSON.stringify(payload) });
+          ? await api(ent.endpoint + '/' + editingId, { method: 'PUT', body: JSON.stringify(payload) })
+          : await api(ent.endpoint, { method: 'POST', body: JSON.stringify(payload) });
         if (!r.ok) {
-          msg.innerHTML = '<div class="msg msg-error">' + (r.data?.error || 'فشل الحفظ') + '</div>';
+          msg.innerHTML = '<div class="msg msg-error">' + escapeHtml(r.data?.error || 'فشل الحفظ') + '</div>';
           return;
         }
         closeModal();
-        await loadNews();
+        await loadList();
       } catch (e) {
         msg.innerHTML = '<div class="msg msg-error">حدث خطأ في الاتصال</div>';
       } finally {
@@ -682,18 +795,16 @@
       }
     }
 
-    async function deleteArticle(id) {
-      const n = currentNews.find(x => x.id === id);
-      if (!confirm('هل أنت متأكد من حذف الخبر "' + (n?.titleAr || '') + '"؟ لا يمكن التراجع.')) return;
-      const r = await api('/api/admin/news/' + id, { method: 'DELETE' });
-      if (!r.ok) {
-        alert('فشل الحذف: ' + (r.data?.error || 'خطأ'));
-        return;
-      }
-      await loadNews();
+    async function deleteItem(id) {
+      const ent = currentEntity();
+      const item = currentItems.find(x => x.id === id);
+      const name = item ? (ent.list.title(item) || '') : '';
+      if (!confirm('هل أنت متأكد من حذف ' + ent.singularAr + ' "' + name + '"؟ لا يمكن التراجع.')) return;
+      const r = await api(ent.endpoint + '/' + id, { method: 'DELETE' });
+      if (!r.ok) { alert('فشل الحذف: ' + (r.data?.error || 'خطأ')); return; }
+      await loadList();
     }
 
-    // Allow Enter to submit login
     document.getElementById('login-password').addEventListener('keydown', e => {
       if (e.key === 'Enter') doLogin();
     });
