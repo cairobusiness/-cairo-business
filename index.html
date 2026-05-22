@@ -14795,6 +14795,91 @@
       } catch (e) { console.warn('[homepage] data pull failed:', e); }
     }
 
+
+    /* ============== LIVE MARKET DATA (auto-refresh every 5 min) ==============
+       Free APIs (no key needed):
+         - CoinGecko        → crypto prices
+         - Currency-API     → USD/EGP, EUR/EGP, etc.
+       Optional (set window.TWELVE_DATA_KEY): Twelve Data → EGX30, TASI, ADX
+    */
+    async function fetchLiveMarketData() {
+      // 1) Currency rates
+      try {
+        const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json', { cache: 'no-store' });
+        if (res.ok) {
+          const j = await res.json();
+          const r = j && j.usd;
+          if (r && typeof DASHBOARD_DATA !== 'undefined') {
+            const usd2egp = r.egp;
+            const updates = {
+              'USD/EGP': usd2egp,
+              'EUR/EGP': usd2egp / r.eur,
+              'GBP/EGP': usd2egp / r.gbp,
+              'SAR/EGP': usd2egp / r.sar,
+            };
+            DASHBOARD_DATA.forEach(d => {
+              if (updates[d.symbol] != null) {
+                const newV = Number(updates[d.symbol].toFixed(2));
+                d.change = Number(((newV - parseFloat(d.value)) / parseFloat(d.value) * 100).toFixed(2)) || 0;
+                d.value = newV;
+              }
+            });
+          }
+        }
+      } catch (e) { console.warn('Currency fetch failed:', e); }
+
+      // 2) Crypto prices
+      try {
+        const ids = 'bitcoin,ethereum,tether,binancecoin,solana,ripple,cardano,dogecoin,tron,polkadot';
+        const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + ids + '&order=market_cap_desc&per_page=20&page=1&price_change_percentage=24h', { cache: 'no-store' });
+        if (res.ok) {
+          const arr = await res.json();
+          if (Array.isArray(arr) && typeof CRYPTO_DATA !== 'undefined') {
+            const symMap = { 'BTC':'bitcoin','ETH':'ethereum','USDT':'tether','BNB':'binancecoin','SOL':'solana','XRP':'ripple','ADA':'cardano','DOGE':'dogecoin','TRX':'tron','DOT':'polkadot' };
+            CRYPTO_DATA.forEach(c => {
+              const apiId = symMap[c.sym];
+              const live = arr.find(x => x.id === apiId);
+              if (live) {
+                c.price = live.current_price;
+                c.h24 = Number((live.price_change_percentage_24h || 0).toFixed(2));
+                c.cap = Math.round((live.market_cap || 0) / 1e9 * 10) / 10;
+                c.vol = Math.round((live.total_volume || 0) / 1e9 * 10) / 10;
+              }
+            });
+            if (typeof renderCrypto === 'function') try { renderCrypto(); } catch(_){}
+          }
+        }
+      } catch (e) { console.warn('Crypto fetch failed:', e); }
+
+      // 3) Stock indices via Twelve Data (only if key is set globally)
+      if (window.TWELVE_DATA_KEY) {
+        try {
+          const res = await fetch('https://api.twelvedata.com/quote?symbol=EGX30,TASI,ADX&apikey=' + window.TWELVE_DATA_KEY, { cache: 'no-store' });
+          if (res.ok) {
+            const j = await res.json();
+            if (typeof DASHBOARD_DATA !== 'undefined') {
+              ['EGX30','TASI','ADX','EGX70'].forEach(sym => {
+                const live = j[sym];
+                if (live && live.close) {
+                  const d = DASHBOARD_DATA.find(x => x.symbol === sym);
+                  if (d) {
+                    d.value = parseFloat(live.close).toLocaleString();
+                    d.change = parseFloat(live.percent_change) || 0;
+                  }
+                }
+              });
+            }
+          }
+        } catch (e) { console.warn('Twelve Data fetch failed:', e); }
+      }
+
+      // 4) Re-render dashboard
+      if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(_){}
+    }
+
+    setTimeout(fetchLiveMarketData, 1500);
+    setInterval(fetchLiveMarketData, 5 * 60 * 1000);
+
     /* Bootstrap on page load */
     (function bootstrapApp() {
       function safeApply() {
