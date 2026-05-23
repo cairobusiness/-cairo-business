@@ -3389,6 +3389,55 @@
   </section>
 
   <!-- =========================================================== -->
+  <!--                     MORNING BRIEFING                          -->
+  <!-- =========================================================== -->
+  <section id="morning-briefing" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-950 to-navy-900">
+    <div class="absolute inset-0 pointer-events-none opacity-50 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(212,175,55,0.15),transparent_60%)]"></div>
+    <div class="max-w-[1280px] mx-auto px-4 lg:px-8 relative">
+      <div class="text-center mb-12 reveal">
+        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
+          <i data-lucide="sunrise" class="w-3.5 h-3.5"></i>
+          <span data-i18n="briefing.eyebrow">الموجز اليومي للمستثمر</span>
+        </div>
+        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="briefing.title">ما تحتاج لمعرفته اليوم</h2>
+        <p class="mt-3 text-white/60 max-w-2xl mx-auto" data-i18n="briefing.subtitle">5 أخبار حصرية + صفقة اليوم — كل صباح قبل الساعة 7 ص</p>
+      </div>
+
+      <div class="grid lg:grid-cols-[1.6fr_1fr] gap-6 reveal">
+        <!-- Top 5 items -->
+        <div>
+          <div class="text-xs font-bold tracking-widest text-gold-400 mb-3 flex items-center gap-2">
+            <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+            <span data-i18n="briefing.top5">أهم 5 أحداث اليوم</span>
+          </div>
+          <div id="briefing-items" class="space-y-3"></div>
+        </div>
+
+        <!-- Deal of the Day -->
+        <div>
+          <div class="text-xs font-bold tracking-widest text-gold-400 mb-3 flex items-center gap-2">
+            <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+            <span data-i18n="briefing.dealOfDay">صفقة اليوم</span>
+          </div>
+          <div class="grad-border rounded-2xl bg-gradient-to-br from-navy-800 to-navy-900 p-6 h-full flex flex-col justify-between">
+            <div>
+              <div class="text-3xl mb-2">💼</div>
+              <h3 id="briefing-deal-title" class="text-xl font-bold text-white mb-2">—</h3>
+              <p class="text-white/60 text-sm mb-4" data-i18n="briefing.dealDesc">أبرز صفقة استثمارية في الشرق الأوسط اليوم</p>
+            </div>
+            <a href="#deal-room" class="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 font-semibold text-sm">
+              <span data-i18n="briefing.viewAll">شاهد جميع الصفقات</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 flip-x"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-column investor brief (FX, markets, commodities, sectors, macro) -->
+      <div class="brief-grid mt-12" id="investor-brief-grid"></div>
+    </div>
+  </section>
+
   <!-- =========================================================== -->
   <!--                     LIVE MARKETS DASHBOARD                   -->
   <!-- =========================================================== -->
@@ -14696,39 +14745,6 @@
             } else if (input) {
               input.focus();
             }
-          });
-        });
-        // Wire #ai-assistant section (Cairo AI chat section below hero)
-        const aibotInput = document.getElementById('aibot-input');
-        if (aibotInput && !aibotInput._wired) {
-          aibotInput._wired = true;
-          aibotInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-              const q = (aibotInput.value || '').trim();
-              if (q) askCairoAI(q);
-            }
-          });
-        }
-        const aibotSend = document.getElementById('aibot-send');
-        if (aibotSend && !aibotSend._wired) {
-          aibotSend._wired = true;
-          aibotSend.addEventListener('click', () => {
-            const inp = document.getElementById('aibot-input');
-            const q = inp ? (inp.value || '').trim() : '';
-            if (q) askCairoAI(q);
-            else if (inp) inp.focus();
-          });
-        }
-        // Wire 4 suggestion buttons (data-sug=1..4) inside #ai-assistant
-        const sugBtns = document.querySelectorAll('#ai-assistant .ai-sug-btn[data-sug]');
-        sugBtns.forEach(b => {
-          if (b._wired) return; b._wired = true;
-          b.addEventListener('click', () => {
-            const qEl = b.querySelector('.ai-sug-q');
-            const q = qEl ? qEl.textContent.trim() : '';
-            const inp = document.getElementById('aibot-input');
-            if (inp && q) inp.value = q;
-            if (q) askCairoAI(q);
           });
         });
         // Wire suggestion chips below hero
