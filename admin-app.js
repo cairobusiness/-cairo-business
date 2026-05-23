@@ -204,8 +204,12 @@ const ENTITIES = {
     fields: [
       { id: 'nameAr', label: 'الاسم بالعربية *', type: 'text', required: true },
       { id: 'nameEn', label: 'Name in English *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'titleAr', label: 'المنصب بالعربية', type: 'text', nullable: true, placeholder: 'رئيس مجلس الإدارة، مؤسس...' },
+      { id: 'titleEn', label: 'Title in English', type: 'text', dir: 'ltr', nullable: true, placeholder: 'Chairman, Founder...' },
       { id: 'sectorAr', label: 'القطاع بالعربية *', type: 'text', required: true },
       { id: 'sectorEn', label: 'Sector in English *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'imageUrl', label: '📷 رابط الصورة الشخصية', type: 'url', dir: 'ltr', nullable: true, full: true, placeholder: 'https://...' },
+      { id: 'isPowerPerson', label: '⭐ عرض في قسم "أقوى الشخصيات في البيزنس" (المجلة)', type: 'checkbox', full: true },
       { id: 'netWorth', label: 'الثروة (مليار $)', type: 'number', nullable: true, step: '0.01' },
       { id: 'rank', label: 'الترتيب', type: 'number', nullable: true, min: 1 },
       { id: 'age', label: 'العمر', type: 'number', nullable: true, min: 18 },
@@ -217,9 +221,10 @@ const ENTITIES = {
     ],
     list: {
       title: b => b.nameAr,
-      excerpt: b => (b.bio || '').slice(0, 140) + ((b.bio || '').length > 140 ? '...' : ''),
-      emoji: '👔',
+      excerpt: b => (b.titleAr || b.bio || '').slice(0, 140) + ((b.titleAr || b.bio || '').length > 140 ? '...' : ''),
+      thumb: b => b.imageUrl, emoji: '👔',
       badges: b => [
+        ...(b.isPowerPerson ? [{ text: '⭐ مجلة', kind: 'gold' }] : []),
         { text: b.sectorAr || b.sectorEn, kind: 'gold' },
         ...(b.rank ? [{ text: '#' + b.rank, kind: 'blue' }] : []),
         ...(b.netWorth ? [{ text: '$' + b.netWorth + 'B', kind: 'green' }] : [])

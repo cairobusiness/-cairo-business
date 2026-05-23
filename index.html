@@ -10680,21 +10680,62 @@
       renderTopCompaniesGrid();
     }
 
+    /* Try to fetch live Power People from API; merge into POWER_PEOPLE for rendering */
+    async function pullPowerPeopleFromApi() {
+      try {
+        const res = await fetch('https://cairo-business-backend.vercel.app/api/power-people?limit=25', { cache: 'no-store' });
+        const j = await res.json();
+        if (!j || !j.success || !Array.isArray(j.data) || !j.data.length) return false;
+        const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
+        const colorRamps = ['#FFB800/#FF9500','#F59E0B/#B45309','#06B6D4/#0891B2','#8B5CF6/#6D28D9','#EC4899/#BE185D','#EF4444/#B91C1C','#14B8A6/#0F766E','#3B82F6/#1D4ED8','#10B981/#047857','#A78BFA/#7C3AED','#0EA5E9/#0369A1','#22C55E/#15803D'];
+        const flagFromCode = (code) => {
+          if (!code) return '🌐';
+          const c = String(code).trim().toUpperCase();
+          const map = { EG:'🇪🇬', SA:'🇸🇦', AE:'🇦🇪', QA:'🇶🇦', KW:'🇰🇼', BH:'🇧🇭', OM:'🇴🇲', JO:'🇯🇴', LB:'🇱🇧', SY:'🇸🇾', IQ:'🇮🇶', PS:'🇵🇸', MA:'🇲🇦', TN:'🇹🇳', DZ:'🇩🇿', LY:'🇱🇾', SD:'🇸🇩', YE:'🇾🇪' };
+          return map[c] || '🌐';
+        };
+        const items = j.data.map((row, idx) => {
+          const colors = (colorRamps[idx % colorRamps.length]).split('/');
+          const value = row.netWorth ? '$' + row.netWorth + 'B' : '—';
+          const monoAr = (row.nameAr || '').trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('.');
+          const monoEn = (row.nameEn || '').trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase();
+          return {
+            id: 'api_' + row.id,
+            rank: String((row.rank || idx + 1)).padStart(2, '0'),
+            wealthValue: row.netWorth || (25 - idx),
+            imageUrl: row.imageUrl || '',
+            flag: flagFromCode(row.flag),
+            mono: monoAr, monoEn: monoEn,
+            sc: colors[0], sc2: colors[1],
+            __apiName: { ar: row.nameAr, en: row.nameEn },
+            __apiTitle: { ar: row.titleAr || row.sectorAr || '', en: row.titleEn || row.sectorEn || '' },
+            __apiCompany: row.companies || '',
+            __apiValue: value,
+          };
+        });
+        window.POWER_PEOPLE_API = items;
+        return true;
+      } catch (e) { console.warn('pullPowerPeopleFromApi failed:', e); return false; }
+    }
+
     function renderPowerPeople(){
       const wrap = document.getElementById('pp-magazine-grid');
       if (!wrap) return;
       const isAr = currentLang === 'ar';
+      /* Prefer API data if available, otherwise use hardcoded POWER_PEOPLE */
+      const apiData = (window.POWER_PEOPLE_API && window.POWER_PEOPLE_API.length) ? window.POWER_PEOPLE_API : null;
+      const source = apiData || POWER_PEOPLE;
       /* Cache by id for the modal lookup */
       window.POWER_PEOPLE_BY_ID = window.POWER_PEOPLE_BY_ID || {};
-      POWER_PEOPLE.forEach(p => { window.POWER_PEOPLE_BY_ID[p.id] = p; });
+      source.forEach(p => { window.POWER_PEOPLE_BY_ID[p.id] = p; });
       /* Sort by wealth and take top 12 for the magazine covers */
-      const sorted = POWER_PEOPLE.slice().sort((a, b) => b.wealthValue - a.wealthValue);
+      const sorted = source.slice().sort((a, b) => (b.wealthValue || 0) - (a.wealthValue || 0));
       const top12 = sorted.slice(0, 12);
       wrap.innerHTML = top12.map((p, idx) => {
-        const name = t('pp.' + p.id + '.name');
-        const title = t('pp.' + p.id + '.title');
-        const company = t('pp.' + p.id + '.company');
-        const value = t(p.valueLabelKey);
+        const name = p.__apiName ? (isAr ? p.__apiName.ar : p.__apiName.en) : t('pp.' + p.id + '.name');
+        const title = p.__apiTitle ? (isAr ? p.__apiTitle.ar : p.__apiTitle.en) : t('pp.' + p.id + '.title');
+        const company = p.__apiCompany ? p.__apiCompany : t('pp.' + p.id + '.company');
+        const value = p.__apiValue ? p.__apiValue : t(p.valueLabelKey);
         const rank = String(idx + 1).padStart(2, '0');
         const mono = isAr ? p.mono : p.monoEn;
         const issue = isAr ? 'العدد رقم ' + rank : 'ISSUE No. ' + rank;
@@ -10736,10 +10777,10 @@
       const p = (window.POWER_PEOPLE_BY_ID || {})[id];
       if (!p) return;
       const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
-      const name = t('pp.' + p.id + '.name');
-      const title = t('pp.' + p.id + '.title');
-      const company = t('pp.' + p.id + '.company');
-      const value = t(p.valueLabelKey);
+      const name = p.__apiName ? (isAr ? p.__apiName.ar : p.__apiName.en) : t('pp.' + p.id + '.name');
+      const title = p.__apiTitle ? (isAr ? p.__apiTitle.ar : p.__apiTitle.en) : t('pp.' + p.id + '.title');
+      const company = p.__apiCompany ? p.__apiCompany : t('pp.' + p.id + '.company');
+      const value = p.__apiValue ? p.__apiValue : t(p.valueLabelKey);
       const overlay = document.getElementById('pp-profile-modal');
       if (!overlay) return;
       const elName = document.getElementById('pp-prof-name');
@@ -15493,6 +15534,15 @@
         try { if (typeof renderDashboard === 'function') renderDashboard(); } catch (e) { console.warn('renderDashboard failed:', e); }
         try { if (typeof renderTopCompanies === 'function') renderTopCompanies(); } catch (e) { console.warn('renderTopCompanies failed:', e); }
         try { if (typeof renderPowerPeople === 'function') renderPowerPeople(); } catch (e) { console.warn('renderPowerPeople failed:', e); }
+        setTimeout(function () {
+          if (typeof pullPowerPeopleFromApi === 'function') {
+            pullPowerPeopleFromApi().then(function (ok) {
+              if (ok && typeof renderPowerPeople === 'function') {
+                try { renderPowerPeople(); } catch (_e) {}
+              }
+            });
+          }
+        }, 600);
         try {
           var __pm = document.getElementById('pp-profile-modal');
           if (__pm && __pm.parentElement !== document.body) document.body.appendChild(__pm);
