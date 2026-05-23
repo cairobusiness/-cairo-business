@@ -374,15 +374,138 @@ async function boot() {
 
 function renderTabs() {
   const wrap = document.getElementById('tabs');
-  const dashboardTab = '<button class="tab ' + (currentEntityKey === '__dashboard__' ? 'active' : '') + '" onclick="switchToDashboard()"><span class="tab-icon">📊</span>الرئيسية</button>';
-  const usersTab = '<button class="tab ' + (currentEntityKey === '__users__' ? 'active' : '') + '" onclick="switchToUsers()"><span class="tab-icon">👥</span>المستخدمين</button>';
+  const mk = (key, icon, label, fn) => '<button class="tab ' + (currentEntityKey === key ? 'active' : '') + '" onclick="' + fn + '()"><span class="tab-icon">' + icon + '</span>' + label + '</button>';
+  const dashboardTab = mk('__dashboard__', '📊', 'الرئيسية', 'switchToDashboard');
+  const usersTab = mk('__users__', '👥', 'المستخدمين', 'switchToUsers');
+  const msgTab = mk('__messages__', '📧', 'الرسائل', 'switchToMessages');
+  const newsletterTab = mk('__newsletter__', '📨', 'النشرة', 'switchToNewsletter');
+  const regsTab = mk('__regs__', '🎫', 'تسجيلات الفعاليات', 'switchToRegs');
+  const aichatsTab = mk('__aichats__', '💬', 'محادثات AI', 'switchToAIChats');
+  const settingsTab = mk('__settings__', '🔌', 'التكاملات', 'switchToIntegrations');
   const entityTabs = Object.values(ENTITIES).map(e =>
     '<button class="tab ' + (e.key === currentEntityKey ? 'active' : '') + '" onclick="switchEntity(\'' + e.key + '\')">' +
     '<span class="tab-icon">' + e.icon + '</span>' + e.nameAr + '</button>'
   ).join('');
-  const briefingTab = '<button class="tab ' + (currentEntityKey === '__briefing__' ? 'active' : '') + '" onclick="switchToBriefing()"><span class="tab-icon">🌅</span>النشرة الصباحية</button>';
-  const analyticsTab = '<button class="tab ' + (currentEntityKey === '__analytics__' ? 'active' : '') + '" onclick="switchToAnalytics()"><span class="tab-icon">📈</span>التحليلات</button>';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + usersTab + analyticsTab;
+  const briefingTab = mk('__briefing__', '🌅', 'النشرة الصباحية', 'switchToBriefing');
+  const analyticsTab = mk('__analytics__', '📈', 'التحليلات', 'switchToAnalytics');
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + usersTab + msgTab + newsletterTab + regsTab + aichatsTab + settingsTab + analyticsTab;
+}
+
+function setupListView(title) {
+  currentEntityKey = title.key;
+  renderTabs();
+  document.getElementById('page-title').textContent = title.label;
+  document.getElementById('stats-section').innerHTML = '';
+  document.getElementById('search-input').style.display = 'none';
+  document.querySelector('.actions button.btn-primary').style.display = 'none';
+  document.getElementById('list-container').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+}
+
+async function switchToMessages() {
+  setupListView({ key: '__messages__', label: '📧 رسائل التواصل' });
+  const r = await api('/api/admin/messages?limit=100');
+  if (!r.ok) { document.getElementById('list-container').innerHTML = '<div class="msg msg-error">تعذّر التحميل</div>'; return; }
+  const items = r.data.data || [];
+  if (!items.length) { document.getElementById('list-container').innerHTML = '<div class="empty-state"><div class="icon">📧</div><div class="title">مفيش رسائل لسه</div></div>'; return; }
+  const rows = items.map(m => '<div class="item-row"><div class="item-thumb">📧</div><div>' +
+    '<div class="item-meta"><span class="pill">' + (m.subject || m.status || '—') + '</span><span>' + formatDate(m.createdAt) + '</span></div>' +
+    '<div class="item-title">' + escapeHtml((m.fromUser && (m.fromUser.name || m.fromUser.email)) || m.fromName || m.fromEmail || 'مجهول') + '</div>' +
+    '<div class="item-excerpt">' + escapeHtml((m.body || m.message || '').slice(0, 200)) + '</div>' +
+    '</div><div class="item-actions">' +
+    (m.fromEmail ? '<a class="btn btn-ghost btn-sm" href="mailto:' + m.fromEmail + '">رد</a>' : '') +
+    '</div></div>').join('');
+  document.getElementById('list-container').innerHTML = '<div class="item-grid">' + rows + '</div>';
+}
+
+function downloadCsv(filename, rows) {
+  if (!rows || !rows.length) { alert('مفيش بيانات للتصدير'); return; }
+  const headers = Object.keys(rows[0]);
+  const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""').replace(/\n/g, ' ') + '"';
+  const csv = '﻿' + headers.join(',') + '\n' + rows.map(r => headers.map(h => esc(r[h])).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function switchToNewsletter() {
+  setupListView({ key: '__newsletter__', label: '📨 مشتركي النشرة البريدية' });
+  const r = await api('/api/admin/newsletter?limit=500');
+  if (!r.ok) { document.getElementById('list-container').innerHTML = '<div class="msg msg-error">تعذّر التحميل</div>'; return; }
+  const items = r.data.data || [];
+  const csvRows = items.map(s => ({ email: s.email, name: s.name || '', subscribedAt: s.createdAt }));
+  const exportBtn = '<button class="btn btn-primary" onclick=\'downloadCsv("newsletter-subscribers.csv", ' + JSON.stringify(csvRows).replace(/'/g, '&#39;') + ')\'>📥 تصدير CSV</button>';
+  if (!items.length) { document.getElementById('list-container').innerHTML = '<div class="empty-state"><div class="icon">📨</div><div class="title">مفيش مشتركين</div></div>'; return; }
+  const rows = items.map(s => '<div class="item-row"><div class="item-thumb">📧</div><div>' +
+    '<div class="item-meta"><span>' + formatDate(s.createdAt) + '</span></div>' +
+    '<div class="item-title">' + escapeHtml(s.email) + '</div>' +
+    (s.name ? '<div class="item-excerpt">' + escapeHtml(s.name) + '</div>' : '') +
+    '</div></div>').join('');
+  document.getElementById('list-container').innerHTML = '<div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;"><span class="pill">إجمالي ' + items.length + ' مشترك</span>' + exportBtn + '</div><div class="item-grid">' + rows + '</div>';
+}
+
+async function switchToRegs() {
+  setupListView({ key: '__regs__', label: '🎫 تسجيلات الفعاليات' });
+  const r = await api('/api/admin/event-registrations?limit=200');
+  if (!r.ok) { document.getElementById('list-container').innerHTML = '<div class="msg msg-error">تعذّر التحميل</div>'; return; }
+  const items = r.data.data || [];
+  const csvRows = items.map(x => ({ event: (x.event && x.event.titleAr) || '', date: (x.event && x.event.date) || '', user: (x.user && x.user.name) || x.name || '', email: (x.user && x.user.email) || x.email || '', registeredAt: x.createdAt }));
+  const exportBtn = '<button class="btn btn-primary" onclick=\'downloadCsv("event-registrations.csv", ' + JSON.stringify(csvRows).replace(/'/g, '&#39;') + ')\'>📥 تصدير CSV</button>';
+  if (!items.length) { document.getElementById('list-container').innerHTML = '<div class="empty-state"><div class="icon">🎫</div><div class="title">مفيش تسجيلات</div></div>'; return; }
+  const rows = items.map(x => '<div class="item-row"><div class="item-thumb">🎫</div><div>' +
+    '<div class="item-meta"><span class="pill">' + ((x.event && x.event.titleAr) || '—') + '</span><span>' + formatDate(x.createdAt) + '</span></div>' +
+    '<div class="item-title">' + escapeHtml((x.user && x.user.name) || x.name || '—') + '</div>' +
+    '<div class="item-excerpt">' + escapeHtml((x.user && x.user.email) || x.email || '') + '</div>' +
+    '</div></div>').join('');
+  document.getElementById('list-container').innerHTML = '<div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;"><span class="pill">إجمالي ' + items.length + ' تسجيل</span>' + exportBtn + '</div><div class="item-grid">' + rows + '</div>';
+}
+
+async function switchToAIChats() {
+  setupListView({ key: '__aichats__', label: '💬 سجل محادثات الـ AI' });
+  const r = await api('/api/admin/ai-chats?limit=100');
+  if (!r.ok) { document.getElementById('list-container').innerHTML = '<div class="msg msg-error">تعذّر التحميل</div>'; return; }
+  const items = r.data.data || [];
+  const meta = r.data.meta || {};
+  const topQs = (meta.topQuestions || []).slice(0, 5);
+  const topHtml = topQs.length ? '<div class="item-row" style="grid-template-columns:1fr;"><div><div class="item-title">🔥 أكتر 5 أسئلة تكراراً</div><div style="margin-top:10px;">' +
+    topQs.map((q, i) => '<div style="padding:8px 0;border-bottom:1px solid var(--border);"><span class="pill">' + (q._count.id) + '×</span> <span style="margin-inline-start:8px;">' + escapeHtml((q.question || '').slice(0, 120)) + '</span></div>').join('') +
+    '</div></div></div>' : '';
+  const summary = '<div class="stats" style="margin-bottom:14px;">' +
+    '<div class="stat"><div class="stat-label">إجمالي المحادثات</div><div class="stat-value">' + (meta.total || 0).toLocaleString() + '</div></div>' +
+    '<div class="stat"><div class="stat-label">إجمالي التكلفة</div><div class="stat-value">$' + (Number(meta.totalCostUsd || 0).toFixed(2)) + '</div></div>' +
+    '<div class="stat"><div class="stat-label">متوسط لكل سؤال</div><div class="stat-value">$' + ((meta.totalCostUsd && meta.total) ? (meta.totalCostUsd / meta.total).toFixed(4) : '0.00') + '</div></div>' +
+    '</div>';
+  if (!items.length) { document.getElementById('list-container').innerHTML = summary + topHtml + '<div class="empty-state"><div class="icon">💬</div><div class="title">مفيش محادثات بعد</div></div>'; return; }
+  const rows = items.map(c => '<div class="item-row"><div class="item-thumb">💬</div><div>' +
+    '<div class="item-meta"><span class="pill">' + (c.tier || 'free') + '</span><span>' + formatDate(c.createdAt) + '</span>' + (c.costUsd ? '<span>$' + Number(c.costUsd).toFixed(4) + '</span>' : '') + '</div>' +
+    '<div class="item-title">' + escapeHtml((c.question || '').slice(0, 100)) + '</div>' +
+    '<div class="item-excerpt">' + escapeHtml((c.answer || '').slice(0, 200)) + '</div>' +
+    '</div></div>').join('');
+  document.getElementById('list-container').innerHTML = summary + topHtml + '<div class="item-grid" style="margin-top:14px;">' + rows + '</div>';
+}
+
+async function switchToIntegrations() {
+  setupListView({ key: '__settings__', label: '🔌 حالة التكاملات والمراقبة' });
+  const r = await api('/api/admin/integrations');
+  if (!r.ok) { document.getElementById('list-container').innerHTML = '<div class="msg msg-error">تعذّر التحميل</div>'; return; }
+  const d = r.data.data || {};
+  const env = d.env || {};
+  const apis = d.externalApis || {};
+  const envRow = Object.entries(env).map(([k, v]) =>
+    '<div class="item-row" style="grid-template-columns:1fr auto;"><div><div class="item-title">' + k + '</div><div class="item-excerpt">' + (v ? 'مكوّن في Vercel' : 'غير مكوّن — التكامل معطّل') + '</div></div>' +
+    '<div>' + (v ? '<span class="pill pill-green">✓ فعّال</span>' : '<span class="pill" style="color:var(--red);border-color:rgba(239,68,68,0.3);">✗ غير مفعّل</span>') + '</div></div>'
+  ).join('');
+  const apisRow = Object.entries(apis).map(([k, v]) => {
+    const ok = v && v.ok;
+    return '<div class="item-row" style="grid-template-columns:1fr auto;"><div><div class="item-title">' + k + '</div><div class="item-excerpt">Latency: ' + (v && v.latencyMs ? v.latencyMs + 'ms' : '—') + ' · HTTP ' + (v && v.status ? v.status : '—') + '</div></div>' +
+      '<div>' + (ok ? '<span class="pill pill-green">✓ متاح</span>' : '<span class="pill" style="color:var(--red);border-color:rgba(239,68,68,0.3);">✗ معطّل</span>') + '</div></div>';
+  }).join('');
+  document.getElementById('list-container').innerHTML =
+    '<h3 style="margin-bottom:10px;color:var(--gold);">🔑 متغيرات البيئة (Env Vars)</h3>' +
+    '<div class="item-grid">' + envRow + '</div>' +
+    '<h3 style="margin:20px 0 10px;color:var(--gold);">🌐 الـ APIs الخارجية</h3>' +
+    '<div class="item-grid">' + apisRow + '</div>' +
+    '<div style="margin-top:20px;font-size:12px;color:var(--text-3);">آخر تحديث: ' + formatDate(d.timestamp || new Date()) + '</div>';
 }
 
 async function switchToDashboard() {
@@ -611,163 +734,90 @@ function renderList() {
   container.innerHTML = '<div class="item-grid">' + html + '</div>';
 }
 
-function buildFormFields() {
-  const ent = currentEntity();
-  const wrap = document.getElementById('form-fields');
-  wrap.innerHTML = ent.fields.map(f => {
-    const fullClass = f.full ? ' field-full' : '';
-    const dir = f.dir ? ' dir="' + f.dir + '"' : '';
-    const placeholder = f.placeholder ? ' placeholder="' + escapeHtml(f.placeholder) + '"' : '';
-    const id = 'f-' + f.id;
-    if (f.type === 'checkbox') {
-      return '<div class="field' + fullClass + '"><label class="checkbox-row"><input id="' + id + '" type="checkbox" /><span>' + escapeHtml(f.label) + '</span></label></div>';
-    }
-    if (f.type === 'textarea') {
-      return '<div class="field' + fullClass + '"><label>' + escapeHtml(f.label) + '</label><textarea id="' + id + '"' + dir + placeholder + '></textarea></div>';
-    }
-    if (f.type === 'select') {
-      const opts = (f.options || []).map(o => '<option value="' + escapeHtml(o[0]) + '">' + escapeHtml(o[1]) + '</option>').join('');
-      return '<div class="field' + fullClass + '"><label>' + escapeHtml(f.label) + '</label><select id="' + id + '">' + opts + '</select></div>';
-    }
-    const step = f.step ? ' step="' + f.step + '"' : '';
-    const min = f.min != null ? ' min="' + f.min + '"' : '';
-    const max = f.max != null ? ' max="' + f.max + '"' : '';
-    // Image fields get a file picker + preview
-    const isImage = /imageUrl$|^logo$/i.test(f.id) || f.type === 'image';
-    if (isImage) {
-      const realType = f.type === 'image' ? 'url' : f.type;
-      return '<div class="field' + fullClass + '">'
-        + '<label>' + escapeHtml(f.label) + '</label>'
-        + '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">'
-        +   '<button type="button" class="btn btn-ghost btn-sm" onclick="pickAndCompressImage(\'' + id + '\')">📷 رفع من جهازي</button>'
-        +   '<span style="font-size:11px;color:var(--text-3);" id="' + id + '-status">أو الصق رابط أدناه</span>'
-        + '</div>'
-        + '<input id="' + id + '" type="' + realType + '"' + dir + placeholder + ' />'
-        + '<div id="' + id + '-preview" style="margin-top:8px;"></div>'
-        + '</div>';
-    }
-    return '<div class="field' + fullClass + '"><label>' + escapeHtml(f.label) + '</label><input id="' + id + '" type="' + f.type + '"' + dir + placeholder + step + min + max + ' /></div>';
-  }).join('');
-}
-
-function setFieldValue(field, value) {
-  const el = document.getElementById('f-' + field.id);
-  if (!el) return;
-  if (field.type === 'checkbox') el.checked = !!value;
-  else if (field.type === 'datetime-local' && value) el.value = new Date(value).toISOString().slice(0, 16);
-  else el.value = value == null ? '' : value;
-  // Refresh preview for image fields when loading existing data
-  const isImg = /imageUrl$|^logo$/i.test(field.id) || field.type === 'image';
-  if (isImg && value) {
-    const preview = document.getElementById('f-' + field.id + '-preview');
-    if (preview) preview.innerHTML = '<img src="' + value + '" style="max-width:200px;max-height:120px;border-radius:8px;border:1px solid var(--border);" onerror="this.style.display=\'none\'" />';
-  }
-}
-
-function getFieldValue(field) {
-  const el = document.getElementById('f-' + field.id);
-  if (!el) return null;
-  if (field.type === 'checkbox') return el.checked;
-  if (field.type === 'number') {
-    const v = el.value.trim();
-    return v === '' ? null : Number(v);
-  }
-  if (field.type === 'datetime-local') return el.value || null;
-  const v = el.value.trim();
-  if (field.nullable && v === '') return null;
-  return v;
-}
-
 function openCreateModal() {
   editingId = null;
   const ent = currentEntity();
   document.getElementById('modal-title').textContent = ent.singularAr + ' جديد';
-  buildFormFields();
-  ent.fields.forEach(f => {
-    const def = typeof f.default === 'function' ? f.default() : f.default;
-    setFieldValue(f, def != null ? def : (f.type === 'checkbox' ? false : ''));
-  });
-  document.getElementById('modal-msg').innerHTML = '';
+  renderForm({});
   document.getElementById('item-modal').classList.add('open');
 }
 
 function editItem(id) {
+  editingId = id;
   const item = currentItems.find(x => x.id === id);
   if (!item) return;
-  editingId = id;
   const ent = currentEntity();
   document.getElementById('modal-title').textContent = 'تعديل ' + ent.singularAr;
-  buildFormFields();
-  ent.fields.forEach(f => setFieldValue(f, item[f.id]));
-  document.getElementById('modal-msg').innerHTML = '';
+  renderForm(item);
   document.getElementById('item-modal').classList.add('open');
 }
 
-function closeModal() { document.getElementById('item-modal').classList.remove('open'); }
-
-async function saveItem() {
-  const msg = document.getElementById('modal-msg');
-  const btn = document.getElementById('save-btn');
-  msg.innerHTML = '';
-  const ent = currentEntity();
-  const payload = {};
-  const missing = [];
-  ent.fields.forEach(f => {
-    const v = getFieldValue(f);
-    payload[f.id] = v;
-    if (f.required && (v == null || v === '')) missing.push(f.label.replace(/\s*\*\s*$/, ''));
-  });
-  if (missing.length) {
-    msg.innerHTML = '<div class="msg msg-error">يرجى ملء: ' + escapeHtml(missing.join('، ')) + '</div>';
-    return;
-  }
-  btn.disabled = true;
-  btn.textContent = 'جاري الحفظ...';
-  try {
-    const r = editingId
-      ? await api(ent.endpoint + '/' + editingId, { method: 'PUT', body: JSON.stringify(payload) })
-      : await api(ent.endpoint, { method: 'POST', body: JSON.stringify(payload) });
-    if (!r.ok) {
-      msg.innerHTML = '<div class="msg msg-error">' + escapeHtml(r.data?.error || 'فشل الحفظ') + '</div>';
-      return;
-    }
-    closeModal();
-    await loadList();
-  } catch (e) {
-    msg.innerHTML = '<div class="msg msg-error">حدث خطأ في الاتصال</div>';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'حفظ';
-  }
+function closeModal() {
+  document.getElementById('item-modal').classList.remove('open');
+  document.getElementById('modal-msg').innerHTML = '';
+  editingId = null;
 }
 
 async function deleteItem(id) {
   const ent = currentEntity();
-  const item = currentItems.find(x => x.id === id);
-  const name = item ? (ent.list.title(item) || '') : '';
-  if (!confirm('هل أنت متأكد من حذف ' + ent.singularAr + ' "' + name + '"؟ لا يمكن التراجع.')) return;
+  if (!confirm('تأكيد حذف؟ لا يمكن التراجع.')) return;
   const r = await api(ent.endpoint + '/' + id, { method: 'DELETE' });
   if (!r.ok) { alert('فشل الحذف: ' + (r.data?.error || 'خطأ')); return; }
   await loadList();
 }
 
-document.getElementById('login-password').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
-});
+function renderForm(item) {
+  const ent = currentEntity();
+  const grid = document.getElementById('form-fields');
+  grid.innerHTML = ent.fields.map(f => {
+    const v = item[f.id];
+    const full = f.full ? 'field-full' : '';
+    const dir = f.dir ? ' dir="' + f.dir + '"' : '';
+    let input = '';
+    if (f.type === 'textarea') input = '<textarea id="f_' + f.id + '"' + dir + '>' + escapeHtml(v || (typeof f.default === 'function' ? f.default() : f.default || '')) + '</textarea>';
+    else if (f.type === 'select') input = '<select id="f_' + f.id + '">' + (f.options || []).map(o => '<option value="' + o[0] + '"' + (v === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>';
+    else if (f.type === 'checkbox') input = '<div class="checkbox-row"><input id="f_' + f.id + '" type="checkbox"' + (v ? ' checked' : '') + ' /><label for="f_' + f.id + '">' + f.label + '</label></div>';
+    else input = '<input id="f_' + f.id + '" type="' + f.type + '"' + dir + ' value="' + escapeHtml(v != null ? v : (typeof f.default === 'function' ? f.default() : f.default || '')) + '" />';
+    if (f.type === 'checkbox') return '<div class="field ' + full + '">' + input + '</div>';
+    return '<div class="field ' + full + '"><label>' + f.label + '</label>' + input + '</div>';
+  }).join('');
+}
 
-boot();
+async function saveItem() {
+  const ent = currentEntity();
+  const msg = document.getElementById('modal-msg');
+  const btn = document.getElementById('save-btn');
+  msg.innerHTML = '';
+  const payload = {};
+  const missing = [];
+  for (const f of ent.fields) {
+    const el = document.getElementById('f_' + f.id);
+    if (!el) continue;
+    let val;
+    if (f.type === 'checkbox') val = el.checked;
+    else if (f.type === 'number') val = el.value === '' ? null : Number(el.value);
+    else val = el.value.trim();
+    if (f.required && (val === '' || val == null)) missing.push(f.label);
+    if (val !== '' && val != null) payload[f.id] = val;
+  }
+  if (missing.length) { msg.innerHTML = '<div class="msg msg-error">يرجى ملء: ' + escapeHtml(missing.join('، ')) + '</div>'; return; }
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  try {
+    const r = editingId
+      ? await api(ent.endpoint + '/' + editingId, { method: 'PUT', body: JSON.stringify(payload) })
+      : await api(ent.endpoint, { method: 'POST', body: JSON.stringify(payload) });
+    if (!r.ok) { msg.innerHTML = '<div class="msg msg-error">' + escapeHtml(r.data?.error || 'فشل الحفظ') + '</div>'; return; }
+    closeModal();
+    await loadList();
+  } catch (e) {
+    msg.innerHTML = '<div class="msg msg-error">حدث خطأ في الاتصال</div>';
+  } finally { btn.disabled = false; btn.textContent = 'حفظ'; }
+}
 
-/* ═══════════════════════════════════════════════════════════
-   MORNING BRIEFING — custom (non-entity) tab
-   ═════════════════════════════════════════════════════════ */
-const BRIEFING_IMPACTS = [['bullish','📈 إيجابي'],['bearish','📉 سلبي'],['neutral','➖ محايد']];
-const BRIEFING_CATEGORIES = [['currency','عملة'],['index','مؤشر'],['commodity','سلعة'],['material','مادة خام']];
 const DEFAULT_BRIEFING_ITEMS = Array.from({length:5}, (_,i) => ({num:i+1,title_ar:'',title_en:'',sector_ar:'',sector_en:'',impact:'neutral'}));
 const DEFAULT_BRIEFING_RATES = [
   { symbol:'USD/EGP', name_ar:'دولار/جنيه', name_en:'USD/EGP', value:'52.92', change:'0.2', category:'currency' },
-  { symbol:'EUR/EGP', name_ar:'يورو/جنيه', name_en:'EUR/EGP', value:'61.46', change:'-0.3', category:'currency' },
-  { symbol:'EGX30',   name_ar:'EGX30', name_en:'EGX30', value:'31245', change:'1.8', category:'index' },
-  { symbol:'Gold',    name_ar:'ذهب', name_en:'Gold', value:'4506', change:'0.5', category:'commodity' }
+  { symbol:'EGX30', name_ar:'EGX30', name_en:'EGX30', value:'31245', change:'1.8', category:'index' }
 ];
 
 async function switchToBriefing() {
@@ -779,13 +829,11 @@ async function switchToBriefing() {
   document.getElementById('stats-section').innerHTML = '';
   const container = document.getElementById('list-container');
   container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-  // Try to load today's briefing
   const r = await api('/api/admin/briefing');
   let briefing = (r.ok && r.data && r.data.data) || null;
   const items = (briefing && briefing.items) || DEFAULT_BRIEFING_ITEMS;
   const rates = (briefing && briefing.rates) || DEFAULT_BRIEFING_RATES;
-  const deal = (briefing && briefing.dealOfDay) || { title_ar:'', title_en:'', value:'', sector_ar:'', sector_en:'' };
-  // Render simple form
+  const deal = (briefing && briefing.dealOfDay) || { title_ar:'', title_en:'', value:'' };
   let html = '<div class="form-grid" style="grid-template-columns:1fr;">';
   html += '<div class="field field-full"><label>تاريخ النشرة</label><input id="bf-date" type="date" value="' + (briefing && briefing.date ? new Date(briefing.date).toISOString().slice(0,10) : new Date().toISOString().slice(0,10)) + '" /></div>';
   html += '<div class="field field-full"><label>أهم 5 أخبار (JSON)</label><textarea id="bf-items" style="min-height:200px;font-family:monospace;">' + JSON.stringify(items, null, 2) + '</textarea></div>';
@@ -804,8 +852,9 @@ async function saveBriefing() {
     const dealOfDay = JSON.parse(document.getElementById('bf-deal').value);
     const r = await api('/api/admin/briefing', { method: 'POST', body: JSON.stringify({ date, items, rates, dealOfDay }) });
     if (!r.ok) { alert('فشل الحفظ: ' + (r.data?.error || 'خطأ')); return; }
-    alert('تم حفظ النشرة يوم ' + date);
-  } catch (e) {
-    alert('خطأ في JSON: ' + e.message);
-  }
+    alert('تم حفظ النشرة');
+  } catch (e) { alert('خطأ في JSON: ' + e.message); }
 }
+
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+boot();
