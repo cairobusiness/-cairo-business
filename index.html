@@ -15064,4 +15064,10 @@
       }
       setTimeout(safeApply, 50);
       setTimeout(safeApply, 300);
-      setTime
+      setTimeout(safeApply, 1000);
+      // After initial render, try to enrich with live API data
+      setTimeout(pullHomepageDataFromApi, 800);
+    })();
+  </script>
+</body>
+</html>
