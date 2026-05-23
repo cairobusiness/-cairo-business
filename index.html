@@ -4674,40 +4674,192 @@
         </a>
       </div>
 
-      <!-- Power Network Web — interactive graph of relationships -->
-      <div class="bm-network-wrap reveal" id="bm-grid">
-        <div class="bm-network-head">
-          <div class="bm-network-eyebrow"><i data-lucide="git-fork" class="w-3.5 h-3.5"></i><span data-i18n="bm.net.eyebrow">Power network</span></div>
-          <div class="bm-network-title" data-i18n="bm.net.title">Who knows whom</div>
-          <div class="bm-network-legend">
-            <span class="bm-leg"><span class="bm-leg-line gold"></span><span data-i18n="bm.net.legendDeal">Direct deal / JV</span></span>
-            <span class="bm-leg"><span class="bm-leg-line dashed"></span><span data-i18n="bm.net.legendBoard">Board overlap</span></span>
-            <span class="bm-leg"><span class="bm-leg-line family"></span><span data-i18n="bm.net.legendFamily">Family ties</span></span>
+      <!-- Forbes-style profile cards grid — data-driven from /api/businessmen -->
+      <div class="bm-grid-wrap reveal" id="bm-grid">
+        <div class="bm-grid-toolbar">
+          <div class="bm-grid-toolbar-left">
+            <span class="bm-grid-count"><span id="bm-grid-count-num">—</span> <span data-i18n="bm.count.profiles">شخصية</span></span>
+            <span class="bm-grid-sep">·</span>
+            <span class="bm-grid-meta-item"><i data-lucide="globe-2" class="w-3 h-3"></i><span id="bm-grid-countries-num">—</span> <span data-i18n="bm.count.countries">دولة</span></span>
+            <span class="bm-grid-sep">·</span>
+            <span class="bm-grid-meta-item"><i data-lucide="trending-up" class="w-3 h-3"></i><span id="bm-grid-wealth">—</span> <span data-i18n="bm.count.wealth">إجمالي الثروة</span></span>
           </div>
+          <div class="bm-grid-filters" id="bm-grid-filters"></div>
         </div>
-        <div class="bm-network-stage">
-          <svg id="bm-network-svg" viewBox="0 0 760 540" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
-          <div id="bm-network-panel" class="bm-network-panel">
-            <div class="bm-panel-empty" id="bm-panel-empty">
-              <i data-lucide="mouse-pointer-click" class="w-7 h-7"></i>
-              <div data-i18n="bm.net.emptyTitle">Click any node</div>
-              <div class="bm-panel-empty-sub" data-i18n="bm.net.emptySub">to explore the businessman’s empire</div>
-            </div>
-            <div class="bm-panel-detail hidden" id="bm-panel-detail"></div>
-          </div>
+        <div class="bm-grid-list" id="bm-grid-list">
+          <!-- cards rendered by renderBusinessmen() -->
         </div>
-        <div class="bm-network-foot">
-          <span class="bm-foot-item"><i data-lucide="circle" class="w-3 h-3"></i><span data-i18n="bm.net.footNodes">13 nodes</span></span>
-          <span class="bm-foot-sep">·</span>
-          <span class="bm-foot-item"><i data-lucide="git-pull-request" class="w-3 h-3"></i><span data-i18n="bm.net.footEdges">17 connections</span></span>
-          <span class="bm-foot-sep">·</span>
-          <span class="bm-foot-item"><i data-lucide="globe-2" class="w-3 h-3"></i><span data-i18n="bm.net.footCountries">4 countries</span></span>
+        <div class="bm-grid-empty hidden" id="bm-grid-empty">
+          <i data-lucide="users" class="w-8 h-8"></i>
+          <div data-i18n="bm.empty.title">لا توجد بيانات حتى الآن</div>
+          <div class="bm-grid-empty-sub" data-i18n="bm.empty.sub">أضف رجال الأعمال من لوحة التحكم — قسم "رجال الأعمال"</div>
         </div>
       </div>
     </div>
 
-    <!-- ===== Power Network Web — scoped styles ===== -->
+    <!-- ===== Forbes-style profile grid — scoped styles ===== -->
     <style>
+      .bm-grid-wrap {
+        position: relative;
+        background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+        border: 1px solid rgba(244,208,63,.18);
+        border-radius: 28px;
+        padding: 24px;
+        backdrop-filter: blur(12px) saturate(140%);
+        -webkit-backdrop-filter: blur(12px) saturate(140%);
+      }
+      .bm-grid-wrap::before {
+        content:''; position: absolute; top:0; left:0; right:0; height:1px;
+        background: linear-gradient(90deg, transparent, rgba(244,208,63,.6), transparent);
+      }
+      .bm-grid-toolbar {
+        display: flex; justify-content: space-between; align-items: center;
+        flex-wrap: wrap; gap: 12px;
+        padding-bottom: 14px; margin-bottom: 18px;
+        border-bottom: 1px solid rgba(244,208,63,.18);
+      }
+      .bm-grid-toolbar-left {
+        display: inline-flex; align-items: center; gap: 10px;
+        flex-wrap: wrap; font-size: 12px; color: rgba(255,255,255,.72);
+      }
+      .bm-grid-count { color: #F4D03F; font-weight: 800; letter-spacing: .05em; }
+      .bm-grid-count #bm-grid-count-num { font-size: 18px; margin-inline-end: 4px; }
+      .bm-grid-sep { color: rgba(255,255,255,.25); }
+      .bm-grid-meta-item { display: inline-flex; align-items: center; gap: 6px; }
+      .bm-grid-meta-item i { color: #F4D03F; }
+      .bm-grid-filters { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+      .bm-grid-filter {
+        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+        color: rgba(255,255,255,.7); border-radius: 999px;
+        padding: 6px 14px; font-size: 11px; font-weight: 700;
+        cursor: pointer; transition: all .18s ease;
+      }
+      .bm-grid-filter:hover { background: rgba(244,208,63,.08); border-color: rgba(244,208,63,.3); color: #fff; }
+      .bm-grid-filter.is-active {
+        background: linear-gradient(135deg, #F4D03F, #D4AF37); color: #0A0E27;
+        border-color: transparent; box-shadow: 0 4px 14px rgba(244,208,63,.4);
+      }
+      .bm-grid-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 18px;
+      }
+      .bm-card {
+        position: relative;
+        background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 22px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+      }
+      .bm-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(244,208,63,.45);
+        box-shadow: 0 22px 50px -18px rgba(244,208,63,.35);
+      }
+      .bm-card-photo {
+        position: relative;
+        height: 280px;
+        background: linear-gradient(180deg, var(--bmc1, #1f2937), var(--bmc2, #0a0e27));
+        background-size: cover;
+        background-position: center top;
+        overflow: hidden;
+      }
+      .bm-card-photo::after {
+        content:''; position: absolute; inset: 0;
+        background: linear-gradient(180deg, rgba(10,14,39,0) 40%, rgba(10,14,39,.85) 100%);
+        pointer-events: none;
+      }
+      .bm-card-initials {
+        position: absolute; inset: 0;
+        display: grid; place-items: center;
+        font-family: 'Cairo','Inter',sans-serif; font-weight: 900;
+        font-size: 68px; color: rgba(255,255,255,.65);
+        text-shadow: 0 4px 14px rgba(0,0,0,.45);
+        letter-spacing: 0;
+      }
+      [lang="en"] .bm-card-initials { font-family: 'Playfair Display','Inter',sans-serif; }
+      .bm-card-rank {
+        position: absolute; top: 12px; inset-inline-start: 12px;
+        background: rgba(10,14,39,.7); backdrop-filter: blur(8px);
+        color: #F4D03F; font-size: 11px; font-weight: 900;
+        padding: 4px 10px; border-radius: 999px;
+        border: 1px solid rgba(244,208,63,.3);
+        z-index: 2;
+      }
+      .bm-card-flag {
+        position: absolute; top: 12px; inset-inline-end: 12px;
+        background: rgba(10,14,39,.7); backdrop-filter: blur(8px);
+        color: #fff; font-size: 11px; font-weight: 800;
+        padding: 4px 10px; border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.15);
+        z-index: 2;
+      }
+      .bm-card-net {
+        position: absolute; bottom: 0; inset-inline-end: 0;
+        background: linear-gradient(135deg, #F4D03F, #D4AF37); color: #0A0E27;
+        font-size: 14px; font-weight: 900;
+        padding: 6px 14px;
+        border-start-start-radius: 14px;
+        z-index: 2;
+        letter-spacing: -.01em;
+      }
+      .bm-card-body {
+        padding: 16px 18px 20px;
+      }
+      .bm-card-sector {
+        font-size: 10px; font-weight: 800; color: #F4D03F;
+        letter-spacing: .22em; text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .bm-card-name {
+        font-family: 'Cairo','Inter',sans-serif; font-weight: 900;
+        font-size: 18px; color: #fff; line-height: 1.25;
+        margin-bottom: 4px;
+      }
+      [lang="en"] .bm-card-name { font-family: 'Playfair Display','Inter',sans-serif; letter-spacing: -.01em; }
+      .bm-card-title {
+        font-size: 13px; color: rgba(255,255,255,.6);
+        line-height: 1.4;
+        min-height: 36px;
+      }
+      .bm-card-companies {
+        font-size: 11px; color: rgba(255,255,255,.45);
+        margin-top: 10px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .bm-card-cta {
+        display: inline-flex; align-items: center; gap: 6px;
+        margin-top: 12px;
+        font-size: 12px; font-weight: 700; color: #F4D03F;
+      }
+      .bm-card-cta i { transition: transform .18s ease; }
+      .bm-card:hover .bm-card-cta i { transform: translateX(4px); }
+      [dir="rtl"] .bm-card:hover .bm-card-cta i { transform: translateX(-4px); }
+      .bm-grid-empty {
+        text-align: center; padding: 48px 24px;
+        color: rgba(255,255,255,.5);
+      }
+      .bm-grid-empty i { display: block; margin: 0 auto 12px; color: #F4D03F; }
+      .bm-grid-empty > div { font-weight: 800; color: #fff; font-size: 16px; }
+      .bm-grid-empty-sub { font-size: 13px; color: rgba(255,255,255,.5) !important; font-weight: 400 !important; margin-top: 6px; }
+
+      /* Light theme overrides */
+      html[data-theme="light"] .bm-grid-wrap {
+        background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(245,247,250,.92));
+        border-color: rgba(212,175,55,.35);
+      }
+      html[data-theme="light"] .bm-grid-toolbar-left { color: #475569; }
+      html[data-theme="light"] .bm-grid-toolbar { border-bottom-color: rgba(212,175,55,.25); }
+      html[data-theme="light"] .bm-grid-sep { color: #cbd5e1; }
+      html[data-theme="light"] .bm-grid-filter { background: rgba(255,255,255,.7); border-color: #e2e8f0; color: #475569; }
+      html[data-theme="light"] .bm-card { background: #fff; border-color: #e2e8f0; box-shadow: 0 6px 18px -8px rgba(15,23,42,.12); }
+      html[data-theme="light"] .bm-card-name { color: #0f172a; }
+      html[data-theme="light"] .bm-card-title { color: #475569; }
+      html[data-theme="light"] .bm-card-companies { color: #64748b; }
+
+      /* Hide the legacy Network Web styles below — kept for compatibility but no element uses them */
       .bm-network-wrap {
         position: relative;
         background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
@@ -8957,7 +9109,7 @@
         'news.eyebrow':'آخر التطورات','news.title':'أخبار تصنع الفارق في قراراتك','news.subtitle':'تغطية فورية لأهم الأحداث الاقتصادية في مصر والشرق الأوسط — فلتّرها حسب اهتمامك.','news.breaking':'عاجل','news.cat.markets':'الأسواق','news.author1':'محمد الغمراوي','news.hero.title':'البنك المركزي يثبّت أسعار الفائدة — إشارة خضراء للمطورين العقاريين','news.hero.excerpt':'قرار لجنة السياسة النقدية بتثبيت الفائدة يضع ضغطاً على البنوك لإعادة إطلاق برامج التمويل العقاري المجمّد، ويفتح نافذة نادرة لمطوري المدن الجديدة قبل نهاية الربع الثالث.','news.aiSummary':'ملخص AI','news.save':'احفظ',
         'ai.eyebrow':'اسأل الخبراء','ai.title':'اسأل وخُذ قرارك','ai.subtitle':'أسئلة حقيقية يطرحها صنّاع القرار — مع إجابات تحليلية من كايرو AI.','ai.online':'متصل الآن','ai.new':'محادثة جديدة','ai.inputPh':'اسأل كايرو بيزنس AI...','ai.msg.user':'قارن بين مدينتي ومراسي من حيث العائد الإيجاري؟','ai.msg.aiText':'بناءً على بيانات الربع الأول ٢٠٢٦: مدينتي يحقق عائداً إيجارياً متوسطه 6.2% سنوياً، بينما مراسي 4.8% موسمياً لكنه يرتفع إلى 11% خلال يونيو–أغسطس [1]. المقارنة الكاملة في الجدول أدناه.','ai.table.metric':'المؤشر','ai.table.yield':'العائد الإيجاري','ai.table.price':'سعر المتر','ai.table.forecast':'توقع ١٢ شهر','ai.action.deepen':'تعميق','ai.action.sources':'المصادر (3)','ai.action.pdf':'تصدير PDF',
         'top10.eyebrow':'تصنيفات القوة','top10.title':'أقوى 10 شركات في الشرق الأوسط','top10.subtitle':'تصنيف حصري يعتمد على الإيرادات والنمو والابتكار — اعرف من يقود السوق.','top10.methodology':'منهجية التقييم','top10.footnote':'المصادر: تقارير الشركات، البورصات المحلية، Reuters، Zawya — آخر تحديث Q1 2026.','top10.rank':'الترتيب','top10.growth':'النمو السنوي','top10.revenue':'الإيراد','top10.score':'النقاط',
-        'bm.eyebrow':'صُنّاع القرار','bm.title':'أقوى رجال الأعمال في الشرق الأوسط','bm.subtitle':'ملفات تفصيلية لأبرز قادة الاقتصاد — ثرواتهم، إمبراطورياتهم، وقراراتهم التي تشكّل المنطقة.','bm.viewAll':'كل الملفات','bm.profile':'الملف الكامل','bm.empire':'الإمبراطورية','bm.net':'صافي الثروة',
+        'bm.eyebrow':'صُنّاع القرار','bm.title':'أقوى رجال الأعمال في الشرق الأوسط','bm.subtitle':'ملفات تفصيلية لأبرز قادة الاقتصاد — ثرواتهم، إمبراطورياتهم، وقراراتهم التي تشكّل المنطقة.','bm.viewAll':'كل الملفات','bm.profile':'الملف الكامل','bm.empire':'الإمبراطورية','bm.net':'صافي الثروة','bm.count.profiles':'شخصية','bm.count.countries':'دولة','bm.count.wealth':'إجمالي الثروة','bm.empty.title':'لا توجد بيانات حتى الآن','bm.empty.sub':'أضف رجال الأعمال من لوحة التحكم — قسم "رجال الأعمال"',
         'bm.net.eyebrow':'شبكة القوة','bm.net.title':'من يعرف من',
         'bm.net.legendDeal':'صفقة / شراكة مباشرة','bm.net.legendBoard':'تداخل في مجالس الإدارة','bm.net.legendFamily':'روابط عائلية',
         'bm.net.emptyTitle':'اضغط على أي عقدة','bm.net.emptySub':'لاستكشاف إمبراطورية رجل الأعمال',
@@ -9350,7 +9502,7 @@
         'news.eyebrow':'LATEST DEVELOPMENTS','news.title':'News That Shapes Your Decisions','news.subtitle':'Instant coverage of top economic events in Egypt & the Middle East — filtered to your interest.','news.breaking':'BREAKING','news.cat.markets':'Markets','news.author1':'Mohamed El-Ghamrawy','news.hero.title':'Central Bank Holds Rates — Green Light for Real-Estate Developers','news.hero.excerpt':'The monetary policy committee\u2019s decision puts pressure on banks to restart frozen mortgage programmes and opens a rare window for new-city developers before Q3 end.','news.aiSummary':'AI Summary','news.save':'Save',
         'ai.eyebrow':'ASK EXPERTS','ai.title':'Ask & Decide','ai.subtitle':'Real questions from decision-makers — with analytical answers from Cairo AI.','ai.online':'Online','ai.new':'New chat','ai.inputPh':'Ask Cairo Business AI...','ai.msg.user':'Compare Madinaty vs Marassi on rental yield?','ai.msg.aiText':'Based on Q1 2026 data: Madinaty delivers an average annual rental yield of 6.2%, while Marassi runs at 4.8% seasonally but spikes to 11% during June–August [1]. Full comparison below.','ai.table.metric':'Metric','ai.table.yield':'Rental Yield','ai.table.price':'Price / sqm','ai.table.forecast':'12-Mo Forecast','ai.action.deepen':'Deepen','ai.action.sources':'Sources (3)','ai.action.pdf':'Export PDF',
         'top10.eyebrow':'POWER RANKINGS','top10.title':'Top 10 Companies in the Middle East','top10.subtitle':'Exclusive ranking by revenue, growth & innovation — know who leads the market.','top10.methodology':'Methodology','top10.footnote':'Sources: company filings, regional exchanges, Reuters, Zawya — updated Q1 2026.','top10.rank':'Rank','top10.growth':'YoY Growth','top10.revenue':'Revenue','top10.score':'Score',
-        'bm.eyebrow':'DECISION MAKERS','bm.title':'Most Powerful Businessmen in the Middle East','bm.subtitle':'Detailed profiles of top economic leaders — their wealth, empires, and region-shaping decisions.','bm.viewAll':'All profiles','bm.profile':'Full profile','bm.empire':'Empire','bm.net':'Net worth',
+        'bm.eyebrow':'DECISION MAKERS','bm.title':'Most Powerful Businessmen in the Middle East','bm.subtitle':'Detailed profiles of top economic leaders — their wealth, empires, and region-shaping decisions.','bm.viewAll':'All profiles','bm.profile':'Full profile','bm.empire':'Empire','bm.net':'Net worth','bm.count.profiles':'profiles','bm.count.countries':'countries','bm.count.wealth':'Total Wealth','bm.empty.title':'No data yet','bm.empty.sub':'Add businessmen via the admin panel — "Businessmen" section',
         'bm.net.eyebrow':'Power network','bm.net.title':'Who knows whom',
         'bm.net.legendDeal':'Direct deal / JV','bm.net.legendBoard':'Board overlap','bm.net.legendFamily':'Family ties',
         'bm.net.emptyTitle':'Click any node','bm.net.emptySub':'to explore the businessman’s empire',
@@ -11670,8 +11822,249 @@
     };
 
     let BM_ACTIVE_NODE = null;
+    /* Forbes-style profile grid state */
+    window.BM_API_DATA = window.BM_API_DATA || null;
+    window.BM_ACTIVE_SECTOR = window.BM_ACTIVE_SECTOR || 'all';
+
+    /* Fetch businessmen from API and refresh the grid */
+    async function pullBusinessmenFromApi() {
+      try {
+        const res = await fetch('https://cairo-business-backend.vercel.app/api/businessmen?limit=100', { cache: 'no-store' });
+        const j = await res.json();
+        if (!j || !j.success || !Array.isArray(j.data)) return false;
+        window.BM_API_DATA = j.data;
+        renderBusinessmen();
+        return true;
+      } catch (e) { console.warn('pullBusinessmenFromApi failed:', e); return false; }
+    }
+
+    function bmCountryNameAr(code) {
+      const m = { EG:'مصر', SA:'السعودية', AE:'الإمارات', QA:'قطر', KW:'الكويت', BH:'البحرين', OM:'عُمان', JO:'الأردن', LB:'لبنان', SY:'سوريا', IQ:'العراق', PS:'فلسطين', MA:'المغرب', TN:'تونس', DZ:'الجزائر', LY:'ليبيا', SD:'السودان', YE:'اليمن' };
+      return m[(code||'').toUpperCase()] || code || '—';
+    }
+    function bmFlagEmoji(code) {
+      const m = { EG:'🇪🇬', SA:'🇸🇦', AE:'🇦🇪', QA:'🇶🇦', KW:'🇰🇼', BH:'🇧🇭', OM:'🇴🇲', JO:'🇯🇴', LB:'🇱🇧', SY:'🇸🇾', IQ:'🇮🇶', PS:'🇵🇸', MA:'🇲🇦', TN:'🇹🇳', DZ:'🇩🇿', LY:'🇱🇾', SD:'🇸🇩', YE:'🇾🇪' };
+      return m[(code||'').toUpperCase()] || '🌐';
+    }
+    function bmInitials(name) {
+      if (!name) return '?';
+      const parts = String(name).trim().split(/\s+/).slice(0, 2);
+      return parts.map(w => w.charAt(0)).join('.');
+    }
 
     function renderBusinessmen(){
+      const list = document.getElementById('bm-grid-list');
+      if (!list) {
+        /* Backward compatibility — old SVG path may still be queried by other code */
+        const svg = document.getElementById('bm-network-svg');
+        if (svg) return; /* old code path no longer used; silent return */
+        return;
+      }
+      const isAr = currentLang === 'ar';
+      const data = (window.BM_API_DATA && window.BM_API_DATA.length) ? window.BM_API_DATA : [];
+
+      /* If no data yet, show empty state */
+      const emptyEl = document.getElementById('bm-grid-empty');
+      if (!data.length) {
+        list.innerHTML = '';
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        document.getElementById('bm-grid-count-num').textContent = '0';
+        document.getElementById('bm-grid-countries-num').textContent = '0';
+        document.getElementById('bm-grid-wealth').textContent = '$0B';
+        return;
+      }
+      if (emptyEl) emptyEl.classList.add('hidden');
+
+      /* Compute aggregate stats */
+      const totalCount = data.length;
+      const countries = new Set(data.map(d => d.flag).filter(Boolean));
+      const totalWealth = data.reduce((s, d) => s + (d.netWorth || 0), 0);
+      document.getElementById('bm-grid-count-num').textContent = totalCount;
+      document.getElementById('bm-grid-countries-num').textContent = countries.size;
+      const wealthLabel = totalWealth >= 1000 ? '$' + (totalWealth/1000).toFixed(1) + 'T' : '$' + totalWealth.toFixed(0) + 'B';
+      document.getElementById('bm-grid-wealth').textContent = wealthLabel;
+
+      /* Build sector filter pills */
+      const sectors = Array.from(new Set(data.map(d => isAr ? (d.sectorAr || d.sectorEn) : (d.sectorEn || d.sectorAr)).filter(Boolean)));
+      const allLabel = isAr ? 'الكل' : 'All';
+      const filtersEl = document.getElementById('bm-grid-filters');
+      if (filtersEl) {
+        filtersEl.innerHTML = ['all', ...sectors].map(s => {
+          const active = (window.BM_ACTIVE_SECTOR || 'all') === s;
+          const label = s === 'all' ? allLabel : s;
+          return `<button class="bm-grid-filter ${active ? 'is-active' : ''}" onclick="setBmSector('${String(s).replace(/'/g,"\\'")}')">${label}</button>`;
+        }).join('');
+      }
+
+      /* Filter and sort by rank/wealth */
+      let filtered = data.slice();
+      if (window.BM_ACTIVE_SECTOR && window.BM_ACTIVE_SECTOR !== 'all') {
+        filtered = filtered.filter(d => {
+          const s = isAr ? (d.sectorAr || d.sectorEn) : (d.sectorEn || d.sectorAr);
+          return s === window.BM_ACTIVE_SECTOR;
+        });
+      }
+      filtered.sort((a, b) => (a.rank || 999) - (b.rank || 999) || (b.netWorth || 0) - (a.netWorth || 0));
+
+      /* Color ramp by index for the gradient fallback */
+      const ramps = [
+        ['#FFB800','#FF9500'], ['#F59E0B','#B45309'], ['#06B6D4','#0891B2'],
+        ['#8B5CF6','#6D28D9'], ['#EC4899','#BE185D'], ['#EF4444','#B91C1C'],
+        ['#14B8A6','#0F766E'], ['#3B82F6','#1D4ED8'], ['#10B981','#047857'],
+        ['#A78BFA','#7C3AED'], ['#0EA5E9','#0369A1'], ['#22C55E','#15803D']
+      ];
+
+      /* Build cards HTML */
+      list.innerHTML = filtered.map((b, idx) => {
+        const ramp = ramps[idx % ramps.length];
+        const name = isAr ? (b.nameAr || b.nameEn) : (b.nameEn || b.nameAr);
+        const title = isAr ? (b.titleAr || b.sectorAr || '') : (b.titleEn || b.sectorEn || '');
+        const sectorLabel = isAr ? (b.sectorAr || b.sectorEn) : (b.sectorEn || b.sectorAr);
+        const initials = bmInitials(name);
+        const flagEm = bmFlagEmoji(b.flag);
+        const countryName = isAr ? bmCountryNameAr(b.flag) : (b.flag || '');
+        const wealth = b.netWorth ? '$' + b.netWorth + 'B' : '';
+        const companies = b.companies || '';
+        const rank = b.rank ? String(b.rank).padStart(2, '0') : String(idx + 1).padStart(2, '0');
+        const hasPhoto = !!b.imageUrl;
+        const safeImg = hasPhoto ? String(b.imageUrl).replace(/'/g,'%27').replace(/"/g,'%22') : '';
+        const photoStyle = hasPhoto
+          ? `background-image:url('${safeImg}'); --bmc1:${ramp[0]}; --bmc2:${ramp[1]};`
+          : `--bmc1:${ramp[0]}; --bmc2:${ramp[1]};`;
+        const detailsLabel = isAr ? 'الملف الكامل' : 'Full profile';
+
+        return `
+          <article class="bm-card" data-id="${b.id}" onclick="openBmProfile('${b.id}')">
+            <div class="bm-card-photo" style="${photoStyle}">
+              <span class="bm-card-rank">#${rank}</span>
+              <span class="bm-card-flag">${flagEm} ${countryName}</span>
+              ${!hasPhoto ? `<div class="bm-card-initials">${initials}</div>` : ''}
+              ${wealth ? `<span class="bm-card-net">${wealth}</span>` : ''}
+            </div>
+            <div class="bm-card-body">
+              <div class="bm-card-sector">${sectorLabel || ''}</div>
+              <div class="bm-card-name">${name}</div>
+              <div class="bm-card-title">${title}</div>
+              ${companies ? `<div class="bm-card-companies">${companies}</div>` : ''}
+              <div class="bm-card-cta">
+                <span>${detailsLabel}</span>
+                <i data-lucide="arrow-${isAr ? 'left' : 'right'}" class="w-3 h-3"></i>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      /* Cache by id for the profile modal */
+      window.BM_API_BY_ID = {};
+      data.forEach(b => { window.BM_API_BY_ID[b.id] = b; });
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function setBmSector(s) {
+      window.BM_ACTIVE_SECTOR = s;
+      renderBusinessmen();
+    }
+
+    /* Open profile modal for an API-driven businessman record */
+    function openBmProfile(id) {
+      const b = (window.BM_API_BY_ID || {})[id];
+      if (!b) return;
+      const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
+      const modal = document.getElementById('bm-modal');
+      const content = document.getElementById('bm-modal-content');
+      if (!modal || !content) return;
+
+      const name = isAr ? (b.nameAr || b.nameEn) : (b.nameEn || b.nameAr);
+      const title = isAr ? (b.titleAr || b.sectorAr || '') : (b.titleEn || b.sectorEn || '');
+      const sector = isAr ? (b.sectorAr || b.sectorEn) : (b.sectorEn || b.sectorAr);
+      const bio = b.bio || (isAr ? 'لم تُضف نبذة بعد.' : 'No biography yet.');
+      const edu = b.education || (isAr ? 'غير محدد' : 'Not specified');
+      const ach = (b.achievements || '').split(/\n|·|•|—/).map(s => s.trim()).filter(Boolean);
+      const comps = (b.companies || '').split(/[,،·]/).map(s => s.trim()).filter(Boolean);
+      const flagEm = bmFlagEmoji(b.flag);
+      const countryName = isAr ? bmCountryNameAr(b.flag) : (b.flag || '');
+      const wealth = b.netWorth ? '$' + b.netWorth + 'B' : '—';
+      const rank = b.rank ? '#' + b.rank : '—';
+      const age = b.age ? String(b.age) : '—';
+      const initials = bmInitials(name);
+
+      const labels = {
+        net: isAr ? 'صافي الثروة' : 'Net Worth',
+        rank: isAr ? 'الترتيب' : 'Rank',
+        comps: isAr ? 'الشركات' : 'Companies',
+        age: isAr ? 'العمر' : 'Age',
+        bio: isAr ? 'نبذة' : 'Biography',
+        education: isAr ? 'التعليم' : 'Education',
+        empire: isAr ? 'الإمبراطورية' : 'Empire',
+        ach: isAr ? 'أبرز الإنجازات' : 'Key Achievements'
+      };
+
+      const hasPhoto = !!b.imageUrl;
+      const safeImg = hasPhoto ? String(b.imageUrl).replace(/'/g,'%27').replace(/"/g,'%22') : '';
+      const headerBg = hasPhoto
+        ? `background-image:linear-gradient(180deg, rgba(10,14,39,0) 30%, rgba(10,14,39,.85) 100%), url('${safeImg}'); background-size:cover; background-position:center top;`
+        : `background:linear-gradient(135deg, #1f2937, #0a0e27);`;
+
+      content.innerHTML = `
+        <div class="relative h-56 rounded-t-3xl overflow-hidden" style="${headerBg}">
+          ${!hasPhoto ? `<div class="absolute inset-0 grid place-items-center"><div class="font-display font-black text-white/70 text-7xl">${initials}</div></div>` : ''}
+          <span class="absolute top-4 start-4 bg-navy-900/70 text-gold-400 text-xs font-black px-3 py-1 rounded-full">${rank}</span>
+          <span class="absolute top-4 end-4 bg-navy-900/70 text-white text-xs font-bold px-3 py-1 rounded-full">${flagEm} ${countryName}</span>
+          <button onclick="closeBmModal()" class="absolute bottom-4 end-4 w-9 h-9 rounded-full bg-navy-900/70 hover:bg-navy-900 text-white grid place-items-center transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div class="p-6 space-y-6">
+          <div>
+            <h3 class="font-display text-2xl font-black text-white">${name}</h3>
+            <div class="text-sm text-gold-400 font-semibold mt-1">${title}${sector && title !== sector ? ' · ' + sector : ''}</div>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="glass-light border border-white/10 rounded-xl p-3 text-center">
+              <div class="text-[10px] text-white/40 uppercase tracking-wider">${labels.net}</div>
+              <div class="text-lg font-bold text-gold-400 num mt-1">${wealth}</div>
+            </div>
+            <div class="glass-light border border-white/10 rounded-xl p-3 text-center">
+              <div class="text-[10px] text-white/40 uppercase tracking-wider">${labels.rank}</div>
+              <div class="text-lg font-bold text-white num mt-1">${rank}</div>
+            </div>
+            <div class="glass-light border border-white/10 rounded-xl p-3 text-center">
+              <div class="text-[10px] text-white/40 uppercase tracking-wider">${labels.comps}</div>
+              <div class="text-lg font-bold text-white num mt-1">${comps.length || '—'}</div>
+            </div>
+            <div class="glass-light border border-white/10 rounded-xl p-3 text-center">
+              <div class="text-[10px] text-white/40 uppercase tracking-wider">${labels.age}</div>
+              <div class="text-lg font-bold text-white num mt-1">${age}</div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 mb-2"><i data-lucide="user" class="w-4 h-4 text-gold-400"></i><span class="text-sm font-bold text-white">${labels.bio}</span></div>
+            <p class="text-sm text-white/70 leading-relaxed">${bio}</p>
+          </div>
+          ${edu && edu !== '—' && edu !== 'غير محدد' && edu !== 'Not specified' ? `<div>
+            <div class="flex items-center gap-2 mb-2"><i data-lucide="graduation-cap" class="w-4 h-4 text-gold-400"></i><span class="text-sm font-bold text-white">${labels.education}</span></div>
+            <p class="text-sm text-white/70">${edu}</p>
+          </div>` : ''}
+          ${comps.length ? `<div>
+            <div class="flex items-center gap-2 mb-3"><i data-lucide="building-2" class="w-4 h-4 text-gold-400"></i><span class="text-sm font-bold text-white">${labels.empire}</span></div>
+            <div class="flex flex-wrap gap-2">${comps.map(c => '<span class="text-xs bg-white/5 border border-white/10 text-white/80 rounded-lg px-3 py-1.5">' + c + '</span>').join('')}</div>
+          </div>` : ''}
+          ${ach.length ? `<div>
+            <div class="flex items-center gap-2 mb-3"><i data-lucide="trophy" class="w-4 h-4 text-gold-400"></i><span class="text-sm font-bold text-white">${labels.ach}</span></div>
+            <div class="space-y-2">${ach.map(a => '<div class="flex items-start gap-2"><span class="text-gold-400 mt-0.5">✦</span><span class="text-sm text-white/70">' + a + '</span></div>').join('')}</div>
+          </div>` : ''}
+        </div>`;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    /* Legacy noop placeholders for old code paths */
+    function __legacyRenderBusinessmen(){
       const svg = document.getElementById('bm-network-svg');
       if (!svg) return;
       const isAr = currentLang === 'ar';
@@ -15544,6 +15937,13 @@
             });
           }
         }, 600);
+        setTimeout(function () {
+          if (typeof pullBusinessmenFromApi === 'function') {
+            pullBusinessmenFromApi().catch(function(){});
+          } else if (typeof renderBusinessmen === 'function') {
+            try { renderBusinessmen(); } catch (_e) {}
+          }
+        }, 700);
         try {
           var __pm = document.getElementById('pp-profile-modal');
           if (__pm && __pm.parentElement !== document.body) document.body.appendChild(__pm);
