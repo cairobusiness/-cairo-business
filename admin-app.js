@@ -374,19 +374,176 @@ async function boot() {
 
 function renderTabs() {
   const wrap = document.getElementById('tabs');
+  const dashboardTab = '<button class="tab ' + (currentEntityKey === '__dashboard__' ? 'active' : '') + '" onclick="switchToDashboard()"><span class="tab-icon">📊</span>الرئيسية</button>';
+  const usersTab = '<button class="tab ' + (currentEntityKey === '__users__' ? 'active' : '') + '" onclick="switchToUsers()"><span class="tab-icon">👥</span>المستخدمين</button>';
   const entityTabs = Object.values(ENTITIES).map(e =>
     '<button class="tab ' + (e.key === currentEntityKey ? 'active' : '') + '" onclick="switchEntity(\'' + e.key + '\')">' +
     '<span class="tab-icon">' + e.icon + '</span>' + e.nameAr + '</button>'
   ).join('');
-  const briefingTab = '<button class="tab ' + (currentEntityKey === '__briefing__' ? 'active' : '') + '" onclick="switchToBriefing()">' +
-    '<span class="tab-icon">🌅</span>النشرة الصباحية</button>';
-  wrap.innerHTML = entityTabs + briefingTab;
+  const briefingTab = '<button class="tab ' + (currentEntityKey === '__briefing__' ? 'active' : '') + '" onclick="switchToBriefing()"><span class="tab-icon">🌅</span>النشرة الصباحية</button>';
+  const analyticsTab = '<button class="tab ' + (currentEntityKey === '__analytics__' ? 'active' : '') + '" onclick="switchToAnalytics()"><span class="tab-icon">📈</span>التحليلات</button>';
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + usersTab + analyticsTab;
+}
+
+async function switchToDashboard() {
+  currentEntityKey = '__dashboard__';
+  renderTabs();
+  document.getElementById('page-title').textContent = '📊 لوحة التحكم — نظرة عامة';
+  document.getElementById('stats-section').innerHTML = '';
+  document.getElementById('search-input').style.display = 'none';
+  document.querySelector('.actions button.btn-primary').style.display = 'none';
+  const container = document.getElementById('list-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const r = await api('/api/admin/stats');
+  if (!r.ok) {
+    container.innerHTML = '<div class="msg msg-error">تعذّر تحميل الإحصائيات</div>';
+    return;
+  }
+  const d = r.data.data || {};
+  const c = d.counts || {};
+  const g = d.growth || {};
+  const ur = d.usersByRole || {};
+  const cards = [
+    { label: 'المستخدمين', value: c.users || 0, sub: '+' + (g.usersThisWeek || 0) + ' هذا الأسبوع', color: '#3b82f6' },
+    { label: 'الأخبار', value: c.news || 0, sub: '+' + (g.newsThisWeek || 0) + ' هذا الأسبوع', color: '#10b981' },
+    { label: 'الفعاليات', value: c.events || 0, sub: 'تسجيلات: ' + (c.eventRegistrations || 0), color: '#f59e0b' },
+    { label: 'الشركات', value: c.companies || 0, sub: '', color: '#8b5cf6' },
+    { label: 'رجال الأعمال', value: c.businessmen || 0, sub: '', color: '#ec4899' },
+    { label: 'العقارات', value: c.realEstate || 0, sub: '', color: '#06b6d4' },
+    { label: 'الصفقات', value: c.deals || 0, sub: '+' + (g.dealsThisWeek || 0) + ' هذا الأسبوع', color: '#ef4444' },
+    { label: 'رسائل التواصل', value: c.messages || 0, sub: '', color: '#84cc16' },
+    { label: 'النشرة البريدية', value: c.newsletter || 0, sub: 'مشتركين', color: '#f97316' },
+    { label: 'محادثات الـ AI', value: c.aiChats || 0, sub: 'سؤال مجاب', color: '#a855f7' },
+  ];
+  const cardsHtml = cards.map(card =>
+    '<div class="stat" style="border-color:' + card.color + '40;">' +
+    '<div class="stat-label">' + card.label + '</div>' +
+    '<div class="stat-value" style="color:' + card.color + '">' + card.value.toLocaleString() + '</div>' +
+    (card.sub ? '<div style="font-size:11px;color:var(--text-3);margin-top:4px;">' + card.sub + '</div>' : '') +
+    '</div>'
+  ).join('');
+  const roleHtml = '<div class="item-row" style="grid-template-columns:1fr;">' +
+    '<div><div class="item-title">توزيع المستخدمين حسب الباقة</div>' +
+    '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;">' +
+    Object.entries(ur).map(([k, v]) => '<span class="pill">' + k + ': ' + v + '</span>').join('') +
+    '</div></div></div>';
+  const latestUser = d.latest && d.latest.user;
+  const latestNews = d.latest && d.latest.news;
+  const latestHtml = '<div class="item-row" style="grid-template-columns:1fr;">' +
+    '<div><div class="item-title">آخر نشاط</div><div style="margin-top:10px;font-size:13px;color:var(--text-2);">' +
+    (latestUser ? 'آخر مستخدم: <span style="color:var(--gold);">' + (latestUser.name || latestUser.email) + '</span> · ' + new Date(latestUser.createdAt).toLocaleDateString('ar-EG') + '<br>' : '') +
+    (latestNews ? 'آخر خبر: <span style="color:var(--gold);">' + (latestNews.titleAr || '—').slice(0, 60) + '</span>' : '') +
+    '</div></div></div>';
+  container.innerHTML = '<div class="stats" style="margin-bottom:20px;">' + cardsHtml + '</div>' + roleHtml + '<div style="height:14px;"></div>' + latestHtml;
+}
+
+async function switchToUsers() {
+  currentEntityKey = '__users__';
+  renderTabs();
+  document.getElementById('page-title').textContent = '👥 إدارة المستخدمين';
+  document.getElementById('stats-section').innerHTML = '';
+  document.getElementById('search-input').style.display = '';
+  document.querySelector('.actions button.btn-primary').style.display = 'none';
+  const container = document.getElementById('list-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const r = await api('/api/admin/users?limit=100');
+  if (!r.ok) {
+    container.innerHTML = '<div class="msg msg-error">تعذّر تحميل المستخدمين</div>';
+    return;
+  }
+  const users = r.data.data || [];
+  if (users.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">👤</div><div class="title">مفيش مستخدمين</div></div>';
+    return;
+  }
+  const rows = users.map(u => {
+    const roleColor = u.role === 'ADMIN' ? 'var(--gold)' : (u.role === 'PRO' ? '#3b82f6' : 'var(--text-2)');
+    return '<div class="item-row">' +
+      '<div class="item-thumb">' + (u.name ? u.name[0].toUpperCase() : '?') + '</div>' +
+      '<div>' +
+      '<div class="item-meta"><span class="pill" style="color:' + roleColor + ';border-color:' + roleColor + '40;">' + (u.role || 'FREE') + '</span>' +
+      '<span>' + new Date(u.createdAt).toLocaleDateString('ar-EG') + '</span></div>' +
+      '<div class="item-title">' + (u.name || '—') + '</div>' +
+      '<div class="item-excerpt">' + u.email + (u.company ? ' · ' + u.company : '') + '</div>' +
+      '</div>' +
+      '<div class="item-actions">' +
+      '<button class="btn btn-ghost btn-sm" onclick="editUserRole(\'' + u.id + '\',\'' + (u.role || 'FREE') + '\')">تغيير الباقة</button>' +
+      '<button class="btn btn-danger btn-sm" onclick="deleteUser(\'' + u.id + '\',\'' + (u.email || '').replace(/\'/g, '') + '\')">حذف</button>' +
+      '</div></div>';
+  }).join('');
+  container.innerHTML = '<div class="item-grid">' + rows + '</div>';
+}
+
+async function editUserRole(id, currentRole) {
+  const newRole = prompt('الباقة الجديدة (FREE / PRO / PREMIUM / ADMIN):', currentRole);
+  if (!newRole) return;
+  const role = newRole.trim().toUpperCase();
+  if (!['FREE', 'PRO', 'PREMIUM', 'ADMIN'].includes(role)) {
+    alert('باقة غير صحيحة');
+    return;
+  }
+  const r = await api('/api/admin/users/' + id, { method: 'PUT', body: JSON.stringify({ role }) });
+  if (!r.ok) {
+    alert('فشل التعديل: ' + (r.data?.error || 'خطأ'));
+    return;
+  }
+  await switchToUsers();
+}
+
+async function deleteUser(id, email) {
+  if (!confirm('تأكيد حذف المستخدم: ' + email + '؟ هذا الإجراء نهائي.')) return;
+  const r = await api('/api/admin/users/' + id, { method: 'DELETE' });
+  if (!r.ok) {
+    alert('فشل الحذف: ' + (r.data?.error || 'خطأ'));
+    return;
+  }
+  await switchToUsers();
+}
+
+async function switchToAnalytics() {
+  currentEntityKey = '__analytics__';
+  renderTabs();
+  document.getElementById('page-title').textContent = '📈 التحليلات والنمو';
+  document.getElementById('stats-section').innerHTML = '';
+  document.getElementById('search-input').style.display = 'none';
+  document.querySelector('.actions button.btn-primary').style.display = 'none';
+  const container = document.getElementById('list-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const r = await api('/api/admin/stats');
+  if (!r.ok) {
+    container.innerHTML = '<div class="msg msg-error">تعذّر تحميل البيانات</div>';
+    return;
+  }
+  const d = r.data.data || {};
+  const g = d.growth || {};
+  const c = d.counts || {};
+  const ur = d.usersByRole || {};
+  const totalUsers = c.users || 1;
+  const proPct = Math.round(((ur.PRO || 0) + (ur.PREMIUM || 0)) / totalUsers * 100);
+  const html = '<div class="stats" style="margin-bottom:20px;">' +
+    '<div class="stat"><div class="stat-label">نمو المستخدمين (7 أيام)</div><div class="stat-value">+' + (g.usersThisWeek || 0) + '</div></div>' +
+    '<div class="stat"><div class="stat-label">نمو الأخبار (7 أيام)</div><div class="stat-value">+' + (g.newsThisWeek || 0) + '</div></div>' +
+    '<div class="stat"><div class="stat-label">نمو الصفقات (7 أيام)</div><div class="stat-value">+' + (g.dealsThisWeek || 0) + '</div></div>' +
+    '<div class="stat"><div class="stat-label">معدل التحويل لـ Pro</div><div class="stat-value">' + proPct + '%</div></div>' +
+    '<div class="stat"><div class="stat-label">إجمالي محادثات AI</div><div class="stat-value">' + (c.aiChats || 0).toLocaleString() + '</div></div>' +
+    '<div class="stat"><div class="stat-label">مشتركي النشرة</div><div class="stat-value">' + (c.newsletter || 0).toLocaleString() + '</div></div>' +
+    '</div>' +
+    '<div class="item-row" style="grid-template-columns:1fr;"><div><div class="item-title">روابط مفيدة</div>' +
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">' +
+    '<a class="btn btn-ghost btn-sm" target="_blank" href="https://analytics.google.com/">Google Analytics 4</a>' +
+    '<a class="btn btn-ghost btn-sm" target="_blank" href="https://search.google.com/search-console">Search Console</a>' +
+    '<a class="btn btn-ghost btn-sm" target="_blank" href="https://vercel.com/cairobusiness-projects/cairo-business-backend">Vercel Backend</a>' +
+    '<a class="btn btn-ghost btn-sm" target="_blank" href="https://console.groq.com/">Groq Console</a>' +
+    '</div></div></div>';
+  container.innerHTML = html;
 }
 
 async function switchEntity(key) {
   if (!ENTITIES[key]) return;
   currentEntityKey = key;
   document.getElementById('search-input').value = '';
+  document.getElementById('search-input').style.display = '';
+  document.querySelector('.actions button.btn-primary').style.display = '';
   renderTabs();
   const ent = currentEntity();
   document.getElementById('page-title').textContent = ent.icon + ' إدارة ' + ent.nameAr;
@@ -607,145 +764,48 @@ const BRIEFING_IMPACTS = [['bullish','📈 إيجابي'],['bearish','📉 سل�
 const BRIEFING_CATEGORIES = [['currency','عملة'],['index','مؤشر'],['commodity','سلعة'],['material','مادة خام']];
 const DEFAULT_BRIEFING_ITEMS = Array.from({length:5}, (_,i) => ({num:i+1,title_ar:'',title_en:'',sector_ar:'',sector_en:'',impact:'neutral'}));
 const DEFAULT_BRIEFING_RATES = [
-  { symbol:'USD/EGP', name_ar:'دولار/جنيه', name_en:'USD/EGP', value:'49.8', change:'0.2', category:'currency' },
-  { symbol:'EUR/EGP', name_ar:'يورو/جنيه', name_en:'EUR/EGP', value:'54.2', change:'-0.3', category:'currency' },
-  { symbol:'GBP/EGP', name_ar:'جنيه بريطاني/جنيه', name_en:'GBP/EGP', value:'62.1', change:'0.5', category:'currency' },
-  { symbol:'SAR/EGP', name_ar:'ريال سعودي/جنيه', name_en:'SAR/EGP', value:'13.3', change:'0.1', category:'currency' },
-  { symbol:'EGX30', name_ar:'EGX30', name_en:'EGX30', value:'31245', change:'1.8', category:'index' },
-  { symbol:'EGX70', name_ar:'EGX70', name_en:'EGX70', value:'3841', change:'0.6', category:'index' },
-  { symbol:'TASI', name_ar:'TASI', name_en:'TASI', value:'11542', change:'-0.4', category:'index' },
-  { symbol:'ADX', name_ar:'ADX', name_en:'ADX', value:'9158', change:'1.2', category:'index' },
-  { symbol:'Gold', name_ar:'الذهب', name_en:'Gold/oz', value:'2485', change:'12', category:'commodity' },
-  { symbol:'Silver', name_ar:'الفضة', name_en:'Silver/oz', value:'28.5', change:'0.8', category:'commodity' },
-  { symbol:'Brent', name_ar:'برنت', name_en:'Brent Oil', value:'82.5', change:'-1.2', category:'commodity' },
-  { symbol:'Steel', name_ar:'الحديد', name_en:'Steel/ton', value:'285', change:'2.1', category:'material' },
-  { symbol:'Cement', name_ar:'الأسمنت', name_en:'Cement/ton', value:'1150', change:'0.3', category:'material' },
-  { symbol:'Rebar', name_ar:'الحديد المسلح', name_en:'Rebar/ton', value:'5800', change:'0.9', category:'material' },
+  { symbol:'USD/EGP', name_ar:'دولار/جنيه', name_en:'USD/EGP', value:'52.92', change:'0.2', category:'currency' },
+  { symbol:'EUR/EGP', name_ar:'يورو/جنيه', name_en:'EUR/EGP', value:'61.46', change:'-0.3', category:'currency' },
+  { symbol:'EGX30',   name_ar:'EGX30', name_en:'EGX30', value:'31245', change:'1.8', category:'index' },
+  { symbol:'Gold',    name_ar:'ذهب', name_en:'Gold', value:'4506', change:'0.5', category:'commodity' }
 ];
-let briefingState = { items: DEFAULT_BRIEFING_ITEMS, rates: DEFAULT_BRIEFING_RATES, dealOfDay: { name_ar:'', name_en:'', value:'', score:0 } };
 
 async function switchToBriefing() {
   currentEntityKey = '__briefing__';
-  document.getElementById('search-input').value = '';
   renderTabs();
   document.getElementById('page-title').textContent = '🌅 النشرة الصباحية';
-  document.getElementById('create-label').textContent = 'حفظ';
-  document.getElementById('list-container').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  document.getElementById('search-input').style.display = 'none';
+  document.querySelector('.actions button.btn-primary').style.display = 'none';
   document.getElementById('stats-section').innerHTML = '';
-  // Hide the add button via search bar visibility tweak
-  const r = await api('/api/admin/briefing');
-  if (r.ok && r.data?.data) {
-    try {
-      const d = r.data.data;
-      briefingState.items = JSON.parse(d.items || '[]');
-      briefingState.rates = JSON.parse(d.rates || '[]');
-      briefingState.dealOfDay = d.dealOfDay ? JSON.parse(d.dealOfDay) : briefingState.dealOfDay;
-      if (!briefingState.items.length) briefingState.items = DEFAULT_BRIEFING_ITEMS;
-      if (!briefingState.rates.length) briefingState.rates = DEFAULT_BRIEFING_RATES;
-    } catch(e) { console.warn('Briefing parse error:', e); }
-  }
-  renderBriefingForm();
-}
-
-function renderBriefingForm() {
   const container = document.getElementById('list-container');
-  const itemRows = briefingState.items.map((it, i) => `
-    <div class="item-row" style="grid-template-columns:auto 1fr 1fr 1fr;align-items:start;">
-      <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#0a0e1a;font-weight:900;display:grid;place-items:center;">${i+1}</div>
-      <div>
-        <label style="font-size:11px;color:var(--text-2);margin-bottom:4px;display:block;">العنوان بالعربية</label>
-        <input id="brief-it-${i}-titleAr" value="${escapeHtml(it.title_ar||'')}" placeholder="مثال: البنك المركزي يثبّت الفائدة" />
-        <label style="font-size:11px;color:var(--text-2);margin:8px 0 4px;display:block;">القطاع</label>
-        <input id="brief-it-${i}-sectorAr" value="${escapeHtml(it.sector_ar||'')}" placeholder="اقتصاد" />
-      </div>
-      <div>
-        <label style="font-size:11px;color:var(--text-2);margin-bottom:4px;display:block;">Title in English</label>
-        <input id="brief-it-${i}-titleEn" value="${escapeHtml(it.title_en||'')}" placeholder="Central Bank Holds Rates" dir="ltr" />
-        <label style="font-size:11px;color:var(--text-2);margin:8px 0 4px;display:block;">Sector</label>
-        <input id="brief-it-${i}-sectorEn" value="${escapeHtml(it.sector_en||'')}" placeholder="Economy" dir="ltr" />
-      </div>
-      <div>
-        <label style="font-size:11px;color:var(--text-2);margin-bottom:4px;display:block;">الاتجاه</label>
-        <select id="brief-it-${i}-impact">${BRIEFING_IMPACTS.map(o=>`<option value="${o[0]}" ${o[0]===it.impact?'selected':''}>${o[1]}</option>`).join('')}</select>
-      </div>
-    </div>`).join('');
-
-  const rateRows = briefingState.rates.map((r, i) => `
-    <div class="item-row" style="grid-template-columns:auto 1fr 1fr auto auto auto;align-items:center;gap:10px;padding:12px;">
-      <span style="font-size:13px;color:var(--gold);font-weight:700;width:80px;">${escapeHtml(r.symbol||'')}</span>
-      <input id="brief-r-${i}-nameAr" value="${escapeHtml(r.name_ar||'')}" placeholder="اسم عربي" />
-      <input id="brief-r-${i}-nameEn" value="${escapeHtml(r.name_en||'')}" placeholder="English name" dir="ltr" />
-      <input id="brief-r-${i}-value" value="${escapeHtml(String(r.value||''))}" placeholder="القيمة" style="width:90px;" dir="ltr" />
-      <input id="brief-r-${i}-change" value="${escapeHtml(String(r.change||''))}" placeholder="±%" style="width:70px;" dir="ltr" />
-      <select id="brief-r-${i}-category" style="width:110px;">${BRIEFING_CATEGORIES.map(o=>`<option value="${o[0]}" ${o[0]===r.category?'selected':''}>${o[1]}</option>`).join('')}</select>
-    </div>`).join('');
-
-  const dod = briefingState.dealOfDay || { name_ar:'', name_en:'', value:'', score:0 };
-  container.innerHTML = `
-    <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:18px;margin-bottom:24px;">
-      <div style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:6px;">🌅 ما تحتاج لمعرفته اليوم</div>
-      <div style="font-size:12px;color:var(--text-2);">عدّل الـ 5 أخبار اللي تظهر في النشرة الصباحية. التاريخ يُحفظ تلقائياً لتاريخ اليوم.</div>
-    </div>
-    <div class="item-grid" style="margin-bottom:32px;">${itemRows}</div>
-
-    <div style="background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.2);border-radius:14px;padding:18px;margin-bottom:24px;">
-      <div style="font-size:13px;color:var(--blue);font-weight:700;margin-bottom:6px;">📊 كل الأرقام · شاشة واحدة</div>
-      <div style="font-size:12px;color:var(--text-2);">حدّث الـ 14 سعراً اللي تظهر في الـ Dashboard. الرموز ثابتة، عدّل القيم والتغيّر اليومي.</div>
-    </div>
-    <div class="item-grid" style="margin-bottom:32px;">${rateRows}</div>
-
-    <div style="background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:18px;margin-bottom:24px;">
-      <div style="font-size:13px;color:var(--green);font-weight:700;margin-bottom:6px;">💎 صفقة اليوم</div>
-      <div class="item-row" style="grid-template-columns:1fr 1fr 100px 100px;align-items:end;background:transparent;border:none;padding:0;">
-        <div><label style="font-size:11px;color:var(--text-2);">الاسم بالعربية</label><input id="brief-dod-nameAr" value="${escapeHtml(dod.name_ar||'')}" placeholder="مثال: شقة في مدينتي" /></div>
-        <div><label style="font-size:11px;color:var(--text-2);">Name in English</label><input id="brief-dod-nameEn" value="${escapeHtml(dod.name_en||'')}" placeholder="Apartment in Madinaty" dir="ltr" /></div>
-        <div><label style="font-size:11px;color:var(--text-2);">القيمة</label><input id="brief-dod-value" value="${escapeHtml(dod.value||'')}" placeholder="4.85M EGP" dir="ltr" /></div>
-        <div><label style="font-size:11px;color:var(--text-2);">AI Score</label><input id="brief-dod-score" type="number" min="0" max="100" value="${dod.score||0}" /></div>
-      </div>
-    </div>
-
-    <div style="text-align:center;margin-top:32px;">
-      <button class="btn btn-primary" style="padding:14px 40px;" onclick="saveBriefing()">💾 حفظ النشرة الصباحية</button>
-      <div id="brief-status" style="margin-top:14px;font-size:13px;color:var(--text-2);"></div>
-    </div>
-  `;
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  // Try to load today's briefing
+  const r = await api('/api/admin/briefing');
+  let briefing = (r.ok && r.data && r.data.data) || null;
+  const items = (briefing && briefing.items) || DEFAULT_BRIEFING_ITEMS;
+  const rates = (briefing && briefing.rates) || DEFAULT_BRIEFING_RATES;
+  const deal = (briefing && briefing.dealOfDay) || { title_ar:'', title_en:'', value:'', sector_ar:'', sector_en:'' };
+  // Render simple form
+  let html = '<div class="form-grid" style="grid-template-columns:1fr;">';
+  html += '<div class="field field-full"><label>تاريخ النشرة</label><input id="bf-date" type="date" value="' + (briefing && briefing.date ? new Date(briefing.date).toISOString().slice(0,10) : new Date().toISOString().slice(0,10)) + '" /></div>';
+  html += '<div class="field field-full"><label>أهم 5 أخبار (JSON)</label><textarea id="bf-items" style="min-height:200px;font-family:monospace;">' + JSON.stringify(items, null, 2) + '</textarea></div>';
+  html += '<div class="field field-full"><label>أسعار ومؤشرات (JSON)</label><textarea id="bf-rates" style="min-height:160px;font-family:monospace;">' + JSON.stringify(rates, null, 2) + '</textarea></div>';
+  html += '<div class="field field-full"><label>صفقة اليوم (JSON)</label><textarea id="bf-deal" style="min-height:120px;font-family:monospace;">' + JSON.stringify(deal, null, 2) + '</textarea></div>';
+  html += '<div class="field field-full"><button class="btn btn-primary" onclick="saveBriefing()">حفظ النشرة</button></div>';
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 async function saveBriefing() {
-  const status = document.getElementById('brief-status');
-  status.textContent = 'جاري الحفظ...';
-  status.style.color = 'var(--text-2)';
-  const items = briefingState.items.map((it, i) => ({
-    num: i + 1,
-    title_ar: document.getElementById(`brief-it-${i}-titleAr`).value.trim(),
-    title_en: document.getElementById(`brief-it-${i}-titleEn`).value.trim(),
-    sector_ar: document.getElementById(`brief-it-${i}-sectorAr`).value.trim(),
-    sector_en: document.getElementById(`brief-it-${i}-sectorEn`).value.trim(),
-    impact: document.getElementById(`brief-it-${i}-impact`).value,
-  }));
-  const rates = briefingState.rates.map((r, i) => ({
-    symbol: r.symbol,
-    name_ar: document.getElementById(`brief-r-${i}-nameAr`).value.trim(),
-    name_en: document.getElementById(`brief-r-${i}-nameEn`).value.trim(),
-    value: document.getElementById(`brief-r-${i}-value`).value.trim(),
-    change: Number(document.getElementById(`brief-r-${i}-change`).value),
-    category: document.getElementById(`brief-r-${i}-category`).value,
-  }));
-  const dealOfDay = {
-    name_ar: document.getElementById('brief-dod-nameAr').value.trim(),
-    name_en: document.getElementById('brief-dod-nameEn').value.trim(),
-    value: document.getElementById('brief-dod-value').value.trim(),
-    score: Number(document.getElementById('brief-dod-score').value) || 0,
-  };
-  briefingState = { items, rates, dealOfDay };
-  const r = await api('/api/admin/briefing', { method: 'PUT', body: JSON.stringify({ items, rates, dealOfDay }) });
-  if (r.ok) {
-    status.textContent = '✓ تم الحفظ بنجاح! ستظهر التحديثات على الموقع خلال دقيقة.';
-    status.style.color = 'var(--green)';
-    setTimeout(() => { if (status) status.textContent = ''; }, 6000);
-  } else {
-    status.textContent = '✗ فشل الحفظ: ' + (r.data?.error || 'خطأ');
-    status.style.color = 'var(--red)';
+  try {
+    const date = document.getElementById('bf-date').value;
+    const items = JSON.parse(document.getElementById('bf-items').value);
+    const rates = JSON.parse(document.getElementById('bf-rates').value);
+    const dealOfDay = JSON.parse(document.getElementById('bf-deal').value);
+    const r = await api('/api/admin/briefing', { method: 'POST', body: JSON.stringify({ date, items, rates, dealOfDay }) });
+    if (!r.ok) { alert('فشل الحفظ: ' + (r.data?.error || 'خطأ')); return; }
+    alert('تم حفظ النشرة يوم ' + date);
+  } catch (e) {
+    alert('خطأ في JSON: ' + e.message);
   }
 }
-
