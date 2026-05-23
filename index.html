@@ -3344,10 +3344,25 @@
 
         <!-- Suggested chips -->
         <div class="flex flex-wrap justify-center gap-2 mt-4">
-          <button class="chip-bob text-xs text-white/60 hover:text-gold-400 glass-light border border-white/10 rounded-full px-3 py-1.5 transition" data-i18n="hero.chip.1">📊 قارن أرامكو × إعمار</button>
-          <button class="chip-bob text-xs text-white/60 hover:text-gold-400 glass-light border border-white/10 rounded-full px-3 py-1.5 transition" data-i18n="hero.chip.2">🏢 أقوى 10 شركات خليجية</button>
-          <button class="chip-bob text-xs text-white/60 hover:text-gold-400 glass-light border border-white/10 rounded-full px-3 py-1.5 transition" data-i18n="hero.chip.3">💹 مؤشرات الأسواق الحية</button>
-          <button class="chip-bob text-xs text-white/60 hover:text-gold-400 glass-light border border-white/10 rounded-full px-3 py-1.5 transition" data-i18n="hero.chip.4">📈 فرص الاستثمار العقاري</button>
+          <button class="chip-bob text-xs text-white/60 hover:text-gold-400 glass-light border border-white/10 rounded-full px-3 py-1.5 transition" data-ai-chip data-i18n="hero.chip.1">📊 قارن أرامكو × إعمار</button>
+          <button class="chip-bob text-xs text-white/60 hover:text-gold-400 glass-light border border-white/10 rounded-full px-3 py-1.5 transition" data-ai-chip data-i18n="hero.chip.2">🏢 أقوى 10 شركات خليجية</button>
+          <button class="chip-bob text-xs text-white/60 hover:text-gold-400 glass-light border border-white/10 rounded-full px-3 py-1.5 transition" data-ai-chip data-i18n="hero.chip.3">💹 مؤشرات الأسواق الحية</button>
+          <button class="chip-bob text-xs text-white/60 hover:text-gold-400 glass-light border border-white/10 rounded-full px-3 py-1.5 transition" data-ai-chip data-i18n="hero.chip.4">📈 فرص الاستثمار العقاري</button>
+        </div>
+
+        <!-- AI answer panel -->
+        <div id="ai-answer-panel" class="mt-6 hidden">
+          <div class="grad-border rounded-2xl bg-navy-800/80 p-5 text-start" dir="auto">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2 text-gold-400 text-sm font-semibold">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                <span>Cairo AI</span>
+              </div>
+              <button id="ai-close" class="text-white/50 hover:text-white text-xl leading-none">×</button>
+            </div>
+            <div id="ai-answer-text" class="text-white/90 text-sm leading-relaxed whitespace-pre-wrap"></div>
+            <div id="ai-answer-status" class="mt-3 text-xs text-white/40"></div>
+          </div>
         </div>
       </div>
 
@@ -15218,9 +15233,139 @@
                 if (typeof askAI === 'function') return askAI(q);
                 if (typeof handleAsk === 'function') return handleAsk(q);
                 if (typeof openAskModal === 'function') return openAskModal(q);
-                window.open('https://www.google.com/search?q=' + encodeURIComponent('cairobusiness.net ' + q), '_blank');
+                askCairoAI(q);
               }
             }
+          });
+        });
+      } catch (e) { console.warn('Header wiring failed:', e); }
+    }
+
+    /* Cairo AI streaming client */
+    async function askCairoAI(question) {
+      const panel = document.getElementById('ai-answer-panel');
+      const textEl = document.getElementById('ai-answer-text');
+      const statusEl = document.getElementById('ai-answer-status');
+      const closeBtn = document.getElementById('ai-close');
+      if (!panel || !textEl) return;
+      // Show panel & reset
+      panel.classList.remove('hidden');
+      textEl.textContent = '';
+      statusEl.textContent = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'Thinking...' : '\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0644\u064a\u0644...';
+      panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (closeBtn) closeBtn.onclick = () => { panel.classList.add('hidden'); };
+      try {
+        const res = await fetch('https://cairo-business-backend.vercel.app/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: question }],
+            lang: (typeof currentLang !== 'undefined' ? currentLang : 'ar'),
+          }),
+        });
+        if (!res.ok || !res.body) {
+          statusEl.textContent = 'AI is currently unavailable. (HTTP ' + res.status + ')';
+          return;
+        }
+        statusEl.textContent = '';
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          // Parse SSE events
+          const events = buffer.split('\n\n');
+          buffer = events.pop() || '';
+          for (const ev of events) {
+            const line = ev.trim();
+            if (!line.startsWith('data:')) continue;
+            const payload = line.slice(5).trim();
+            if (payload === '[DONE]') {
+              statusEl.textContent = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'Powered by Claude AI' : '\u0645\u062f\u0639\u0648\u0645 \u0628\u0640 Claude AI';
+              return;
+            }
+            try {
+              const obj = JSON.parse(payload);
+              if (obj.chunk) textEl.textContent += obj.chunk;
+              if (obj.error) { statusEl.textContent = obj.error; }
+            } catch (_) {}
+          }
+        }
+      } catch (e) {
+        statusEl.textContent = 'Network error. Try again.';
+        console.error('Cairo AI error:', e);
+      }
+    }
+
+    function wireHeaderButtonsSafe() {
+      try {
+        const themeBtn = document.getElementById('theme-toggle');
+        if (themeBtn && !themeBtn._wired) {
+          themeBtn._wired = true;
+          try { const s = localStorage.getItem('cb-theme'); if (s === 'light' || s === 'dark') document.documentElement.setAttribute('data-theme', s); } catch(_){}
+          const syncIcon = () => {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            const d = document.getElementById('theme-icon-dark');
+            const l = document.getElementById('theme-icon-light');
+            if (d) d.style.display = isLight ? 'none' : '';
+            if (l) l.style.display = isLight ? '' : 'none';
+          };
+          syncIcon();
+          themeBtn.addEventListener('click', () => {
+            const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = cur === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            try { localStorage.setItem('cb-theme', next); } catch(_){}
+            syncIcon();
+            if (window.lucide) try { lucide.createIcons(); } catch(_){}
+          });
+        }
+        const langBtn = document.getElementById('lang-toggle');
+        if (langBtn && !langBtn._wired) {
+          langBtn._wired = true;
+          try { const s = localStorage.getItem('cb-lang'); if ((s === 'ar' || s === 'en') && typeof applyLang === 'function') applyLang(s); } catch(_){}
+          langBtn.addEventListener('click', () => {
+            const cur = (typeof currentLang !== 'undefined') ? currentLang : 'ar';
+            const next = cur === 'ar' ? 'en' : 'ar';
+            if (typeof applyLang === 'function') applyLang(next);
+            try { localStorage.setItem('cb-lang', next); } catch(_){}
+            if (window.lucide) try { lucide.createIcons(); } catch(_){}
+          });
+        }
+        const aiInput = document.getElementById('ai-search-input');
+        if (aiInput && !aiInput._wired) {
+          aiInput._wired = true;
+          aiInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              const q = (aiInput.value || '').trim();
+              if (q) askCairoAI(q);
+            }
+          });
+        }
+        const askBtns = Array.from(document.querySelectorAll('button')).filter(b => /^(اسأل|Ask)$/i.test(b.textContent.trim()));
+        askBtns.forEach(b => {
+          if (b._wired) return; b._wired = true;
+          b.addEventListener('click', () => {
+            const input = document.getElementById('ai-search-input');
+            const q = ((input && input.value) || '').trim();
+            if (q) {
+              askCairoAI(q);
+            } else if (input) {
+              input.focus();
+            }
+          });
+        });
+        // Wire suggestion chips
+        const chips = document.querySelectorAll('[data-ai-chip]');
+        chips.forEach(c => {
+          if (c._wired) return; c._wired = true;
+          c.addEventListener('click', () => {
+            const input = document.getElementById('ai-search-input');
+            const q = c.textContent.replace(/^[\s\u00a0\ud83d\udcca\ud83c\udfe2\ud83d\udcb9\ud83d\udcc8]+/, '').trim();
+            if (input) input.value = q;
+            askCairoAI(q);
           });
         });
       } catch (e) { console.warn('Header wiring failed:', e); }
