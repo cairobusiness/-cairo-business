@@ -15044,6 +15044,59 @@
         }
       } catch(_){}
 
+      // 4c) Sync to INVESTOR BRIEF (5-column "كل ما تحتاج معرفته الآن")
+      try {
+        const getDD = (sym) => DASHBOARD_DATA && DASHBOARD_DATA.find(d => d.symbol === sym);
+        const fmtPct = (n) => (n>=0?'+':'') + Number(n).toFixed(2) + '%';
+        const trendOf = (n) => n>0?'up':(n<0?'down':'flat');
+        const setBriefRow = (arr, labKey, val, changePct) => {
+          if (!arr) return;
+          const row = arr.find(r => r.labKey === labKey);
+          if (!row) return;
+          if (val != null) row.value = typeof val === 'number'
+            ? (Math.abs(val) >= 1000 ? Math.round(val).toLocaleString() : val.toFixed(2))
+            : String(val);
+          if (changePct != null) { row.trend = trendOf(changePct); row.delta = fmtPct(changePct); }
+        };
+
+        // Egypt FX column
+        if (typeof COUNTRIES_DATA !== 'undefined' && COUNTRIES_DATA.eg) {
+          const fxArr = COUNTRIES_DATA.eg.brief.fx;
+          const mkt   = COUNTRIES_DATA.eg.brief.markets;
+          const usd = getDD('USD/EGP'); if (usd) setBriefRow(fxArr, 'dashboard.f.usd.eg', parseFloat(usd.value), usd.change);
+          const eur = getDD('EUR/EGP'); if (eur) setBriefRow(fxArr, 'dashboard.f.eur.eg', parseFloat(eur.value), eur.change);
+          const sar = getDD('SAR/EGP'); if (sar) setBriefRow(fxArr, 'dashboard.f.sar.eg', parseFloat(sar.value), sar.change);
+          const egx = getDD('EGX30');   if (egx) setBriefRow(mkt,   'dashboard.k.eg.egx30', parseFloat(String(egx.value).replace(/,/g,'')), egx.change);
+        }
+        // Saudi FX column
+        if (typeof COUNTRIES_DATA !== 'undefined' && COUNTRIES_DATA.sa) {
+          const tasi = getDD('TASI'); if (tasi) setBriefRow(COUNTRIES_DATA.sa.brief.markets, 'dashboard.k.sa.tasi', parseFloat(String(tasi.value).replace(/,/g,'')), tasi.change);
+        }
+        // UAE markets
+        if (typeof COUNTRIES_DATA !== 'undefined' && COUNTRIES_DATA.ae) {
+          const adx = getDD('ADX'); if (adx) setBriefRow(COUNTRIES_DATA.ae.brief.markets, 'dashboard.k.ae.adx', parseFloat(String(adx.value).replace(/,/g,'')), adx.change);
+        }
+
+        // Commodities (global)
+        if (typeof COMMODITIES_GLOBAL !== 'undefined') {
+          const goldD = getDD('Gold');
+          if (goldD) {
+            const row = COMMODITIES_GLOBAL.find(r => r.labKey === 'dashboard.c.gold');
+            if (row) { row.value = '$' + Math.round(parseFloat(goldD.value)).toLocaleString(); row.trend = trendOf(goldD.change); row.delta = fmtPct(goldD.change); }
+          }
+          const silvD = getDD('Silver');
+          if (silvD) {
+            const row = COMMODITIES_GLOBAL.find(r => r.labKey === 'dashboard.c.silver');
+            if (row) { row.value = '$' + Number(silvD.value).toFixed(2); row.trend = trendOf(silvD.change); row.delta = fmtPct(silvD.change); }
+          }
+          const brentD = getDD('Brent');
+          if (brentD) {
+            const row = COMMODITIES_GLOBAL.find(r => r.labKey === 'dashboard.c.brent');
+            if (row) { row.value = '$' + Number(brentD.value).toFixed(2); row.trend = trendOf(brentD.change); row.delta = fmtPct(brentD.change); }
+          }
+        }
+      } catch (e) { console.warn('Brief sync failed:', e); }
+
       // 5) Re-render dashboard (country switcher)
       if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(_){}
     }
