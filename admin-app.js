@@ -376,13 +376,25 @@ function renderTabs() {
   const wrap = document.getElementById('tabs');
   const mk = (key, icon, label, fn) => '<button class="tab ' + (currentEntityKey === key ? 'active' : '') + '" onclick="' + fn + '()"><span class="tab-icon">' + icon + '</span>' + label + '</button>';
   const user = getUser() || {};
-  const isAdmin = user.role === 'ADMIN';
+  const role = user.role || 'FREE';
+  const isAdmin = role === 'ADMIN';
+  const isEditor = role === 'EDITOR';
+  const isWriter = role === 'WRITER';
+  const isModerator = role === 'MODERATOR';
+  // Role label chip in header
+  const roleChip = document.getElementById('user-role-chip');
+  if (roleChip) roleChip.textContent = '· ' + role;
   const dashboardTab = mk('__dashboard__', '📊', 'الرئيسية', 'switchToDashboard');
-  const entityTabs = Object.values(ENTITIES).map(e =>
+  // Filter entity tabs based on role
+  let allowedEntities = Object.values(ENTITIES);
+  if (isWriter) allowedEntities = allowedEntities.filter(e => e.key === 'news');
+  if (isModerator) allowedEntities = allowedEntities.filter(e => e.key === 'news' || e.key === 'events');
+  const entityTabs = allowedEntities.map(e =>
     '<button class="tab ' + (e.key === currentEntityKey ? 'active' : '') + '" onclick="switchEntity(\'' + e.key + '\')">' +
     '<span class="tab-icon">' + e.icon + '</span>' + e.nameAr + '</button>'
   ).join('');
-  const briefingTab = mk('__briefing__', '🌅', 'النشرة الصباحية', 'switchToBriefing');
+  // Briefing for Admin + Editor + Moderator only
+  const briefingTab = (isAdmin || isEditor || isModerator) ? mk('__briefing__', '🌅', 'النشرة الصباحية', 'switchToBriefing') : '';
   // Admin-only tabs
   const adminOnlyTabs = isAdmin ? (
     mk('__users__', '👥', 'المستخدمين', 'switchToUsers') +
@@ -393,7 +405,82 @@ function renderTabs() {
     mk('__settings__', '🔌', 'التكاملات', 'switchToIntegrations') +
     mk('__analytics__', '📈', 'التحليلات', 'switchToAnalytics')
   ) : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + adminOnlyTabs;
+  // Moderator gets messages
+  const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + adminOnlyTabs + modOnlyTabs;
+}
+
+// ═════════════════════════════════════════════════════════════
+// Dark/Light theme toggle for admin panel
+// ═════════════════════════════════════════════════════════════
+function toggleAdminTheme() {
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme') || 'dark';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('cb-admin-theme', next); } catch (_) {}
+  const btn = document.getElementById('theme-btn');
+  const label = document.getElementById('theme-label');
+  if (label) label.textContent = next === 'dark' ? 'داكن' : 'فاتح';
+  if (btn) btn.innerHTML = (next === 'dark' ? '🌙 ' : '☀️ ') + '<span id="theme-label">' + (next === 'dark' ? 'داكن' : 'فاتح') + '</span>';
+}
+// Restore saved theme on load
+(function restoreAdminTheme() {
+  try {
+    const t = localStorage.getItem('cb-admin-theme');
+    if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  } catch (_) {}
+})();
+
+// ═════════════════════════════════════════════════════════════
+// Live Preview — open news article in new tab with full styling
+// ═════════════════════════════════════════════════════════════
+function previewNews() {
+  const titleAr = (document.getElementById('f_titleAr') || {}).value || '';
+  const excerptAr = (document.getElementById('f_excerptAr') || {}).value || '';
+  const author = (document.getElementById('f_author') || {}).value || '';
+  const category = (document.getElementById('f_category') || {}).value || '';
+  const imageUrl = (document.getElementById('f_imageUrl') || {}).value || '';
+  const html = '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>معاينة: ' +
+    titleAr + '</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">' +
+    '<style>body{font-family:Cairo,sans-serif;max-width:780px;margin:40px auto;padding:0 20px;background:#0a0e1a;color:#f3f4f6;line-height:1.8}' +
+    'h1{font-size:32px;font-weight:800;color:#D4AF37;margin-bottom:8px}' +
+    '.meta{color:#9ca3af;font-size:14px;margin-bottom:20px;display:flex;gap:14px}' +
+    '.cat{background:rgba(212,175,55,0.2);color:#D4AF37;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600}' +
+    '.preview-banner{position:fixed;top:0;left:0;right:0;background:#D4AF37;color:#0a0e1a;text-align:center;padding:8px;font-weight:700;font-size:13px;z-index:9999}' +
+    'img{max-width:100%;border-radius:14px;margin:20px 0}' +
+    '.excerpt{font-size:18px;color:#e5e7eb;margin-bottom:20px;font-weight:500}' +
+    '</style></head><body>' +
+    '<div class="preview-banner">⚠️ معاينة فقط — هذا الخبر لم يُنشر بعد</div>' +
+    '<div style="margin-top:50px"></div>' +
+    '<div class="meta"><span class="cat">' + category + '</span><span>' + author + '</span><span>' + new Date().toLocaleDateString('ar-EG') + '</span></div>' +
+    '<h1>' + escapeHtml(titleAr) + '</h1>' +
+    (imageUrl ? '<img src="' + imageUrl + '" alt="" />' : '') +
+    '<p class="excerpt">' + escapeHtml(excerptAr) + '</p>' +
+    '</body></html>';
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+// ═════════════════════════════════════════════════════════════
+// SEO analysis helpers (simple scoring)
+// ═════════════════════════════════════════════════════════════
+function analyzeSEO(titleAr, descAr, slug) {
+  const checks = [];
+  if (titleAr.length >= 30 && titleAr.length <= 65) checks.push(['good', '✓ طول العنوان مناسب (' + titleAr.length + ')']);
+  else checks.push([titleAr.length < 30 ? 'warn' : 'bad', '⚠ العنوان (' + titleAr.length + ') — الأفضل 30-65 حرف']);
+  if (descAr.length >= 120 && descAr.length <= 160) checks.push(['good', '✓ طول الوصف مناسب (' + descAr.length + ')']);
+  else checks.push([descAr.length < 120 ? 'warn' : 'bad', '⚠ الوصف (' + descAr.length + ') — الأفضل 120-160']);
+  if (slug && /^[a-z0-9-]+$/.test(slug)) checks.push(['good', '✓ Slug صحيح']);
+  else if (slug) checks.push(['bad', '✗ Slug لازم يكون أحرف صغيرة وأرقام و-']);
+  return checks;
+}
+function slugify(s) {
+  return (s || '').toLowerCase()
+    .replace(/[^\w\s؀-ۿ-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 80);
 }
 
 function setupListView(title) {
@@ -830,20 +917,68 @@ async function deleteItem(id) {
 }
 
 function renderForm(item) {
+  item = item || {};
   const ent = currentEntity();
   const grid = document.getElementById('form-fields');
-  grid.innerHTML = ent.fields.map(f => {
+  let html = ent.fields.map(f => {
     const v = item[f.id];
     const full = f.full ? 'field-full' : '';
     const dir = f.dir ? ' dir="' + f.dir + '"' : '';
     let input = '';
-    if (f.type === 'textarea') input = '<textarea id="f_' + f.id + '"' + dir + '>' + escapeHtml(v || (typeof f.default === 'function' ? f.default() : f.default || '')) + '</textarea>';
+    const defaultVal = (typeof f.default === 'function' ? f.default() : f.default) || '';
+    if (f.type === 'textarea') input = '<textarea id="f_' + f.id + '"' + dir + '>' + escapeHtml(v != null ? v : defaultVal) + '</textarea>';
     else if (f.type === 'select') input = '<select id="f_' + f.id + '">' + (f.options || []).map(o => '<option value="' + o[0] + '"' + (v === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>';
     else if (f.type === 'checkbox') input = '<div class="checkbox-row"><input id="f_' + f.id + '" type="checkbox"' + (v ? ' checked' : '') + ' /><label for="f_' + f.id + '">' + f.label + '</label></div>';
-    else input = '<input id="f_' + f.id + '" type="' + f.type + '"' + dir + ' value="' + escapeHtml(v != null ? v : (typeof f.default === 'function' ? f.default() : f.default || '')) + '" />';
+    else input = '<input id="f_' + f.id + '" type="' + f.type + '"' + dir + ' value="' + escapeHtml(v != null ? v : defaultVal) + '" />';
     if (f.type === 'checkbox') return '<div class="field ' + full + '">' + input + '</div>';
     return '<div class="field ' + full + '"><label>' + f.label + '</label>' + input + '</div>';
   }).join('');
+  // Image picker for news (imageUrl field)
+  if (ent.key === 'news') {
+    html += '<div class="field field-full"><label>رفع صورة من جهازك</label><button type="button" class="btn btn-ghost btn-sm" onclick="pickAndCompressImage(\'f_imageUrl\')">اختار صورة</button><div id="f_imageUrl-status" style="font-size:11px;color:var(--text-3);margin-top:6px"></div><div id="f_imageUrl-preview" style="margin-top:10px;"></div></div>';
+    // SEO collapsible section
+    html += '<details class="seo-collapse" style="grid-column:1/-1;"><summary>🔍 أدوات SEO (أتوماتيكية لمحركات البحث) <span id="seo-score-chip"></span></summary><div class="form-grid">' +
+      '<div class="field field-full"><label>SEO Title (الأفضل 30-65 حرف)</label><input id="f_seoTitle" type="text" value="' + escapeHtml(item.seoTitle || item.titleAr || '') + '" oninput="updateSEOScore()" /></div>' +
+      '<div class="field field-full"><label>Meta Description (120-160 حرف)</label><textarea id="f_metaDescription" oninput="updateSEOScore()">' + escapeHtml(item.metaDescription || item.excerptAr || '') + '</textarea></div>' +
+      '<div class="field"><label>URL Slug</label><input id="f_slug" type="text" dir="ltr" value="' + escapeHtml(item.slug || '') + '" placeholder="cbe-holds-rate" oninput="updateSEOScore()" /></div>' +
+      '<div class="field"><label>&nbsp;</label><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'f_slug\').value=slugify(document.getElementById(\'f_titleEn\').value);updateSEOScore()">اقتراح slug تلقائي</button></div>' +
+      '<div class="field field-full"><label>OG Image URL (1200×630)</label><input id="f_ogImage" type="url" dir="ltr" value="' + escapeHtml(item.ogImage || item.imageUrl || '') + '" placeholder="https://..." /></div>' +
+      '<div class="field field-full"><label>Meta Keywords (مفصولة بفواصل)</label><input id="f_metaKeywords" type="text" value="' + escapeHtml(item.metaKeywords || '') + '" placeholder="اقتصاد, أعمال, مصر" /></div>' +
+      '<div class="field field-full" id="seo-analysis" style="font-size:12px;color:var(--text-2);"></div>' +
+      '</div></details>';
+  }
+  grid.innerHTML = html;
+  // Live SEO scoring
+  if (ent.key === 'news') setTimeout(updateSEOScore, 100);
+  // Add Preview button to modal footer
+  setTimeout(() => {
+    const footer = document.querySelector('.modal-footer');
+    if (footer && ent.key === 'news' && !document.getElementById('preview-btn')) {
+      const btn = document.createElement('button');
+      btn.id = 'preview-btn';
+      btn.className = 'btn btn-ghost';
+      btn.textContent = '👁️ معاينة مباشرة';
+      btn.type = 'button';
+      btn.onclick = previewNews;
+      footer.insertBefore(btn, footer.firstChild);
+    }
+  }, 50);
+}
+
+function updateSEOScore() {
+  const title = (document.getElementById('f_seoTitle') || {}).value || '';
+  const desc = (document.getElementById('f_metaDescription') || {}).value || '';
+  const slug = (document.getElementById('f_slug') || {}).value || '';
+  const checks = analyzeSEO(title, desc, slug);
+  const goodCount = checks.filter(c => c[0] === 'good').length;
+  const score = Math.round((goodCount / checks.length) * 100);
+  const cls = score >= 80 ? 'good' : (score >= 50 ? 'warn' : 'bad');
+  const chip = document.getElementById('seo-score-chip');
+  if (chip) chip.innerHTML = '<span class="seo-score ' + cls + '">' + score + '/100</span>';
+  const analysis = document.getElementById('seo-analysis');
+  if (analysis) {
+    analysis.innerHTML = checks.map(c => '<div style="margin:4px 0;padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.03);">' + c[1] + '</div>').join('');
+  }
 }
 
 async function saveItem() {
@@ -862,6 +997,13 @@ async function saveItem() {
     else val = el.value.trim();
     if (f.required && (val === '' || val == null)) missing.push(f.label);
     if (val !== '' && val != null) payload[f.id] = val;
+  }
+  // Collect SEO fields for news
+  if (ent.key === 'news') {
+    ['seoTitle', 'metaDescription', 'slug', 'ogImage', 'metaKeywords'].forEach(k => {
+      const el = document.getElementById('f_' + k);
+      if (el && el.value.trim()) payload[k] = el.value.trim();
+    });
   }
   if (missing.length) { msg.innerHTML = '<div class="msg msg-error">يرجى ملء: ' + escapeHtml(missing.join('، ')) + '</div>'; return; }
   btn.disabled = true; btn.textContent = 'جاري الحفظ...';
@@ -900,7 +1042,7 @@ async function switchToBriefing() {
   let html = '<div class="form-grid" style="grid-template-columns:1fr;">';
   html += '<div class="field field-full"><label>تاريخ النشرة</label><input id="bf-date" type="date" value="' + (briefing && briefing.date ? new Date(briefing.date).toISOString().slice(0,10) : new Date().toISOString().slice(0,10)) + '" /></div>';
   html += '<div class="field field-full"><label>أهم 5 أخبار (JSON)</label><textarea id="bf-items" style="min-height:200px;font-family:monospace;">' + JSON.stringify(items, null, 2) + '</textarea></div>';
-  html += '<div class="field field-full"><label>أسعار ومؤشرات (JSON)</label><textarea id="bf-rates" style="min-height:160px;font-family:monospace;">' + JSON.stringify(rates, null, 2) + '</textarea></div>';
+  html += '<div class="field field-full"><label>أسعار (JSON)</label><textarea id="bf-rates" style="min-height:160px;font-family:monospace;">' + JSON.stringify(rates, null, 2) + '</textarea></div>';
   html += '<div class="field field-full"><label>صفقة اليوم (JSON)</label><textarea id="bf-deal" style="min-height:120px;font-family:monospace;">' + JSON.stringify(deal, null, 2) + '</textarea></div>';
   html += '<div class="field field-full"><button class="btn btn-primary" onclick="saveBriefing()">حفظ النشرة</button></div>';
   html += '</div>';

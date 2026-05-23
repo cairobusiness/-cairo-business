@@ -83,12 +83,44 @@
     .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
     @media (max-width:720px){.form-grid{grid-template-columns:1fr}.item-row{grid-template-columns:1fr}.toolbar{flex-direction:column;align-items:stretch}.search-box{width:100%}}
+
+    /* ============== LIGHT THEME OVERRIDES ============== */
+    html[data-theme="light"] {
+      --bg: #f5f7fb; --card: #ffffff; --card-2: #f0f2f7;
+      --border: rgba(0,0,0,0.08); --border-2: rgba(0,0,0,0.15);
+      --text: #0f172a; --text-2: #475569; --text-3: #94a3b8;
+    }
+    html[data-theme="light"] body{background:linear-gradient(135deg,#f5f7fb 0%,#e9eef5 100%);color:#0f172a;}
+    html[data-theme="light"] header{background:rgba(255,255,255,0.85);border-bottom:1px solid rgba(0,0,0,0.08);}
+    html[data-theme="light"] input,html[data-theme="light"] textarea,html[data-theme="light"] select{background:#fff;border:1px solid rgba(0,0,0,0.12);color:#0f172a;}
+    html[data-theme="light"] .login-card,html[data-theme="light"] .modal,html[data-theme="light"] .stat,html[data-theme="light"] .item-row,html[data-theme="light"] .tabs{background:#ffffff;border-color:rgba(0,0,0,0.08);}
+    html[data-theme="light"] .item-thumb{background:#eef1f6;color:#94a3b8;}
+    html[data-theme="light"] .tab{color:#475569;}
+    html[data-theme="light"] .tab:hover{background:rgba(0,0,0,0.04);}
+    html[data-theme="light"] .close-btn{background:#eef1f6;color:#0f172a;}
+
+    .theme-btn{position:relative;cursor:pointer;border:1px solid var(--border-2);background:transparent;color:var(--text-2);padding:6px 12px;border-radius:8px;font-size:12px;display:inline-flex;align-items:center;gap:6px;}
+    .theme-btn:hover{color:var(--text);border-color:var(--gold);}
+
+    /* ============== SEO section in news editor ============== */
+    .seo-collapse{margin-top:14px;border:1px dashed var(--border-2);border-radius:10px;}
+    .seo-collapse summary{cursor:pointer;padding:10px 14px;font-weight:600;font-size:13px;color:var(--gold);}
+    .seo-collapse[open] summary{border-bottom:1px solid var(--border);}
+    .seo-collapse .form-grid{padding:14px;}
+    .seo-score{display:inline-block;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700;margin-inline-start:8px;}
+    .seo-score.good{background:rgba(16,185,129,0.12);color:#10b981;}
+    .seo-score.warn{background:rgba(245,158,11,0.12);color:#f59e0b;}
+    .seo-score.bad{background:rgba(239,68,68,0.12);color:#ef4444;}
   </style>
 </head>
 <body>
   <header id="app-header" style="display:none;">
     <div class="brand"><div class="brand-mark">CB</div><span>لوحة تحكم Cairo Business</span></div>
-    <div class="header-actions"><div class="user-chip" id="user-chip"><span id="user-name">—</span></div><button class="btn btn-ghost btn-sm" onclick="logout()">خروج</button></div>
+    <div class="header-actions">
+      <button class="theme-btn" onclick="toggleAdminTheme()" id="theme-btn" title="تبديل الوضع الفاتح/الداكن">🌙 <span id="theme-label">داكن</span></button>
+      <div class="user-chip" id="user-chip"><span id="user-name">—</span><span id="user-role-chip" style="margin-inline-start:6px;font-size:10px;opacity:.7;"></span></div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">خروج</button>
+    </div>
   </header>
   <div id="login-screen" class="login-screen">
     <div class="login-card">
