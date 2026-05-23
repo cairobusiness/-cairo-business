@@ -8676,7 +8676,7 @@
         'pricing.eyebrow':'العضوية','pricing.title':'اختر الباقة التي تناسب طموحك','pricing.subtitle':'استثمر في أداة قرارك — اشتراك سنوي بالدولار عبر بطاقة ائتمان أو تحويل بنكي.',
         'cta.title':'انضم إلى أقوى شبكة أعمال في الشرق الأوسط','cta.subtitle':'أكثر من مليون صانع قرار ومستثمر يعتمدون علينا. انضم لمنصة كايرو بيزنس واستفد من كل الميزات.','cta.primary':'اشترك الآن','cta.secondary':'تحدث مع المبيعات',
         'footer.about':'المنصة الأولى لذكاء الأعمال في الشرق الأوسط. بيانات حية، تحليلات، ذكاء اصطناعي، وتصنيفات — بالعربي والإنجليزي.','footer.col.product':'المنتج','footer.col.company':'الشركة','footer.col.newsletter':'اشترك','footer.about.link':'من نحن','footer.careers':'الوظائف','footer.advertise':'أعلن معنا','footer.press':'غرفة الأخبار','footer.newsletterDesc':'بريد يومي بأهم ٥ أخبار.','footer.emailPh':'بريدك الإلكتروني','footer.subscribe':'اشترك','footer.copyright':'© 2026 Cairo Business. كل الحقوق محفوظة.','footer.terms':'الشروط','footer.privacy':'الخصوصية','footer.cookies':'الكوكيز',
-        'briefing.eyebrow':'MORNING BRIEFING','briefing.title':'ما تحتاج لمعرفته اليوم','briefing.dealOfDay':'صفقة اليوم','briefing.ctaTitle':'اجعل هذا في بريدك','briefing.ctaDesc':'كل صباح قبل الساعة 7','briefing.subscribe':'اشترك',
+        'briefing.eyebrow':'الموجز اليومي للمستثمر','briefing.title':'ما تحتاج لمعرفته اليوم','briefing.subtitle':'5 أخبار حصرية + صفقة اليوم — كل صباح قبل الساعة 7 ص','briefing.lastUpdate':'آخر تحديث 6:45 ص','briefing.top5':'أهم 5 أحداث اليوم','briefing.dealOfDay':'صفقة اليوم','briefing.exclusive':'حصري · EXCLUSIVE','briefing.dealValue':'قيمة الصفقة','briefing.score':'التقييم','briefing.viewAll':'شاهد جميع الصفقات','briefing.ctaTitle':'اجعل هذا في بريدك','briefing.ctaDesc':'كل صباح قبل الساعة 7','briefing.subscribe':'اشترك','dashboard.eyebrow':'لوحة المستثمر · كل الأرقام في مكان واحد','dashboard.pulse.title':'مؤشر صحة الاقتصاد','dashboard.vitals.title':'المؤشرات الحيوية الستة','dashboard.brief.title':'الموجز الاستثماري — 5 محاور',
         'dashboard.title':'كل الأرقام. شاشة واحدة.',
         'dashboard.eyebrow':'موجز المستثمر · الشاشة الحية',
         'dashboard.subtitle':'كل المؤشرات التي يحتاجها رجل الأعمال صباحاً — من الاقتصاد الكلي، أسعار الفائدة، العملات، السلع، إلى أداء القطاعات — في شاشة واحدة.',
@@ -9054,7 +9054,7 @@
         'pricing.eyebrow':'MEMBERSHIP','pricing.title':'Choose the Plan That Matches Your Ambition','pricing.subtitle':'Invest in your decision tool — annual subscription in USD via credit card or bank transfer.',
         'cta.title':'Join the Most Powerful Business Network in the Middle East','cta.subtitle':'Over 1 million decision-makers and investors rely on us. Join Cairo Business and unlock all features.','cta.primary':'Start free trial','cta.secondary':'Talk to sales',
         'footer.about':'The #1 business intelligence platform for the Middle East. Live data, analytics, AI, and rankings — in Arabic and English.','footer.col.product':'Product','footer.col.company':'Company','footer.col.newsletter':'Newsletter','footer.about.link':'About us','footer.careers':'Careers','footer.advertise':'Advertise','footer.press':'Press','footer.newsletterDesc':'A daily 5-story brief.','footer.emailPh':'your email','footer.subscribe':'Subscribe','footer.copyright':'© 2026 Cairo Business. All rights reserved.','footer.terms':'Terms','footer.privacy':'Privacy','footer.cookies':'Cookies',
-        'briefing.eyebrow':'MORNING BRIEFING','briefing.title':'What You Need to Know Today','briefing.dealOfDay':'Deal of the Day','briefing.ctaTitle':'Get This in Your Inbox','briefing.ctaDesc':'Every morning before 7 AM','briefing.subscribe':'Subscribe',
+        'briefing.eyebrow':'MORNING BRIEFING','briefing.title':'What You Need to Know Today','briefing.subtitle':'5 exclusive stories + Deal of the Day — every morning before 7 AM','briefing.lastUpdate':'Last update 6:45 AM','briefing.top5':'TOP 5 STORIES TODAY','briefing.dealOfDay':'DEAL OF THE DAY','briefing.exclusive':'EXCLUSIVE','briefing.dealValue':'DEAL VALUE','briefing.score':'SCORE','briefing.viewAll':'View All Deals','briefing.ctaTitle':'Get This in Your Inbox','briefing.ctaDesc':'Every morning before 7 AM','briefing.subscribe':'Subscribe','dashboard.eyebrow':'INVESTOR DASHBOARD · ALL NUMBERS IN ONE PLACE','dashboard.pulse.title':'ECONOMY HEALTH SCORE','dashboard.vitals.title':'6 VITAL INDICATORS','dashboard.brief.title':'INVESTOR BRIEF — 5 PILLARS',
         'dashboard.title':'Every Number. One Screen.',
         'dashboard.eyebrow':'INVESTOR BRIEF · LIVE TERMINAL',
         'dashboard.subtitle':'Every indicator a business decision-maker needs at sunrise — from macro to rates, FX, commodities, and sector breadth — on one screen.',
@@ -14341,7 +14341,8 @@
             const rates = JSON.parse(bJson.data.rates || '[]');
             const dod = bJson.data.dealOfDay ? JSON.parse(bJson.data.dealOfDay) : null;
             if (typeof MORNING_BRIEFING !== 'undefined') {
-              if (items.length) MORNING_BRIEFING.items = items;
+              const validItems = items.filter(it => it && (it.title_ar || it.title_en));
+              if (validItems.length) MORNING_BRIEFING.items = validItems;
               if (dod && (dod.name_ar || dod.name_en) && (dod.value || dod.score)) MORNING_BRIEFING.dealOfDay = dod;
               MORNING_BRIEFING.date = new Date(bJson.data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
               if (typeof renderMorningBriefing === 'function') try { renderMorningBriefing(); } catch(_){}
