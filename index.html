@@ -14342,7 +14342,7 @@
             const dod = bJson.data.dealOfDay ? JSON.parse(bJson.data.dealOfDay) : null;
             if (typeof MORNING_BRIEFING !== 'undefined') {
               if (items.length) MORNING_BRIEFING.items = items;
-              if (dod) MORNING_BRIEFING.dealOfDay = dod;
+              if (dod && (dod.name_ar || dod.name_en) && (dod.value || dod.score)) MORNING_BRIEFING.dealOfDay = dod;
               MORNING_BRIEFING.date = new Date(bJson.data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
               if (typeof renderMorningBriefing === 'function') try { renderMorningBriefing(); } catch(_){}
               if (typeof renderBriefing === 'function') try { renderBriefing(); } catch(_){}
