@@ -3321,16 +3321,8 @@
           <div class="flex items-center gap-2 p-2 ps-6">
             <i data-lucide="sparkles" class="w-5 h-5 text-gold-400 shrink-0"></i>
             <div class="flex-1 min-w-0 relative">
-              <input id="ai-search-input" type="text" class="w-full bg-transparent h-12 text-white placeholder-transparent focus:outline-none text-sm md:text-base" />
-              <div class="absolute inset-0 flex items-center pointer-events-none text-white/40 text-sm md:text-base overflow-hidden" id="rotator-wrap">
-                <span class="rotator">
-                  <span data-i18n="hero.placeholders.0">اسأل أي سؤال عن سوق العقارات في التجمع الخامس...</span>
-                  <span data-i18n="hero.placeholders.1">كم سعر المتر في الشيخ زايد اليوم؟</span>
-                  <span data-i18n="hero.placeholders.2">أفضل 5 فرص استثمار تحت 3 مليون جنيه</span>
-                  <span data-i18n="hero.placeholders.3">مطورين بتسليم 2026 في العاصمة الإدارية</span>
-                  <span data-i18n="hero.placeholders.0">اسأل أي سؤال عن سوق العقارات في التجمع الخامس...</span>
-                </span>
-              </div>
+              <input id="ai-search-input" type="text" placeholder="اسأل أي سؤال..." class="w-full bg-transparent h-12 text-white placeholder-white/30 focus:outline-none text-sm md:text-base" />
+              <div class="absolute inset-0 flex items-center pointer-events-none text-white/40 text-sm md:text-base overflow-hidden" id="rotator-wrap" style="display:none;"></div>
             </div>
             <button class="w-10 h-10 grid place-items-center rounded-full hover:bg-white/10 transition" title="Voice">
               <div class="wave"><span></span><span></span><span></span><span></span><span></span></div>
