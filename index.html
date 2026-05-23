@@ -14997,6 +14997,55 @@
         } catch (e) { console.warn('Twelve Data indices fetch failed:', e); }
       }
 
+      // 3c) Free backend scrapers: EGX indices + commodities + T-bills
+      try {
+        const SCRAPE_BASE = 'https://cairo-business-backend.vercel.app/api/scrape';
+        const [egxR, comR, tbR] = await Promise.all([
+          fetch(SCRAPE_BASE + '/egx-indices').then(r=>r.ok?r.json():null).catch(()=>null),
+          fetch(SCRAPE_BASE + '/commodities').then(r=>r.ok?r.json():null).catch(()=>null),
+          fetch(SCRAPE_BASE + '/tbills').then(r=>r.ok?r.json():null).catch(()=>null),
+        ]);
+        // EGX -> DASHBOARD_DATA + brief
+        if (egxR && egxR.success && egxR.data) {
+          const d = egxR.data;
+          const writeSym = (sym, q) => {
+            if (!q || q.value == null) return;
+            const dd = DASHBOARD_DATA && DASHBOARD_DATA.find(x => x.symbol === sym);
+            if (dd) { dd.value = q.value; dd.change = q.change || 0; }
+          };
+          writeSym('EGX30',  d.egx30);
+          writeSym('EGX70',  d.egx70);
+          writeSym('EGX100', d.egx100);
+        }
+        // Commodities -> DASHBOARD_DATA + COMMODITIES_GLOBAL
+        if (comR && comR.success && comR.data) {
+          const d = comR.data;
+          const writeSym = (sym, q) => {
+            if (!q || q.value == null) return;
+            const dd = DASHBOARD_DATA && DASHBOARD_DATA.find(x => x.symbol === sym);
+            if (dd) { dd.value = q.value; dd.change = q.change || 0; }
+          };
+          writeSym('Gold',   d.gold);
+          writeSym('Silver', d.silver);
+          writeSym('Brent',  d.brent);
+        }
+        // T-bills -> COUNTRIES_DATA.eg.brief.fx
+        if (tbR && tbR.success && tbR.data && typeof COUNTRIES_DATA !== 'undefined' && COUNTRIES_DATA.eg) {
+          const fx = COUNTRIES_DATA.eg.brief.fx;
+          const setFx = (labKey, q) => {
+            if (!q || q.value == null) return;
+            const row = fx.find(r => r.labKey === labKey);
+            if (row) {
+              row.value = q.value.toFixed(2) + '%';
+              row.trend = q.change > 0 ? 'up' : (q.change < 0 ? 'down' : 'flat');
+              row.delta = (q.change > 0 ? '+' : '') + q.change.toFixed(2);
+            }
+          };
+          setFx('dashboard.f.t3m', tbR.data.tbill3m);
+          setFx('dashboard.f.t1y', tbR.data.tbill1y);
+        }
+      } catch (e) { console.warn('Scrape endpoints failed:', e); }
+
       // 4) Sync to TICKER_ITEMS (the visible scrolling ticker)
       if (typeof TICKER_ITEMS !== 'undefined' && typeof DASHBOARD_DATA !== 'undefined') {
         const tickerMap = {
@@ -15105,7 +15154,6 @@
     setInterval(fetchLiveMarketData, 5 * 60 * 1000);
     setTimeout(fetchWorldBankData, 2500);
 
-    /* Bootstrap on page load */
     (function bootstrapApp() {
       function safeApply() {
         try { if (typeof applyLang === 'function') applyLang(typeof currentLang !== 'undefined' ? currentLang : 'ar'); } catch(e) {}
@@ -15118,7 +15166,6 @@
       setTimeout(safeApply, 50);
       setTimeout(safeApply, 300);
       setTimeout(safeApply, 1000);
-      // After initial render, try to enrich with live API data
       setTimeout(pullHomepageDataFromApi, 800);
     })();
   </script>
