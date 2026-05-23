@@ -15337,6 +15337,15 @@
         const aiInput = document.getElementById('ai-search-input');
         if (aiInput && !aiInput._wired) {
           aiInput._wired = true;
+          const rotator = document.getElementById('rotator-wrap');
+          const syncRotator = () => {
+            if (!rotator) return;
+            const hasText = (aiInput.value || '').trim().length > 0;
+            rotator.style.display = hasText ? 'none' : '';
+          };
+          syncRotator();
+          aiInput.addEventListener('input', syncRotator);
+          aiInput.addEventListener('keyup', syncRotator);
           aiInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
               const q = (aiInput.value || '').trim();
