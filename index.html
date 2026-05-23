@@ -6966,8 +6966,8 @@
           </div>
           <!-- Input -->
           <div class="p-4 border-t border-white/5 flex gap-3">
-            <input type="text" class="flex-1 h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-gold-400" data-i18n-placeholder="aibot.placeholder" placeholder="اكتب سؤالك هنا…" />
-            <button class="w-11 h-11 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 text-navy-900 grid place-items-center shadow-lg shadow-gold-500/20"><i data-lucide="send" class="w-4 h-4"></i></button>
+            <input id="aibot-input" type="text" class="flex-1 h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-gold-400" data-i18n-placeholder="aibot.placeholder" placeholder="اكتب سؤالك هنا…" />
+            <button id="aibot-send" class="w-11 h-11 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 text-navy-900 grid place-items-center shadow-lg shadow-gold-500/20"><i data-lucide="send" class="w-4 h-4"></i></button>
           </div>
           <div class="text-center pb-3 text-[10px] text-white/30" data-i18n="aibot.poweredBy">مدعوم بالذكاء الاصطناعي + بيانات كايرو بيزنس</div>
         </div>
@@ -15376,7 +15376,40 @@
             }
           });
         });
-        // Wire suggestion chips
+        // Wire #ai-assistant section (Cairo AI chat section below hero)
+        const aibotInput = document.getElementById('aibot-input');
+        if (aibotInput && !aibotInput._wired) {
+          aibotInput._wired = true;
+          aibotInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              const q = (aibotInput.value || '').trim();
+              if (q) askCairoAI(q);
+            }
+          });
+        }
+        const aibotSend = document.getElementById('aibot-send');
+        if (aibotSend && !aibotSend._wired) {
+          aibotSend._wired = true;
+          aibotSend.addEventListener('click', () => {
+            const inp = document.getElementById('aibot-input');
+            const q = inp ? (inp.value || '').trim() : '';
+            if (q) askCairoAI(q);
+            else if (inp) inp.focus();
+          });
+        }
+        // Wire 4 suggestion buttons (data-sug=1..4) inside #ai-assistant
+        const sugBtns = document.querySelectorAll('#ai-assistant .ai-sug-btn[data-sug]');
+        sugBtns.forEach(b => {
+          if (b._wired) return; b._wired = true;
+          b.addEventListener('click', () => {
+            const qEl = b.querySelector('.ai-sug-q');
+            const q = qEl ? qEl.textContent.trim() : '';
+            const inp = document.getElementById('aibot-input');
+            if (inp && q) inp.value = q;
+            if (q) askCairoAI(q);
+          });
+        });
+        // Wire suggestion chips below hero
         const chips = document.querySelectorAll('[data-ai-chip]');
         chips.forEach(c => {
           if (c._wired) return; c._wired = true;
