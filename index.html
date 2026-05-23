@@ -5250,6 +5250,126 @@
         <div class="space-y-4" id="news-list"></div>
       </div>
     </div>
+
+    <!-- ===== NEWS ARTICLE MODAL ===== -->
+    <div id="news-article-modal" class="news-modal-overlay" aria-hidden="true">
+      <style>
+        .news-modal-overlay {
+          position: fixed; inset: 0; background: rgba(2,6,23,.85); backdrop-filter: blur(10px);
+          z-index: 9999; display: none; align-items: flex-start; justify-content: center;
+          padding: 40px 20px; overflow-y: auto;
+        }
+        .news-modal-overlay.is-open { display: flex; }
+        .news-modal-card {
+          background: linear-gradient(155deg, #0f1a3d 0%, #0a0e27 100%);
+          border: 1px solid rgba(212,175,55,.25); border-radius: 24px;
+          max-width: 860px; width: 100%; max-height: calc(100vh - 80px);
+          overflow: hidden; display: flex; flex-direction: column;
+          box-shadow: 0 30px 80px rgba(0,0,0,.6);
+          animation: nm-in .25s ease-out;
+        }
+        @keyframes nm-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+        .news-modal-header {
+          position: relative; height: 280px; background: #1a2b4d center/cover no-repeat;
+          flex-shrink: 0;
+        }
+        .news-modal-header::after {
+          content: ''; position: absolute; inset: 0;
+          background: linear-gradient(to top, rgba(10,14,39,.95) 0%, rgba(10,14,39,.4) 50%, transparent 100%);
+        }
+        .news-modal-close {
+          position: absolute; top: 18px; inset-inline-end: 18px; z-index: 2;
+          width: 38px; height: 38px; border-radius: 50%;
+          background: rgba(10,14,39,.8); border: 1px solid rgba(255,255,255,.15);
+          color: #fff; display: grid; place-items: center; cursor: pointer;
+          transition: all .2s;
+        }
+        .news-modal-close:hover { background: #d4af37; color: #0a0e27; border-color: #d4af37; }
+        .news-modal-badges {
+          position: absolute; top: 18px; inset-inline-start: 18px; z-index: 2;
+          display: flex; gap: 8px;
+        }
+        .news-modal-badge {
+          font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+          padding: 5px 10px; border-radius: 999px;
+        }
+        .news-modal-badge.cat { background: rgba(212,175,55,.9); color: #0a0e27; }
+        .news-modal-badge.score { background: rgba(248,113,113,.9); color: #fff; }
+        .news-modal-body { padding: 24px 32px 32px; overflow-y: auto; flex: 1; }
+        .news-modal-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: rgba(255,255,255,.55); margin-bottom: 10px; }
+        .news-modal-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.3); }
+        .news-modal-title { font-family: var(--font-display, inherit); font-size: 28px; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 14px; }
+        .news-modal-ai {
+          background: linear-gradient(135deg, rgba(212,175,55,.08), rgba(212,175,55,.03));
+          border: 1px solid rgba(212,175,55,.25); border-radius: 14px;
+          padding: 16px 18px; margin: 18px 0;
+        }
+        .news-modal-ai-head {
+          display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+          font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #fbbf24; text-transform: uppercase;
+        }
+        .news-modal-ai-head::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fbbf24; animation: pulse-dot 1.5s infinite; }
+        .news-modal-ai-body { font-size: 14px; color: rgba(255,255,255,.85); line-height: 1.7; }
+        .news-modal-ai-body ul { margin: 6px 0 0; padding-inline-start: 18px; }
+        .news-modal-ai-body li { margin-bottom: 4px; }
+        .news-modal-content { font-size: 16px; color: rgba(255,255,255,.78); line-height: 1.85; }
+        .news-modal-content p { margin-bottom: 14px; }
+        .news-modal-actions { display: flex; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.06); }
+        .news-modal-btn {
+          display: inline-flex; align-items: center; gap: 6px;
+          font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px;
+          border: 1px solid rgba(212,175,55,.4); color: #fbbf24; cursor: pointer;
+          background: transparent; transition: all .2s;
+        }
+        .news-modal-btn:hover { background: rgba(251,191,36,.1); border-color: #fbbf24; }
+        .news-modal-btn.primary { background: #d4af37; color: #0a0e27; border-color: #d4af37; }
+        .news-modal-btn.primary:hover { background: #fbbf24; }
+        @media (max-width: 640px) {
+          .news-modal-overlay { padding: 0; }
+          .news-modal-card { border-radius: 0; max-height: 100vh; }
+          .news-modal-header { height: 200px; }
+          .news-modal-body { padding: 20px; }
+          .news-modal-title { font-size: 22px; }
+        }
+      </style>
+      <div class="news-modal-card" onclick="event.stopPropagation()">
+        <div class="news-modal-header" id="news-modal-image">
+          <button class="news-modal-close" onclick="closeNewsArticle()" aria-label="Close">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+          <div class="news-modal-badges">
+            <span class="news-modal-badge cat" id="news-modal-cat">—</span>
+            <span class="news-modal-badge score">AI <span id="news-modal-score">—</span></span>
+          </div>
+        </div>
+        <div class="news-modal-body">
+          <div class="news-modal-meta">
+            <span id="news-modal-time" class="num">—</span>
+            <span class="dot"></span>
+            <span id="news-modal-author">—</span>
+          </div>
+          <h2 class="news-modal-title" id="news-modal-title">—</h2>
+          <div class="news-modal-ai">
+            <div class="news-modal-ai-head">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span data-i18n="news.modal.aiSummary">ملخص AI · أهم 3 نقاط</span>
+            </div>
+            <div class="news-modal-ai-body" id="news-modal-ai-body">—</div>
+          </div>
+          <div class="news-modal-content" id="news-modal-content">—</div>
+          <div class="news-modal-actions">
+            <button class="news-modal-btn primary" onclick="generateAiSummary()">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              <span data-i18n="news.modal.regenerate">جدّد الملخص</span>
+            </button>
+            <button class="news-modal-btn" onclick="closeNewsArticle()">
+              <i data-lucide="x" class="w-4 h-4"></i>
+              <span data-i18n="news.modal.close">إغلاق</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- =========================================================== -->
@@ -10852,6 +10972,18 @@
           if (overlay) overlay.style.background = 'radial-gradient(circle at 30% 40%, rgba(201,162,39,0.35), transparent 50%), radial-gradient(circle at 70% 60%, rgba(54,92,178,0.4), transparent 50%)';
         }
       }
+      // Cache hero item by id and make hero clickable
+      try {
+        if (item.id != null) {
+          window.NEWS_BY_ID = window.NEWS_BY_ID || {};
+          window.NEWS_BY_ID[item.id] = item;
+          const heroEl = document.getElementById('news-hero');
+          if (heroEl) {
+            heroEl.style.cursor = 'pointer';
+            heroEl.onclick = function () { openNewsArticle(item.id); };
+          }
+        }
+      } catch (_e) {}
     }
 
     function paintListFromApi(items){
@@ -10873,8 +11005,9 @@
                <span class="absolute bottom-0.5 end-0.5 bg-navy-900/80 text-gold-400 text-[9px] font-black num leading-none px-1 py-0.5 rounded">${score}</span>
              </div>`
           : `<div class="shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-navy-600 to-navy-800 grid place-items-center text-gold-400 font-black text-sm num border border-white/10">${score}</div>`;
+        const safeId = String(n.id || '').replace(/'/g, "\\'");
         return `
-          <a href="#" class="card glass-light border border-white/10 rounded-2xl p-4 flex gap-4 hover:border-gold-500/50 transition">
+          <a href="javascript:void(0)" onclick="openNewsArticle('${safeId}')" class="card glass-light border border-white/10 rounded-2xl p-4 flex gap-4 hover:border-gold-500/50 transition cursor-pointer">
             ${thumbCell}
             <div class="min-w-0">
               <div class="flex items-center gap-2 text-[11px] text-white/50 mb-1">
@@ -10895,7 +11028,7 @@
         const cat = currentLang === 'ar' ? n.cat_ar : n.cat_en;
         const title = currentLang === 'ar' ? n.title_ar : n.title_en;
         return `
-          <a href="#" class="card glass-light border border-white/10 rounded-2xl p-4 flex gap-4 hover:border-gold-500/50 transition">
+          <a href="javascript:void(0)" class="card glass-light border border-white/10 rounded-2xl p-4 flex gap-4 hover:border-gold-500/50 transition cursor-pointer">
             <div class="shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-navy-600 to-navy-800 grid place-items-center text-gold-400 font-black text-sm num border border-white/10">${n.score}</div>
             <div class="min-w-0">
               <div class="flex items-center gap-2 text-[11px] text-white/50 mb-1">
@@ -10933,6 +11066,9 @@
     async function renderNewsList(){
       const items = await fetchNewsOnce();
       if (items && items.length){
+        // Cache all items by id so the modal can look them up
+        window.NEWS_BY_ID = window.NEWS_BY_ID || {};
+        items.forEach(it => { if (it && it.id != null) window.NEWS_BY_ID[it.id] = it; });
         // Pick a featured story for the hero (fallback to first item)
         const hero = items.find(x => x.isFeatured) || items[0];
         paintHeroFromApi(hero);
@@ -10946,6 +11082,100 @@
       }
       if (window.lucide) try { lucide.createIcons(); } catch(_){}
     }
+
+    /* ===== News article modal: open + close + AI summary ===== */
+    function openNewsArticle(id) {
+      try {
+        const item = (window.NEWS_BY_ID || {})[id];
+        if (!item) return;
+        window.__currentNewsArticle = item;
+        const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
+        const title = isAr ? (item.titleAr || item.titleEn || '') : (item.titleEn || item.titleAr || '');
+        const excerpt = isAr ? (item.excerptAr || item.excerptEn || '') : (item.excerptEn || item.excerptAr || '');
+        const catSlug = (item.category || '').toLowerCase();
+        const cat = (typeof NEWS_CAT_LABELS !== 'undefined' && NEWS_CAT_LABELS[isAr ? 'ar' : 'en'][catSlug]) || item.category || '';
+        const time = (typeof newsTimeAgo === 'function') ? newsTimeAgo(item.publishedAt, currentLang) : '';
+        const author = item.author || (isAr ? 'فريق التحرير' : 'Editorial Team');
+        const score = (typeof newsAiScore === 'function') ? newsAiScore(item) : '';
+        const img = item.imageUrl || '';
+
+        const elT = document.getElementById('news-modal-title'); if (elT) elT.textContent = title;
+        const elC = document.getElementById('news-modal-cat'); if (elC) elC.textContent = cat;
+        const elS = document.getElementById('news-modal-score'); if (elS) elS.textContent = score;
+        const elTime = document.getElementById('news-modal-time'); if (elTime) elTime.textContent = time;
+        const elA = document.getElementById('news-modal-author'); if (elA) elA.textContent = author;
+        const elContent = document.getElementById('news-modal-content');
+        if (elContent) {
+          const paragraphs = (excerpt || '').split(/\n\n+|(?<=[.!?])\s{2,}/).filter(p => p.trim());
+          elContent.innerHTML = paragraphs.length
+            ? paragraphs.map(p => '<p>' + p.replace(/</g, '&lt;') + '</p>').join('')
+            : '<p>' + (isAr ? 'لا يوجد محتوى متاح لهذا الخبر.' : 'No content available for this story.') + '</p>';
+        }
+        const elImg = document.getElementById('news-modal-image');
+        if (elImg) {
+          elImg.style.backgroundImage = img ? `url("${img}")` : 'linear-gradient(135deg, #1a2b4d, #0a0e27)';
+        }
+        const elAi = document.getElementById('news-modal-ai-body');
+        if (elAi) elAi.textContent = isAr ? 'اضغط "جدّد الملخص" لتوليد ملخص AI من النص.' : 'Click "Refresh Summary" to generate an AI summary.';
+
+        const overlay = document.getElementById('news-article-modal');
+        if (overlay) {
+          overlay.classList.add('is-open');
+          overlay.setAttribute('aria-hidden', 'false');
+          overlay.onclick = function (e) { if (e.target === overlay) closeNewsArticle(); };
+          document.body.style.overflow = 'hidden';
+        }
+        if (window.lucide) try { lucide.createIcons(); } catch (_) {}
+        // Auto-generate AI summary on open
+        setTimeout(generateAiSummary, 200);
+      } catch (e) {
+        console.warn('openNewsArticle failed:', e);
+      }
+    }
+
+    function closeNewsArticle() {
+      const overlay = document.getElementById('news-article-modal');
+      if (overlay) {
+        overlay.classList.remove('is-open');
+        overlay.setAttribute('aria-hidden', 'true');
+      }
+      document.body.style.overflow = '';
+    }
+
+    async function generateAiSummary() {
+      const item = window.__currentNewsArticle;
+      const elAi = document.getElementById('news-modal-ai-body');
+      if (!item || !elAi) return;
+      const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
+      const title = isAr ? (item.titleAr || item.titleEn || '') : (item.titleEn || item.titleAr || '');
+      const excerpt = isAr ? (item.excerptAr || item.excerptEn || '') : (item.excerptEn || item.excerptAr || '');
+      elAi.innerHTML = '<em style="opacity:.6">' + (isAr ? 'يولّد الملخص...' : 'Generating summary...') + '</em>';
+      try {
+        const prompt = (isAr
+          ? 'لخّص الخبر التالي في 3 نقاط واضحة وموجزة (Bullet points). كل نقطة جملة قصيرة. ابدأ كل نقطة بـ "- ".\n\nالعنوان: ' + title + '\n\nالنص:\n' + excerpt
+          : 'Summarize the following article in 3 clear, concise bullet points. Each bullet is one short sentence. Start each bullet with "- ".\n\nTitle: ' + title + '\n\nText:\n' + excerpt);
+        const res = await fetch('https://cairo-business-backend.vercel.app/api/ai-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], lang: isAr ? 'ar' : 'en' })
+        });
+        const j = await res.json().catch(() => ({}));
+        let answer = (j && (j.answer || j.text || j.message)) || excerpt.slice(0, 240);
+        // Render as bullet list
+        const bullets = answer.split(/\n+/).map(s => s.replace(/^[-*•]\s*/, '').trim()).filter(Boolean).slice(0, 5);
+        elAi.innerHTML = '<ul>' + bullets.map(b => '<li>' + b.replace(/</g, '&lt;') + '</li>').join('') + '</ul>';
+      } catch (e) {
+        elAi.innerHTML = '<em style="opacity:.7">' + (isAr ? 'تعذر توليد الملخص الآن.' : 'Could not generate summary right now.') + '</em>';
+      }
+    }
+
+    // Close modal on Escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        const overlay = document.getElementById('news-article-modal');
+        if (overlay && overlay.classList.contains('is-open')) closeNewsArticle();
+      }
+    });
 
     function renderTop10Tabs(){
       const wrap = $('#top10-tabs');
