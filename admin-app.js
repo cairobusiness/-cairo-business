@@ -571,7 +571,10 @@ async function switchToUsers() {
   document.getElementById('page-title').textContent = '👥 إدارة المستخدمين';
   document.getElementById('stats-section').innerHTML = '';
   document.getElementById('search-input').style.display = '';
-  document.querySelector('.actions button.btn-primary').style.display = 'none';
+  const newBtn = document.querySelector('.actions button.btn-primary');
+  newBtn.style.display = '';
+  newBtn.setAttribute('onclick', 'openCreateUserModal()');
+  document.getElementById('create-label').textContent = 'مستخدم جديد';
   const container = document.getElementById('list-container');
   container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   const r = await api('/api/admin/users?limit=100');
@@ -600,6 +603,61 @@ async function switchToUsers() {
       '</div></div>';
   }).join('');
   container.innerHTML = '<div class="item-grid">' + rows + '</div>';
+}
+
+function openCreateUserModal() {
+  const modal = document.getElementById('item-modal');
+  document.getElementById('modal-title').textContent = '👤 مستخدم جديد';
+  document.getElementById('modal-msg').innerHTML = '';
+  document.getElementById('form-fields').innerHTML =
+    '<div class="field field-full"><label>الاسم الكامل *</label><input id="nu-name" type="text" placeholder="مثلاً: أحمد محمد" /></div>' +
+    '<div class="field"><label>البريد الإلكتروني *</label><input id="nu-email" type="email" placeholder="editor@cairobusiness.net" dir="ltr" /></div>' +
+    '<div class="field"><label>كلمة السر * (6 أحرف على الأقل)</label><input id="nu-password" type="text" placeholder="كلمة سر قوية" dir="ltr" /></div>' +
+    '<div class="field"><label>الباقة/الدور *</label><select id="nu-role">' +
+    '<option value="EDITOR" selected>EDITOR — محرر (أخبار + فعاليات + إلخ)</option>' +
+    '<option value="ADMIN">ADMIN — مسؤول كامل</option>' +
+    '<option value="PRO">PRO — مشترك مدفوع</option>' +
+    '<option value="PREMIUM">PREMIUM — مشترك مميز</option>' +
+    '<option value="FREE">FREE — مستخدم عادي</option>' +
+    '</select></div>' +
+    '<div class="field"><label>اللغة المفضلة</label><select id="nu-lang"><option value="ar" selected>العربية</option><option value="en">English</option></select></div>';
+  const saveBtn = document.getElementById('save-btn');
+  saveBtn.textContent = 'إنشاء المستخدم';
+  saveBtn.setAttribute('onclick', 'createNewUser()');
+  modal.classList.add('open');
+}
+
+async function createNewUser() {
+  const name = document.getElementById('nu-name').value.trim();
+  const email = document.getElementById('nu-email').value.trim();
+  const password = document.getElementById('nu-password').value;
+  const role = document.getElementById('nu-role').value;
+  const lang = document.getElementById('nu-lang').value;
+  const msg = document.getElementById('modal-msg');
+  if (!name || !email || !password) {
+    msg.innerHTML = '<div class="msg msg-error">كل الحقول مطلوبة</div>';
+    return;
+  }
+  if (password.length < 6) {
+    msg.innerHTML = '<div class="msg msg-error">كلمة السر لازم 6 أحرف على الأقل</div>';
+    return;
+  }
+  const saveBtn = document.getElementById('save-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الإنشاء...';
+  const r = await api('/api/admin/users', { method: 'POST', body: JSON.stringify({ name, email, password, role, lang }) });
+  saveBtn.disabled = false;
+  if (!r.ok) {
+    msg.innerHTML = '<div class="msg msg-error">' + escapeHtml(r.data?.error || 'فشل الإنشاء') + '</div>';
+    saveBtn.textContent = 'إنشاء المستخدم';
+    return;
+  }
+  closeModal();
+  // Restore save button for entity edits
+  saveBtn.setAttribute('onclick', 'saveItem()');
+  saveBtn.textContent = 'حفظ';
+  alert('✅ تم إنشاء المستخدم: ' + email + '\nالدور: ' + role + '\nيقدر يدخل admin.html بإيميله/كلمة سره');
+  await switchToUsers();
 }
 
 async function editUserRole(id, currentRole) {
