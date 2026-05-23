@@ -375,20 +375,25 @@ async function boot() {
 function renderTabs() {
   const wrap = document.getElementById('tabs');
   const mk = (key, icon, label, fn) => '<button class="tab ' + (currentEntityKey === key ? 'active' : '') + '" onclick="' + fn + '()"><span class="tab-icon">' + icon + '</span>' + label + '</button>';
+  const user = getUser() || {};
+  const isAdmin = user.role === 'ADMIN';
   const dashboardTab = mk('__dashboard__', '📊', 'الرئيسية', 'switchToDashboard');
-  const usersTab = mk('__users__', '👥', 'المستخدمين', 'switchToUsers');
-  const msgTab = mk('__messages__', '📧', 'الرسائل', 'switchToMessages');
-  const newsletterTab = mk('__newsletter__', '📨', 'النشرة', 'switchToNewsletter');
-  const regsTab = mk('__regs__', '🎫', 'تسجيلات الفعاليات', 'switchToRegs');
-  const aichatsTab = mk('__aichats__', '💬', 'محادثات AI', 'switchToAIChats');
-  const settingsTab = mk('__settings__', '🔌', 'التكاملات', 'switchToIntegrations');
   const entityTabs = Object.values(ENTITIES).map(e =>
     '<button class="tab ' + (e.key === currentEntityKey ? 'active' : '') + '" onclick="switchEntity(\'' + e.key + '\')">' +
     '<span class="tab-icon">' + e.icon + '</span>' + e.nameAr + '</button>'
   ).join('');
   const briefingTab = mk('__briefing__', '🌅', 'النشرة الصباحية', 'switchToBriefing');
-  const analyticsTab = mk('__analytics__', '📈', 'التحليلات', 'switchToAnalytics');
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + usersTab + msgTab + newsletterTab + regsTab + aichatsTab + settingsTab + analyticsTab;
+  // Admin-only tabs
+  const adminOnlyTabs = isAdmin ? (
+    mk('__users__', '👥', 'المستخدمين', 'switchToUsers') +
+    mk('__messages__', '📧', 'الرسائل', 'switchToMessages') +
+    mk('__newsletter__', '📨', 'النشرة', 'switchToNewsletter') +
+    mk('__regs__', '🎫', 'تسجيلات الفعاليات', 'switchToRegs') +
+    mk('__aichats__', '💬', 'محادثات AI', 'switchToAIChats') +
+    mk('__settings__', '🔌', 'التكاملات', 'switchToIntegrations') +
+    mk('__analytics__', '📈', 'التحليلات', 'switchToAnalytics')
+  ) : '';
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + adminOnlyTabs;
 }
 
 function setupListView(title) {
