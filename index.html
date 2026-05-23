@@ -3393,6 +3393,69 @@
   <!-- =========================================================== -->
   <section id="morning-briefing" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-950 to-navy-900">
     <div class="absolute inset-0 pointer-events-none opacity-50 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(212,175,55,0.15),transparent_60%)]"></div>
+    <style>
+      /* Bloomberg-style timeline for morning briefing */
+      .mb-timeline { position: relative; padding-inline-start: 28px; }
+      [dir="rtl"] .mb-timeline { padding-inline-start: 0; padding-inline-end: 28px; }
+      .mb-timeline::before {
+        content: ''; position: absolute; top: 8px; bottom: 8px; width: 2px;
+        background: linear-gradient(to bottom, rgba(212,175,55,.5), rgba(212,175,55,.1));
+        inset-inline-start: 8px;
+      }
+      [dir="rtl"] .mb-timeline::before { inset-inline-start: auto; inset-inline-end: 8px; }
+      .mb-tl-item { position: relative; padding: 10px 14px 14px; margin-bottom: 6px; border-radius: 10px; transition: background .2s; cursor: pointer; }
+      .mb-tl-item:hover { background: rgba(255,255,255,.04); }
+      .mb-tl-dot {
+        position: absolute; width: 14px; height: 14px; border-radius: 50%;
+        top: 14px; inset-inline-start: -27px;
+        box-shadow: 0 0 0 3px rgba(2,6,23,1), 0 0 12px currentColor;
+      }
+      [dir="rtl"] .mb-tl-dot { inset-inline-start: auto; inset-inline-end: -27px; }
+      .mb-tl-dot.bullish { background: #34d399; color: #34d399; }
+      .mb-tl-dot.bearish { background: #f87171; color: #f87171; }
+      .mb-tl-dot.neutral { background: #fbbf24; color: #fbbf24; }
+      .mb-tl-time {
+        font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 1.5px;
+        color: rgba(212,175,55,.85); font-weight: 700; margin-bottom: 4px;
+      }
+      .mb-tl-title { color: #fff; font-size: 15px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; }
+      .mb-tl-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .mb-tl-sector { font-size: 11px; color: rgba(255,255,255,.5); }
+      .mb-tl-pill {
+        font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: .5px;
+      }
+      .mb-tl-pill.bullish { background: rgba(52,211,153,.12); color: #6ee7b7; }
+      .mb-tl-pill.bearish { background: rgba(248,113,113,.12); color: #fca5a5; }
+      .mb-tl-pill.neutral { background: rgba(251,191,36,.12); color: #fcd34d; }
+      .mb-deal-card {
+        background: linear-gradient(155deg, #0f1a3d 0%, #1a2a5e 100%);
+        border: 1px solid rgba(212,175,55,.25); border-radius: 16px; padding: 22px;
+        position: sticky; top: 100px;
+      }
+      .mb-deal-tag {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-family: 'Courier New', monospace; font-size: 10px; font-weight: 700;
+        letter-spacing: 2px; color: #fbbf24;
+        background: rgba(251,191,36,.1); padding: 4px 10px; border-radius: 4px;
+        border: 1px solid rgba(251,191,36,.3); margin-bottom: 14px;
+      }
+      .mb-deal-tag::before { content:''; width:6px; height:6px; border-radius:50%; background:#fbbf24; animation: pulse-dot 1.5s infinite; }
+      @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+      .mb-deal-value {
+        font-family: 'Courier New', monospace; font-size: 32px; font-weight: 700; color: #fff;
+        letter-spacing: -1px; line-height: 1; margin: 8px 0;
+      }
+      .mb-deal-score { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
+      .mb-deal-score-bar { flex: 1; height: 4px; background: rgba(255,255,255,.1); border-radius: 2px; overflow: hidden; }
+      .mb-deal-score-fill { height: 100%; background: linear-gradient(90deg, #fbbf24, #d4af37); border-radius: 2px; }
+      .mb-deal-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: #fbbf24; font-weight: 600; font-size: 13px;
+        padding: 8px 14px; border: 1px solid rgba(251,191,36,.4); border-radius: 999px;
+        margin-top: 14px; transition: all .2s;
+      }
+      .mb-deal-link:hover { background: rgba(251,191,36,.1); border-color: #fbbf24; }
+    </style>
     <div class="max-w-[1280px] mx-auto px-4 lg:px-8 relative">
       <div class="text-center mb-12 reveal">
         <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
@@ -3401,31 +3464,40 @@
         </div>
         <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="briefing.title">ما تحتاج لمعرفته اليوم</h2>
         <p class="mt-3 text-white/60 max-w-2xl mx-auto" data-i18n="briefing.subtitle">5 أخبار حصرية + صفقة اليوم — كل صباح قبل الساعة 7 ص</p>
+        <div class="mt-4 inline-flex items-center gap-2 text-[11px] text-white/40 font-mono">
+          <span class="live-dot"></span>
+          <span id="briefing-last-update" data-i18n="briefing.lastUpdate">آخر تحديث 6:45 ص</span>
+        </div>
       </div>
 
-      <div class="grid lg:grid-cols-[1.6fr_1fr] gap-6 reveal">
-        <!-- Top 5 items -->
+      <div class="grid lg:grid-cols-[1.6fr_1fr] gap-8 reveal">
+        <!-- Timeline -->
         <div>
-          <div class="text-xs font-bold tracking-widest text-gold-400 mb-3 flex items-center gap-2">
+          <div class="text-xs font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
             <i data-lucide="flame" class="w-3.5 h-3.5"></i>
             <span data-i18n="briefing.top5">أهم 5 أحداث اليوم</span>
           </div>
-          <div id="briefing-items" class="space-y-3"></div>
+          <div id="briefing-items" class="mb-timeline"></div>
         </div>
 
         <!-- Deal of the Day -->
         <div>
-          <div class="text-xs font-bold tracking-widest text-gold-400 mb-3 flex items-center gap-2">
+          <div class="text-xs font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
             <i data-lucide="zap" class="w-3.5 h-3.5"></i>
             <span data-i18n="briefing.dealOfDay">صفقة اليوم</span>
           </div>
-          <div class="grad-border rounded-2xl bg-gradient-to-br from-navy-800 to-navy-900 p-6 h-full flex flex-col justify-between">
-            <div>
-              <div class="text-3xl mb-2">💼</div>
-              <h3 id="briefing-deal-title" class="text-xl font-bold text-white mb-2">—</h3>
-              <p class="text-white/60 text-sm mb-4" data-i18n="briefing.dealDesc">أبرز صفقة استثمارية في الشرق الأوسط اليوم</p>
+          <div class="mb-deal-card">
+            <span class="mb-deal-tag" data-i18n="briefing.exclusive">EXCLUSIVE · حصري</span>
+            <div class="text-[11px] text-white/50 font-mono uppercase tracking-widest mb-1" data-i18n="briefing.dealValue">قيمة الصفقة</div>
+            <div class="mb-deal-value" id="briefing-deal-value">—</div>
+            <h3 id="briefing-deal-title" class="text-base font-bold text-white mb-1">—</h3>
+            <p id="briefing-deal-sector" class="text-xs text-white/50 mb-3">—</p>
+            <div class="mb-deal-score">
+              <span class="text-[10px] font-mono text-white/60 tracking-widest" data-i18n="briefing.score">SCORE</span>
+              <div class="mb-deal-score-bar"><div class="mb-deal-score-fill" id="briefing-deal-score-fill" style="width:0%"></div></div>
+              <span class="text-sm font-mono font-bold text-gold-400" id="briefing-deal-score">—</span>
             </div>
-            <a href="#deal-room" class="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 font-semibold text-sm">
+            <a href="#deal-room" class="mb-deal-link">
               <span data-i18n="briefing.viewAll">شاهد جميع الصفقات</span>
               <i data-lucide="arrow-left" class="w-4 h-4 flip-x"></i>
             </a>
@@ -3433,8 +3505,134 @@
         </div>
       </div>
 
-      <!-- 5-column investor brief (FX, markets, commodities, sectors, macro) -->
-      <div class="brief-grid mt-12" id="investor-brief-grid"></div>
+    </div>
+  </section>
+
+  <!-- =========================================================== -->
+  <!--                  LIVE INVESTOR DASHBOARD                      -->
+  <!-- =========================================================== -->
+  <section id="live-dashboard" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-900 to-navy-950">
+    <div class="absolute inset-0 pointer-events-none opacity-50 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(212,175,55,0.18),transparent_60%)]"></div>
+    <style>
+      .country-strip { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; scrollbar-width: thin; }
+      .country-strip::-webkit-scrollbar { height: 4px; }
+      .country-strip::-webkit-scrollbar-thumb { background: rgba(212,175,55,.3); border-radius: 2px; }
+      .country-pill {
+        flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px;
+        padding: 8px 14px; border-radius: 999px;
+        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+        color: rgba(255,255,255,.7); font-size: 13px; cursor: pointer; transition: all .2s;
+        white-space: nowrap;
+      }
+      .country-pill:hover { background: rgba(255,255,255,.08); color: #fff; }
+      .country-pill.is-active { background: linear-gradient(135deg, #d4af37, #b8941f); color: #1a1a2e; border-color: #d4af37; font-weight: 600; }
+      .country-pill-flag { font-size: 16px; }
+      .country-pill-score {
+        font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700;
+        background: rgba(0,0,0,.2); padding: 2px 6px; border-radius: 4px;
+      }
+      .country-pill.is-active .country-pill-score { background: rgba(0,0,0,.15); color: #1a1a2e; }
+
+      .pulse-card, .vitals-card {
+        background: linear-gradient(155deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+        border: 1px solid rgba(212,175,55,.15);
+        border-radius: 20px; padding: 24px;
+      }
+      .pulse-gauge-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+      .pulse-gauge-svg { width: 200px; height: 200px; transform: rotate(-90deg); }
+      .pulse-gauge-track { fill: none; stroke: rgba(255,255,255,.06); stroke-width: 12; }
+      #pulse-gauge-arc { fill: none; stroke: #d4af37; stroke-width: 12; stroke-linecap: round; transition: stroke-dasharray .8s ease; filter: drop-shadow(0 0 8px rgba(212,175,55,.5)); }
+      .pulse-gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .pulse-gauge-val { font-size: 56px; font-weight: 900; color: #fff; line-height: 1; font-family: 'Courier New', monospace; }
+      .pulse-gauge-out { font-size: 11px; color: rgba(255,255,255,.4); letter-spacing: 2px; margin-top: 4px; }
+
+      .vital-row { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+      .vital-row:last-child { border-bottom: none; }
+      .vital-row-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+      .vital-name { font-size: 13px; color: rgba(255,255,255,.7); }
+      .vital-value { font-family: 'Courier New', monospace; font-size: 14px; font-weight: 700; }
+      .vital-bar { height: 4px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden; }
+      .vital-bar-fill { height: 100%; border-radius: 2px; transition: width .8s ease; }
+
+      .brief-grid {
+        display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+      }
+      @media (max-width: 1024px) { .brief-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 600px)  { .brief-grid { grid-template-columns: 1fr; } }
+      .brief-col {
+        background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+        border-radius: 14px; padding: 14px 14px 8px;
+      }
+      .brief-col-head {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 11px; font-weight: 700; letter-spacing: 2px;
+        color: #d4af37; text-transform: uppercase;
+        padding-bottom: 10px; margin-bottom: 6px;
+        border-bottom: 1px solid rgba(212,175,55,.15);
+      }
+      .brief-col-head svg, .brief-col-head i { width: 14px; height: 14px; }
+      .brief-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+      .brief-row:last-child { border-bottom: none; }
+      .brief-row-label { font-size: 12px; color: rgba(255,255,255,.65); }
+      .brief-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+      .brief-row-value { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: #fff; }
+      .brief-row-trend { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; font-family: 'Courier New', monospace; }
+      .brief-row-trend.up   { color: #6ee7b7; background: rgba(52,211,153,.1); }
+      .brief-row-trend.down { color: #fca5a5; background: rgba(248,113,113,.1); }
+      .brief-row-trend.flat { color: #fcd34d; background: rgba(251,191,36,.1); }
+    </style>
+    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
+      <div class="text-center mb-10 reveal">
+        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
+          <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+          <span data-i18n="dashboard.eyebrow">لوحة المستثمر · كل الأرقام في مكان واحد</span>
+        </div>
+        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="dashboard.title">صحة الاقتصاد لحظة بلحظة</h2>
+        <p id="pulse-eyebrow-text" class="mt-3 text-white/60 max-w-2xl mx-auto text-sm tracking-widest"></p>
+      </div>
+
+      <!-- Country selector strip -->
+      <div class="country-strip reveal" id="country-strip-scroll"></div>
+
+      <!-- Pulse gauge + Vitals -->
+      <div class="grid lg:grid-cols-[1fr_1.4fr] gap-6 mb-10 reveal">
+        <div class="pulse-card">
+          <div class="text-[11px] font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
+            <i data-lucide="heart-pulse" class="w-3.5 h-3.5"></i>
+            <span data-i18n="dashboard.pulse.title">مؤشر صحة الاقتصاد</span>
+          </div>
+          <div class="pulse-gauge-wrap">
+            <svg class="pulse-gauge-svg" viewBox="0 0 160 160">
+              <circle class="pulse-gauge-track" cx="80" cy="80" r="68"/>
+              <circle id="pulse-gauge-arc" cx="80" cy="80" r="68" stroke-dasharray="0 427"/>
+            </svg>
+            <div class="pulse-gauge-center">
+              <div id="pulse-gauge-value" class="pulse-gauge-val">—</div>
+              <div id="pulse-gauge-out" class="pulse-gauge-out">/ 100</div>
+            </div>
+          </div>
+          <div class="text-center mt-4">
+            <span id="pulse-status-label" class="inline-block text-sm font-bold tracking-wide px-3 py-1 rounded-full bg-gold-500/10 text-gold-300">—</span>
+          </div>
+        </div>
+
+        <div class="vitals-card">
+          <div class="text-[11px] font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
+            <span data-i18n="dashboard.vitals.title">المؤشرات الحيوية الستة</span>
+          </div>
+          <div id="pulse-vitals-list"></div>
+        </div>
+      </div>
+
+      <!-- 5-column investor brief -->
+      <div class="reveal">
+        <div class="text-[11px] font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+          <span data-i18n="dashboard.brief.title">الموجز الاستثماري — 5 محاور</span>
+        </div>
+        <div class="brief-grid" id="investor-brief-grid"></div>
+      </div>
     </div>
   </section>
 
@@ -9234,15 +9432,15 @@
 
     // ===== NEW SECTIONS DATA =====
     const MORNING_BRIEFING = {
-      date: 'April 22, 2026',
+      date: 'May 23, 2026',
       items: [
-        { num:1, title_ar:'البنك المركزي يثبّت الفائدة', title_en:'Central Bank Holds Rates', impact:'bullish', sector_ar:'اقتصاد', sector_en:'Economy' },
-        { num:2, title_ar:'EGX30 يتجاوز 31,000 نقطة', title_en:'EGX30 Breaks 31K', impact:'bullish', sector_ar:'أسواق', sector_en:'Markets' },
-        { num:3, title_ar:'أورا ديفلوبرز تطلق فاز جديد', title_en:'Ora Launches New Phase', impact:'bullish', sector_ar:'عقارات', sector_en:'Real Estate' },
-        { num:4, title_ar:'الدولار يستقر عند 49.8', title_en:'USD Stable at 49.8', impact:'neutral', sector_ar:'صرف', sector_en:'FX' },
-        { num:5, title_ar:'Fawry توسّع خدماتها الرقمية', title_en:'Fawry Expands Digital', impact:'bullish', sector_ar:'تكنولوجيا', sector_en:'Tech' }
+        { num:1, time:'06:30', title_ar:'البنك المركزي يثبّت الفائدة عند 27.25%', title_en:'Central Bank Holds Rates at 27.25%', impact:'bullish', sector_ar:'اقتصاد كلي', sector_en:'Macro' },
+        { num:2, time:'06:15', title_ar:'EGX30 يتجاوز 31,000 نقطة بدعم البنوك', title_en:'EGX30 Breaks 31K on Banking Push', impact:'bullish', sector_ar:'أسواق', sector_en:'Markets' },
+        { num:3, time:'05:50', title_ar:'أورا ديفلوبرز تطلق فاز جديد بـ 8 مليار', title_en:'Ora Launches New Phase Worth 8B', impact:'bullish', sector_ar:'عقارات', sector_en:'Real Estate' },
+        { num:4, time:'05:30', title_ar:'الدولار يستقر عند 49.8 جنيه', title_en:'USD Stable at 49.8 EGP', impact:'neutral', sector_ar:'سوق صرف', sector_en:'FX' },
+        { num:5, time:'05:00', title_ar:'Fawry توسّع خدماتها الرقمية في 4 دول جديدة', title_en:'Fawry Expands Digital to 4 New Markets', impact:'bullish', sector_ar:'تكنولوجيا مالية', sector_en:'Fintech' }
       ],
-      dealOfDay: { name_ar:'شقة في مدينتي', name_en:'Apartment in Madinaty', value:'4.85M EGP', score:91 }
+      dealOfDay: { name_ar:'استحواذ على 30% من بنك مصر الإقليمي', name_en:'30% Acquisition in Regional Egyptian Bank', value:'$450M', sector_ar:'مصارف · M&A', sector_en:'Banking · M&A', score:91 }
     };
 
     const DASHBOARD_DATA = [
@@ -12574,22 +12772,43 @@
       const wrap = document.getElementById('briefing-items');
       if (!wrap) return;
       const isAr = currentLang === 'ar';
-      wrap.innerHTML = MORNING_BRIEFING.items.map(it => {
-        const impactColor = it.impact === 'bullish' ? 'text-emerald-400 bg-emerald-500/10' : it.impact === 'bearish' ? 'text-red-400 bg-red-500/10' : 'text-amber-400 bg-amber-500/10';
-        return `<div class="glass-light border border-white/10 rounded-2xl p-4 flex items-start gap-4">
-          <div class="flex-shrink-0 text-3xl font-bold text-gold-400 opacity-30">${it.num}</div>
-          <div class="flex-1">
-            <h3 class="font-semibold text-white mb-1">${isAr ? it.title_ar : it.title_en}</h3>
-            <p class="text-xs text-white/50 mb-2">${isAr ? it.sector_ar : it.sector_en}</p>
-            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${impactColor}">
-              ${it.impact === 'bullish' ? (isAr ? 'صعودي' : 'Bullish') : it.impact === 'bearish' ? (isAr ? 'هبوطي' : 'Bearish') : (isAr ? 'محايد' : 'Neutral')}
-            </span>
-          </div>
-        </div>`;
-      }).join('');
-      const deal = MORNING_BRIEFING.dealOfDay;
-      const dealEl = document.getElementById('briefing-deal-title');
-      if (dealEl) dealEl.textContent = isAr ? deal.name_ar : deal.name_en;
+      const items = (MORNING_BRIEFING.items && MORNING_BRIEFING.items.length) ? MORNING_BRIEFING.items : [];
+      if (!items.length) {
+        wrap.innerHTML = `<div class="text-white/50 text-sm py-8 text-center">${isAr ? 'لا توجد أخبار للموجز حالياً' : 'No briefing items yet'}</div>`;
+      } else {
+        wrap.innerHTML = items.map(it => {
+          const impact = it.impact || 'neutral';
+          const label = impact === 'bullish' ? (isAr ? 'صعودي' : 'BULLISH') : impact === 'bearish' ? (isAr ? 'هبوطي' : 'BEARISH') : (isAr ? 'محايد' : 'NEUTRAL');
+          const time = it.time || '—';
+          return `<div class="mb-tl-item">
+            <span class="mb-tl-dot ${impact}"></span>
+            <div class="mb-tl-time">${time} · ${isAr ? 'ص' : 'AM'}</div>
+            <div class="mb-tl-title">${isAr ? (it.title_ar || it.title_en || '') : (it.title_en || it.title_ar || '')}</div>
+            <div class="mb-tl-meta">
+              <span class="mb-tl-sector">${isAr ? (it.sector_ar || it.sector_en || '') : (it.sector_en || it.sector_ar || '')}</span>
+              <span class="mb-tl-pill ${impact}">${label}</span>
+            </div>
+          </div>`;
+        }).join('');
+      }
+      const deal = MORNING_BRIEFING.dealOfDay || {};
+      const dealTitle = document.getElementById('briefing-deal-title');
+      const dealValue = document.getElementById('briefing-deal-value');
+      const dealSector = document.getElementById('briefing-deal-sector');
+      const dealScore = document.getElementById('briefing-deal-score');
+      const dealScoreFill = document.getElementById('briefing-deal-score-fill');
+      if (dealTitle) dealTitle.textContent = isAr ? (deal.name_ar || '—') : (deal.name_en || deal.name_ar || '—');
+      if (dealValue) dealValue.textContent = deal.value || '—';
+      if (dealSector) dealSector.textContent = isAr ? (deal.sector_ar || deal.sector_en || '—') : (deal.sector_en || deal.sector_ar || '—');
+      if (dealScore) dealScore.textContent = (deal.score != null) ? (deal.score + '/100') : '—';
+      if (dealScoreFill) dealScoreFill.style.width = (deal.score != null ? Math.max(0, Math.min(100, deal.score)) : 0) + '%';
+      const lu = document.getElementById('briefing-last-update');
+      if (lu) {
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2,'0');
+        const mm = String(now.getMinutes()).padStart(2,'0');
+        lu.textContent = (isAr ? 'آخر تحديث ' : 'Last update ') + hh + ':' + mm;
+      }
     }
 
     /* ============== MULTI-COUNTRY INVESTOR DASHBOARD ============== */
@@ -14611,172 +14830,25 @@
       const statusEl = document.getElementById('ai-answer-status');
       const closeBtn = document.getElementById('ai-close');
       if (!panel || !textEl) return;
-      // Show panel & reset
       panel.classList.remove('hidden');
       textEl.textContent = '';
-      statusEl.textContent = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'Thinking...' : '\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0644\u064a\u0644...';
-      panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      if (closeBtn) closeBtn.onclick = () => { panel.classList.add('hidden'); };
+      if (statusEl) statusEl.textContent = (currentLang === 'ar') ? 'يفكر...' : 'Thinking...';
+      if (closeBtn) closeBtn.onclick = function(){ panel.classList.add('hidden'); };
       try {
-        // Build live-data context to ground the AI in real 2026 prices
-        const liveCtx = {};
-        try {
-          if (typeof DASHBOARD_DATA !== 'undefined' && Array.isArray(DASHBOARD_DATA)) {
-            const g = (sym) => { const d = DASHBOARD_DATA.find(x => x.symbol === sym); return d && d.value != null ? d.value : null; };
-            const v1 = g('USD/EGP'); if (v1 != null) liveCtx.USDEGP = v1;
-            const v2 = g('EUR/EGP'); if (v2 != null) liveCtx.EUREGP = v2;
-            const v3 = g('SAR/EGP'); if (v3 != null) liveCtx.SAREGP = v3;
-            const v4 = g('EGX30');   if (v4 != null) liveCtx.EGX30   = v4;
-            const v5 = g('Gold');    if (v5 != null) liveCtx.gold    = v5;
-            const v6 = g('Silver');  if (v6 != null) liveCtx.silver  = v6;
-            const v7 = g('Brent');   if (v7 != null) liveCtx.brent   = v7;
-          }
-          if (typeof CRYPTO_DATA !== 'undefined' && Array.isArray(CRYPTO_DATA)) {
-            const btc = CRYPTO_DATA.find(c => c.sym === 'BTC'); if (btc && btc.price) liveCtx.btc = btc.price;
-          }
-        } catch(_) {}
-        const res = await fetch('https://cairo-business-backend.vercel.app/api/ai/chat', {
+        const res = await fetch('https://cairo-business-backend.vercel.app/api/ai-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: [{ role: 'user', content: question }],
-            lang: (typeof currentLang !== 'undefined' ? currentLang : 'ar'),
-            context: liveCtx,
-          }),
+          body: JSON.stringify({ messages: [{ role: 'user', content: question }], lang: currentLang })
         });
-        if (!res.ok || !res.body) {
-          statusEl.textContent = 'AI is currently unavailable. (HTTP ' + res.status + ')';
-          return;
-        }
-        statusEl.textContent = '';
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          // Parse SSE events
-          const events = buffer.split('\n\n');
-          buffer = events.pop() || '';
-          for (const ev of events) {
-            const line = ev.trim();
-            if (!line.startsWith('data:')) continue;
-            const payload = line.slice(5).trim();
-            if (payload === '[DONE]') {
-              statusEl.textContent = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'Powered by Claude AI' : '\u0645\u062f\u0639\u0648\u0645 \u0628\u0640 Claude AI';
-              return;
-            }
-            try {
-              const obj = JSON.parse(payload);
-              if (obj.chunk) textEl.textContent += obj.chunk;
-              if (obj.error) { statusEl.textContent = obj.error; }
-            } catch (_) {}
-          }
-        }
+        const j = await res.json().catch(()=>({}));
+        const answer = (j && (j.answer || j.text || j.message)) || ((currentLang === 'ar') ? 'تعذر الحصول على رد الآن.' : 'No response right now.');
+        textEl.textContent = answer;
+        if (statusEl) statusEl.textContent = (currentLang === 'ar') ? 'تم' : 'Done';
       } catch (e) {
-        statusEl.textContent = 'Network error. Try again.';
-        console.error('Cairo AI error:', e);
+        textEl.textContent = (currentLang === 'ar') ? 'حدث خطأ في الاتصال بالخادم.' : 'Connection error.';
+        if (statusEl) statusEl.textContent = (currentLang === 'ar') ? 'خطأ' : 'Error';
       }
     }
-
-    function wireHeaderButtonsSafe() {
-      try {
-        const themeBtn = document.getElementById('theme-toggle');
-        if (themeBtn && !themeBtn._wired) {
-          themeBtn._wired = true;
-          try { const s = localStorage.getItem('cb-theme'); if (s === 'light' || s === 'dark') document.documentElement.setAttribute('data-theme', s); } catch(_){}
-          const syncIcon = () => {
-            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-            const d = document.getElementById('theme-icon-dark');
-            const l = document.getElementById('theme-icon-light');
-            if (d) d.style.display = isLight ? 'none' : '';
-            if (l) l.style.display = isLight ? '' : 'none';
-          };
-          syncIcon();
-          themeBtn.addEventListener('click', () => {
-            const cur = document.documentElement.getAttribute('data-theme') || 'dark';
-            const next = cur === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            try { localStorage.setItem('cb-theme', next); } catch(_){}
-            syncIcon();
-            if (window.lucide) try { lucide.createIcons(); } catch(_){}
-          });
-        }
-        const langBtn = document.getElementById('lang-toggle');
-        if (langBtn && !langBtn._wired) {
-          langBtn._wired = true;
-          try { const s = localStorage.getItem('cb-lang'); if ((s === 'ar' || s === 'en') && typeof applyLang === 'function') applyLang(s); } catch(_){}
-          langBtn.addEventListener('click', () => {
-            const cur = (typeof currentLang !== 'undefined') ? currentLang : 'ar';
-            const next = cur === 'ar' ? 'en' : 'ar';
-            if (typeof applyLang === 'function') applyLang(next);
-            try { localStorage.setItem('cb-lang', next); } catch(_){}
-            if (window.lucide) try { lucide.createIcons(); } catch(_){}
-          });
-        }
-        const aiInput = document.getElementById('ai-search-input');
-        if (aiInput && !aiInput._wired) {
-          aiInput._wired = true;
-          const rotator = document.getElementById('rotator-wrap');
-          const syncRotator = () => {
-            if (!rotator) return;
-            const hasText = (aiInput.value || '').trim().length > 0;
-            rotator.style.display = hasText ? 'none' : '';
-          };
-          syncRotator();
-          aiInput.addEventListener('input', syncRotator);
-          aiInput.addEventListener('keyup', syncRotator);
-          aiInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-              const q = (aiInput.value || '').trim();
-              if (q) askCairoAI(q);
-            }
-          });
-        }
-        const askBtns = Array.from(document.querySelectorAll('button')).filter(b => /^(اسأل|Ask)$/i.test(b.textContent.trim()));
-        askBtns.forEach(b => {
-          if (b._wired) return; b._wired = true;
-          b.addEventListener('click', () => {
-            const input = document.getElementById('ai-search-input');
-            const q = ((input && input.value) || '').trim();
-            if (q) {
-              askCairoAI(q);
-            } else if (input) {
-              input.focus();
-            }
-          });
-        });
-        // Wire suggestion chips below hero
-        const chips = document.querySelectorAll('[data-ai-chip]');
-        chips.forEach(c => {
-          if (c._wired) return; c._wired = true;
-          c.addEventListener('click', () => {
-            const input = document.getElementById('ai-search-input');
-            const q = c.textContent.replace(/^[\s\u00a0\ud83d\udcca\ud83c\udfe2\ud83d\udcb9\ud83d\udcc8]+/, '').trim();
-            if (input) input.value = q;
-            askCairoAI(q);
-          });
-        });
-      } catch (e) { console.warn('Header wiring failed:', e); }
-    }
-
-    (function bootstrapApp() {
-      function safeApply() {
-        try { if (typeof applyLang === 'function') applyLang(typeof currentLang !== 'undefined' ? currentLang : 'ar'); } catch(e) {}
-        try { wireHeaderButtonsSafe(); } catch(_){}
-      }
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', safeApply);
-      } else {
-        safeApply();
-      }
-      setTimeout(safeApply, 50);
-      setTimeout(safeApply, 300);
-      setTimeout(safeApply, 1000);
-      setTimeout(wireHeaderButtonsSafe, 1500);
-      setTimeout(pullHomepageDataFromApi, 800);
-    })();
   </script>
 </body>
 </html>
