@@ -15154,9 +15154,82 @@
     setInterval(fetchLiveMarketData, 5 * 60 * 1000);
     setTimeout(fetchWorldBankData, 2500);
 
+    function wireHeaderButtonsSafe() {
+      try {
+        const themeBtn = document.getElementById('theme-toggle');
+        if (themeBtn && !themeBtn._wired) {
+          themeBtn._wired = true;
+          try { const s = localStorage.getItem('cb-theme'); if (s === 'light' || s === 'dark') document.documentElement.setAttribute('data-theme', s); } catch(_){}
+          const syncIcon = () => {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            const d = document.getElementById('theme-icon-dark');
+            const l = document.getElementById('theme-icon-light');
+            if (d) d.style.display = isLight ? 'none' : '';
+            if (l) l.style.display = isLight ? '' : 'none';
+          };
+          syncIcon();
+          themeBtn.addEventListener('click', () => {
+            const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = cur === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            try { localStorage.setItem('cb-theme', next); } catch(_){}
+            syncIcon();
+            if (window.lucide) try { lucide.createIcons(); } catch(_){}
+          });
+        }
+        const langBtn = document.getElementById('lang-toggle');
+        if (langBtn && !langBtn._wired) {
+          langBtn._wired = true;
+          try { const s = localStorage.getItem('cb-lang'); if ((s === 'ar' || s === 'en') && typeof applyLang === 'function') applyLang(s); } catch(_){}
+          langBtn.addEventListener('click', () => {
+            const cur = (typeof currentLang !== 'undefined') ? currentLang : 'ar';
+            const next = cur === 'ar' ? 'en' : 'ar';
+            if (typeof applyLang === 'function') applyLang(next);
+            try { localStorage.setItem('cb-lang', next); } catch(_){}
+            if (window.lucide) try { lucide.createIcons(); } catch(_){}
+          });
+        }
+        const aiInput = document.getElementById('ai-search-input');
+        if (aiInput && !aiInput._wired) {
+          aiInput._wired = true;
+          aiInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              const q = (aiInput.value || '').trim();
+              if (!q) return;
+              if (typeof askAI === 'function') return askAI(q);
+              if (typeof handleAsk === 'function') return handleAsk(q);
+              if (typeof openAskModal === 'function') return openAskModal(q);
+              window.open('https://www.google.com/search?q=' + encodeURIComponent('cairobusiness.net ' + q), '_blank');
+            }
+          });
+        }
+        const askBtns = Array.from(document.querySelectorAll('button')).filter(b => {
+          const t = b.textContent.trim();
+          return /^(اسأل|Ask)$/i.test(t);
+        });
+        askBtns.forEach(b => {
+          if (b._wired) return; b._wired = true;
+          b.addEventListener('click', () => {
+            const input = document.getElementById('ai-search-input');
+            if (input) {
+              input.focus();
+              const q = (input.value || '').trim();
+              if (q) {
+                if (typeof askAI === 'function') return askAI(q);
+                if (typeof handleAsk === 'function') return handleAsk(q);
+                if (typeof openAskModal === 'function') return openAskModal(q);
+                window.open('https://www.google.com/search?q=' + encodeURIComponent('cairobusiness.net ' + q), '_blank');
+              }
+            }
+          });
+        });
+      } catch (e) { console.warn('Header wiring failed:', e); }
+    }
+
     (function bootstrapApp() {
       function safeApply() {
         try { if (typeof applyLang === 'function') applyLang(typeof currentLang !== 'undefined' ? currentLang : 'ar'); } catch(e) {}
+        try { wireHeaderButtonsSafe(); } catch(_){}
       }
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', safeApply);
@@ -15166,6 +15239,7 @@
       setTimeout(safeApply, 50);
       setTimeout(safeApply, 300);
       setTimeout(safeApply, 1000);
+      setTimeout(wireHeaderButtonsSafe, 1500);
       setTimeout(pullHomepageDataFromApi, 800);
     })();
   </script>
