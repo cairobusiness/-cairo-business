@@ -4926,26 +4926,10 @@
         </div>
       </div>
 
-      <!-- Wealth Tower Visualization — rendered by JS for bilingual support -->
-      <div id="pp-grid" class="wealth-chart-wrap">
-        <div class="wealth-chart-head">
-          <div>
-            <div class="wealth-chart-eyebrow"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i><span data-i18n="pp.tower.eyebrow">Wealth towers — by value</span></div>
-            <div class="wealth-chart-title" data-i18n="pp.tower.title">Heights of fortune</div>
-          </div>
-          <div class="wealth-chart-meta">
-            <span class="wealth-chart-meta-num" data-i18n="pp.tower.metaNum">$1.0T+ combined</span>
-            <span class="wealth-chart-meta-sep">·</span>
-            <span data-i18n="pp.tower.metaUnit">Net worth · USD billions</span>
-          </div>
-        </div>
-        <div class="wealth-chart-canvas">
-          <div id="pp-towers" class="wealth-towers"></div>
-        </div>
-        <div class="wealth-chart-foot">
-          <span class="wealth-foot-dot" style="background:#f4d03f"></span>
-          <span data-i18n="pp.tower.foot">PIF = fund AUM (sovereign). Others = personal/group net worth.</span>
-        </div>
+      <!-- Magazine Cover Grid — Forbes-style covers rendered by JS -->
+      <div id="pp-magazine-grid" class="pp-mag-grid reveal"></div>
+      <div style="text-align:center; margin-top:18px; font-size:11px; color:rgba(255,255,255,.4);">
+        <span data-i18n="pp.foot.aum">PIF = أصول إدارة الصندوق السيادي · باقي الأرقام = صافي الثروة الشخصية / المجموعة</span>
       </div>
 
       <!-- Bottom CTA -->
@@ -4956,12 +4940,166 @@
           <i data-lucide="arrow-right" class="w-4 h-4 flip-x"></i>
         </a>
       </div>
+
+      <!-- Power People Profile Modal (will be moved to body on boot) -->
+      <div id="pp-profile-modal" class="pp-profile-overlay" aria-hidden="true">
+        <div class="pp-profile-card" onclick="event.stopPropagation()">
+          <div class="pp-profile-photo" id="pp-prof-photo">
+            <button class="pp-profile-close" onclick="closePowerProfile()" aria-label="Close">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <span class="pp-profile-flag" id="pp-prof-flag">🇸🇦</span>
+          </div>
+          <div class="pp-profile-body">
+            <div class="pp-profile-rank" id="pp-prof-rank">#01</div>
+            <h2 class="pp-profile-name" id="pp-prof-name">—</h2>
+            <p class="pp-profile-title" id="pp-prof-title">—</p>
+            <div class="pp-profile-value" id="pp-prof-value">—</div>
+            <div class="pp-profile-company">
+              <div class="pp-profile-company-label" data-i18n="pp.profile.companies">الشركات والاستثمارات</div>
+              <div id="pp-prof-company">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Personalities styling -->
     <style>
       /* ==================================================== */
-      /*           WEALTH TOWER CHART                          */
+      /*           MAGAZINE COVERS (Forbes style)              */
+      /* ==================================================== */
+      .pp-mag-grid {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;
+      }
+      @media (max-width: 1024px) { .pp-mag-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; } }
+      @media (max-width: 720px)  { .pp-mag-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
+      @media (max-width: 480px)  { .pp-mag-grid { grid-template-columns: 1fr; } }
+      .pp-mag-cover {
+        position: relative; aspect-ratio: 3/4; border-radius: 16px; overflow: hidden;
+        background: linear-gradient(160deg, #1a2b4d, #06122a);
+        border: 1px solid rgba(212,175,55,.25);
+        cursor: pointer; transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s, border-color .4s;
+        will-change: transform;
+      }
+      .pp-mag-cover:hover { transform: translateY(-8px) scale(1.02); border-color: rgba(212,175,55,.6); box-shadow: 0 30px 60px -20px rgba(212,175,55,.4); }
+      .pp-mag-photo {
+        position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      }
+      .pp-mag-vignette {
+        position: absolute; inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,.95) 0%, rgba(0,0,0,.6) 30%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.05) 100%);
+        pointer-events: none;
+      }
+      .pp-mag-initials {
+        font-size: 64px; font-weight: 900; color: rgba(255,255,255,.85);
+        font-family: 'Cairo', sans-serif; text-shadow: 0 2px 8px rgba(0,0,0,.5);
+      }
+      .pp-mag-tophead {
+        position: absolute; top: 12px; left: 12px; right: 12px;
+        display: flex; justify-content: space-between; align-items: center;
+        z-index: 2;
+      }
+      .pp-mag-edition {
+        font-size: 9px; font-weight: 800; letter-spacing: 2px; color: var(--sc, #f4d03f);
+        font-family: 'Courier New', monospace;
+        background: rgba(0,0,0,.4); padding: 3px 8px; border-radius: 999px;
+        backdrop-filter: blur(4px);
+      }
+      .pp-mag-flag {
+        position: absolute; top: 38px; right: 12px; font-size: 20px; z-index: 2;
+        background: rgba(0,0,0,.5); padding: 4px 8px; border-radius: 999px;
+        backdrop-filter: blur(4px);
+      }
+      [dir="rtl"] .pp-mag-flag { right: auto; left: 12px; }
+      .pp-mag-bottom {
+        position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 14px 14px; z-index: 2;
+      }
+      .pp-mag-rank-row {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 10px; font-weight: 800; letter-spacing: 2px; color: var(--sc, #f4d03f);
+        margin-bottom: 6px; font-family: 'Courier New', monospace;
+      }
+      .pp-mag-dot { opacity: .5; }
+      .pp-mag-name {
+        font-family: 'Cairo', 'Inter', sans-serif;
+        font-size: 18px; font-weight: 900; color: #fff;
+        line-height: 1.15; margin: 0 0 4px;
+        text-shadow: 0 2px 4px rgba(0,0,0,.5);
+      }
+      .pp-mag-role {
+        font-size: 11px; color: rgba(255,255,255,.7);
+        line-height: 1.3; margin-bottom: 8px;
+        overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
+        -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      }
+      .pp-mag-value {
+        font-family: 'Courier New', monospace;
+        font-size: 22px; font-weight: 900; color: var(--sc, #fbbf24);
+        letter-spacing: -.02em; line-height: 1; margin-bottom: 4px;
+        text-shadow: 0 2px 6px rgba(0,0,0,.6);
+      }
+      .pp-mag-company { font-size: 10px; color: rgba(255,255,255,.5); }
+
+      /* Profile modal */
+      .pp-profile-overlay {
+        position: fixed; inset: 0; background: rgba(2,6,23,.88); backdrop-filter: blur(12px);
+        z-index: 9999; display: none; align-items: flex-start; justify-content: center;
+        padding: 40px 20px; overflow-y: auto;
+      }
+      .pp-profile-overlay.is-open { display: flex; }
+      .pp-profile-card {
+        background: linear-gradient(155deg, #0f1a3d 0%, #0a0e27 100%);
+        border: 1px solid rgba(212,175,55,.3); border-radius: 24px;
+        max-width: 760px; width: 100%; max-height: calc(100vh - 80px);
+        overflow: hidden; display: flex; flex-direction: column;
+        box-shadow: 0 40px 80px rgba(0,0,0,.7);
+      }
+      .pp-profile-photo {
+        height: 360px; background: #1a2b4d center/cover no-repeat;
+        position: relative;
+      }
+      .pp-profile-photo::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(to top, rgba(10,14,39,.95), transparent 60%);
+      }
+      .pp-profile-close {
+        position: absolute; top: 18px; inset-inline-end: 18px; z-index: 2;
+        width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+        background: rgba(10,14,39,.8); border: 1px solid rgba(255,255,255,.15);
+        color: #fff; display: grid; place-items: center; transition: all .2s;
+      }
+      .pp-profile-close:hover { background: #d4af37; color: #0a0e27; border-color: #d4af37; }
+      .pp-profile-flag {
+        position: absolute; top: 18px; inset-inline-start: 18px; z-index: 2;
+        font-size: 24px; background: rgba(10,14,39,.8); padding: 6px 12px;
+        border-radius: 999px; border: 1px solid rgba(255,255,255,.15);
+      }
+      .pp-profile-body { padding: 24px 32px 32px; color: #fff; }
+      .pp-profile-rank {
+        display: inline-block; font-family: 'Courier New', monospace;
+        font-size: 11px; color: #fbbf24; letter-spacing: 3px;
+        background: rgba(251,191,36,.1); padding: 4px 12px;
+        border-radius: 4px; border: 1px solid rgba(251,191,36,.3); margin-bottom: 10px;
+      }
+      .pp-profile-name {
+        font-family: 'Cairo', sans-serif; font-size: 28px; font-weight: 900;
+        color: #fff; line-height: 1.2; margin-bottom: 6px;
+      }
+      .pp-profile-title { font-size: 14px; color: rgba(255,255,255,.75); margin-bottom: 14px; }
+      .pp-profile-value {
+        font-family: 'Courier New', monospace; font-size: 36px; font-weight: 900;
+        color: #fbbf24; line-height: 1; margin-bottom: 14px; letter-spacing: -1px;
+      }
+      .pp-profile-company {
+        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+        border-radius: 10px; padding: 12px 14px;
+        font-size: 13px; color: rgba(255,255,255,.85); margin-bottom: 14px;
+      }
+      .pp-profile-company-label { font-size: 10px; color: #fbbf24; letter-spacing: 2px; margin-bottom: 4px; }
+
+      /* ==================================================== */
+      /*           WEALTH TOWER CHART (legacy - kept for safety) */
       /* ==================================================== */
       .wealth-chart-wrap {
         background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
@@ -10254,31 +10392,31 @@
     /* ============== POWER PEOPLE ============== */
     const POWER_PEOPLE = [
       /* wealthValue is in USD billions — used for tower height sizing. valueLabel is the display string. */
-      { id:'p1',  rank:'01', wealthValue:940,  isOutlier:true,  valueLabelKey:'pp.p1.s1',  flag:'🇸🇦', mono:'ي.ر', monoEn:'YR', sc:'#FFB800', sc2:'#FF9500', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.fundAssets'},   {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.leadSince'}] },
-      { id:'p2',  rank:'02', wealthValue:3.7,  valueLabelKey:'pp.p2.s1',  flag:'🇦🇪', mono:'م.ع', monoEn:'MA', sc:'#F59E0B', sc2:'#B45309', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.iconic'},      {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p3',  rank:'03', wealthValue:3.4,  valueLabelKey:'pp.p3.s1',  flag:'🇪🇬', mono:'ن.س', monoEn:'NS', sc:'#06B6D4', sc2:'#0891B2', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.launched'}] },
-      { id:'p4',  rank:'04', wealthValue:8,    valueLabelKey:'pp.p4.s1',  flag:'🇶🇦', mono:'ن.خ', monoEn:'NK', sc:'#8B5CF6', sc2:'#6D28D9', tagKey:'pp.tag.president', stats:[{ico:'diamond', labKey:'pp.lab.beINValue'},    {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.launched'}] },
-      { id:'p5',  rank:'05', wealthValue:6.2,  valueLabelKey:'pp.p5.s1',  flag:'🇦🇪', mono:'م.ف', monoEn:'MF', sc:'#EC4899', sc2:'#BE185D', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.groupValue'},   {ico:'handshake', labKey:'pp.lab.landmark'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p6',  rank:'06', wealthValue:3.0,  valueLabelKey:'pp.p6.s1',  flag:'🇪🇬', mono:'م.م', monoEn:'MM', sc:'#EF4444', sc2:'#B91C1C', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.partnership'}, {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p7',  rank:'07', wealthValue:2.4,  valueLabelKey:'pp.p7.s1',  flag:'🇦🇪', mono:'خ.ح', monoEn:'KH', sc:'#14B8A6', sc2:'#0F766E', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.startedAt'}] },
-      { id:'p8',  rank:'08', wealthValue:8.5,  valueLabelKey:'pp.p8.s1',  flag:'🇦🇪', mono:'ح.س', monoEn:'HS', sc:'#3B82F6', sc2:'#1D4ED8', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p9',  rank:'09', wealthValue:8.4,  valueLabelKey:'pp.p9.s1',  flag:'🇸🇦', mono:'م.ج', monoEn:'MJ', sc:'#10B981', sc2:'#047857', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.hotelChain'},  {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p10', rank:'10', wealthValue:5.0,  valueLabelKey:'pp.p10.s1', flag:'🇸🇦', mono:'ل.ع', monoEn:'LO', sc:'#A78BFA', sc2:'#7C3AED', tagKey:'pp.tag.chairF',    stats:[{ico:'diamond', labKey:'pp.lab.familyWealth'},{ico:'handshake', labKey:'pp.lab.biggestMerge'},{ico:'calendar', labKey:'pp.lab.boardSince'}] },
-      { id:'p11', rank:'11', wealthValue:8.5,  valueLabelKey:'pp.p11.s1', flag:'🇪🇬', mono:'ن.س', monoEn:'NS', sc:'#0EA5E9', sc2:'#0369A1', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p12', rank:'12', wealthValue:16.4, valueLabelKey:'pp.p12.s1', flag:'🇸🇦', mono:'و.ط', monoEn:'WT', sc:'#F59E0B', sc2:'#92400E', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p13', rank:'13', wealthValue:3.6,  valueLabelKey:'pp.p13.s1', flag:'🇱🇧', mono:'ن.م', monoEn:'NM', sc:'#22C55E', sc2:'#15803D', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p14', rank:'14', wealthValue:2.7,  valueLabelKey:'pp.p14.s1', flag:'🇪🇬', mono:'ي.م', monoEn:'YM', sc:'#F472B6', sc2:'#9D174D', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p15', rank:'15', wealthValue:2.3,  valueLabelKey:'pp.p15.s1', flag:'🇱🇧', mono:'ب.ح', monoEn:'BH', sc:'#FB7185', sc2:'#9F1239', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p16', rank:'16', wealthValue:2.2,  valueLabelKey:'pp.p16.s1', flag:'🇯🇴', mono:'ص.م', monoEn:'SM', sc:'#84CC16', sc2:'#3F6212', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.boardSince'}] },
-      { id:'p17', rank:'17', wealthValue:1.7,  valueLabelKey:'pp.p17.s1', flag:'🇸🇦', mono:'م.ع', monoEn:'MA', sc:'#0891B2', sc2:'#155E75', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p18', rank:'18', wealthValue:2.1,  valueLabelKey:'pp.p18.s1', flag:'🇦🇪', mono:'س.غ', monoEn:'SG', sc:'#06B6D4', sc2:'#155E75', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p19', rank:'19', wealthValue:2.0,  valueLabelKey:'pp.p19.s1', flag:'🇪🇬', mono:'ه.ط', monoEn:'HT', sc:'#A855F7', sc2:'#6B21A8', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.iconic'},      {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p20', rank:'20', wealthValue:1.9,  valueLabelKey:'pp.p20.s1', flag:'🇸🇦', mono:'س.ر', monoEn:'SR', sc:'#0D9488', sc2:'#134E4A', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p21', rank:'21', wealthValue:2.5,  valueLabelKey:'pp.p21.s1', flag:'🇰🇼', mono:'ك.غ', monoEn:'KA', sc:'#DC2626', sc2:'#7F1D1D', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.partnership'}, {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p22', rank:'22', wealthValue:4.0,  valueLabelKey:'pp.p22.s1', flag:'🇩🇿', mono:'إ.ر', monoEn:'IR', sc:'#16A34A', sc2:'#14532D', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p23', rank:'23', wealthValue:2.0,  valueLabelKey:'pp.p23.s1', flag:'🇦🇪', mono:'ع.ف', monoEn:'AF', sc:'#7C3AED', sc2:'#4C1D95', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.partnership'}, {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p24', rank:'24', wealthValue:1.5,  valueLabelKey:'pp.p24.s1', flag:'🇪🇬', mono:'س.س', monoEn:'SS', sc:'#0EA5E9', sc2:'#0C4A6E', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.landmark'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
-      { id:'p25', rank:'25', wealthValue:1.0,  valueLabelKey:'pp.p25.s1', flag:'🇪🇬', mono:'ح.ع', monoEn:'HA', sc:'#EA580C', sc2:'#7C2D12', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p1',  rank:'01', imageUrl:'', wealthValue:940,  isOutlier:true,  valueLabelKey:'pp.p1.s1',  flag:'🇸🇦', mono:'ي.ر', monoEn:'YR', sc:'#FFB800', sc2:'#FF9500', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.fundAssets'},   {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.leadSince'}] },
+      { id:'p2',  rank:'02', imageUrl:'', wealthValue:3.7,  valueLabelKey:'pp.p2.s1',  flag:'🇦🇪', mono:'م.ع', monoEn:'MA', sc:'#F59E0B', sc2:'#B45309', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.iconic'},      {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p3',  rank:'03', imageUrl:'', wealthValue:3.4,  valueLabelKey:'pp.p3.s1',  flag:'🇪🇬', mono:'ن.س', monoEn:'NS', sc:'#06B6D4', sc2:'#0891B2', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.launched'}] },
+      { id:'p4',  rank:'04', imageUrl:'', wealthValue:8,    valueLabelKey:'pp.p4.s1',  flag:'🇶🇦', mono:'ن.خ', monoEn:'NK', sc:'#8B5CF6', sc2:'#6D28D9', tagKey:'pp.tag.president', stats:[{ico:'diamond', labKey:'pp.lab.beINValue'},    {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.launched'}] },
+      { id:'p5',  rank:'05', imageUrl:'', wealthValue:6.2,  valueLabelKey:'pp.p5.s1',  flag:'🇦🇪', mono:'م.ف', monoEn:'MF', sc:'#EC4899', sc2:'#BE185D', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.groupValue'},   {ico:'handshake', labKey:'pp.lab.landmark'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p6',  rank:'06', imageUrl:'', wealthValue:3.0,  valueLabelKey:'pp.p6.s1',  flag:'🇪🇬', mono:'م.م', monoEn:'MM', sc:'#EF4444', sc2:'#B91C1C', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.partnership'}, {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p7',  rank:'07', imageUrl:'', wealthValue:2.4,  valueLabelKey:'pp.p7.s1',  flag:'🇦🇪', mono:'خ.ح', monoEn:'KH', sc:'#14B8A6', sc2:'#0F766E', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.startedAt'}] },
+      { id:'p8',  rank:'08', imageUrl:'', wealthValue:8.5,  valueLabelKey:'pp.p8.s1',  flag:'🇦🇪', mono:'ح.س', monoEn:'HS', sc:'#3B82F6', sc2:'#1D4ED8', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p9',  rank:'09', imageUrl:'', wealthValue:8.4,  valueLabelKey:'pp.p9.s1',  flag:'🇸🇦', mono:'م.ج', monoEn:'MJ', sc:'#10B981', sc2:'#047857', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.hotelChain'},  {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p10', rank:'10', imageUrl:'', wealthValue:5.0,  valueLabelKey:'pp.p10.s1', flag:'🇸🇦', mono:'ل.ع', monoEn:'LO', sc:'#A78BFA', sc2:'#7C3AED', tagKey:'pp.tag.chairF',    stats:[{ico:'diamond', labKey:'pp.lab.familyWealth'},{ico:'handshake', labKey:'pp.lab.biggestMerge'},{ico:'calendar', labKey:'pp.lab.boardSince'}] },
+      { id:'p11', rank:'11', imageUrl:'', wealthValue:8.5,  valueLabelKey:'pp.p11.s1', flag:'🇪🇬', mono:'ن.س', monoEn:'NS', sc:'#0EA5E9', sc2:'#0369A1', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p12', rank:'12', imageUrl:'', wealthValue:16.4, valueLabelKey:'pp.p12.s1', flag:'🇸🇦', mono:'و.ط', monoEn:'WT', sc:'#F59E0B', sc2:'#92400E', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p13', rank:'13', imageUrl:'', wealthValue:3.6,  valueLabelKey:'pp.p13.s1', flag:'🇱🇧', mono:'ن.م', monoEn:'NM', sc:'#22C55E', sc2:'#15803D', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p14', rank:'14', imageUrl:'', wealthValue:2.7,  valueLabelKey:'pp.p14.s1', flag:'🇪🇬', mono:'ي.م', monoEn:'YM', sc:'#F472B6', sc2:'#9D174D', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p15', rank:'15', imageUrl:'', wealthValue:2.3,  valueLabelKey:'pp.p15.s1', flag:'🇱🇧', mono:'ب.ح', monoEn:'BH', sc:'#FB7185', sc2:'#9F1239', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p16', rank:'16', imageUrl:'', wealthValue:2.2,  valueLabelKey:'pp.p16.s1', flag:'🇯🇴', mono:'ص.م', monoEn:'SM', sc:'#84CC16', sc2:'#3F6212', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.deal'},        {ico:'calendar', labKey:'pp.lab.boardSince'}] },
+      { id:'p17', rank:'17', imageUrl:'', wealthValue:1.7,  valueLabelKey:'pp.p17.s1', flag:'🇸🇦', mono:'م.ع', monoEn:'MA', sc:'#0891B2', sc2:'#155E75', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p18', rank:'18', imageUrl:'', wealthValue:2.1,  valueLabelKey:'pp.p18.s1', flag:'🇦🇪', mono:'س.غ', monoEn:'SG', sc:'#06B6D4', sc2:'#155E75', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p19', rank:'19', imageUrl:'', wealthValue:2.0,  valueLabelKey:'pp.p19.s1', flag:'🇪🇬', mono:'ه.ط', monoEn:'HT', sc:'#A855F7', sc2:'#6B21A8', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.iconic'},      {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p20', rank:'20', imageUrl:'', wealthValue:1.9,  valueLabelKey:'pp.p20.s1', flag:'🇸🇦', mono:'س.ر', monoEn:'SR', sc:'#0D9488', sc2:'#134E4A', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p21', rank:'21', imageUrl:'', wealthValue:2.5,  valueLabelKey:'pp.p21.s1', flag:'🇰🇼', mono:'ك.غ', monoEn:'KA', sc:'#DC2626', sc2:'#7F1D1D', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.partnership'}, {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p22', rank:'22', imageUrl:'', wealthValue:4.0,  valueLabelKey:'pp.p22.s1', flag:'🇩🇿', mono:'إ.ر', monoEn:'IR', sc:'#16A34A', sc2:'#14532D', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p23', rank:'23', imageUrl:'', wealthValue:2.0,  valueLabelKey:'pp.p23.s1', flag:'🇦🇪', mono:'ع.ف', monoEn:'AF', sc:'#7C3AED', sc2:'#4C1D95', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.partnership'}, {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p24', rank:'24', imageUrl:'', wealthValue:1.5,  valueLabelKey:'pp.p24.s1', flag:'🇪🇬', mono:'س.س', monoEn:'SS', sc:'#0EA5E9', sc2:'#0C4A6E', tagKey:'pp.tag.founder',   stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.landmark'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
+      { id:'p25', rank:'25', imageUrl:'', wealthValue:1.0,  valueLabelKey:'pp.p25.s1', flag:'🇪🇬', mono:'ح.ع', monoEn:'HA', sc:'#EA580C', sc2:'#7C2D12', tagKey:'pp.tag.chair',     stats:[{ico:'diamond', labKey:'pp.lab.netWorth'},     {ico:'handshake', labKey:'pp.lab.flagship'},    {ico:'calendar', labKey:'pp.lab.foundedAt'}] },
     ];
 
     /* ============== EXECUTIVE JOBS ============== */
@@ -10543,58 +10681,101 @@
     }
 
     function renderPowerPeople(){
-      const wrap = document.getElementById('pp-towers');
+      const wrap = document.getElementById('pp-magazine-grid');
       if (!wrap) return;
       const isAr = currentLang === 'ar';
-
-      /* Sort by wealth descending — tallest first */
+      /* Cache by id for the modal lookup */
+      window.POWER_PEOPLE_BY_ID = window.POWER_PEOPLE_BY_ID || {};
+      POWER_PEOPLE.forEach(p => { window.POWER_PEOPLE_BY_ID[p.id] = p; });
+      /* Sort by wealth and take top 12 for the magazine covers */
       const sorted = POWER_PEOPLE.slice().sort((a, b) => b.wealthValue - a.wealthValue);
-
-      /* Two-zone scaling: outliers (PIF AUM) get full bar; others share remaining height */
-      const outliers = sorted.filter(p => p.isOutlier);
-      const normals  = sorted.filter(p => !p.isOutlier);
-      const maxNormal = Math.max.apply(null, normals.map(p => p.wealthValue));
-      const minNormal = Math.min.apply(null, normals.map(p => p.wealthValue));
-
-      const minPct = 18;  /* shortest tower in % */
-      const maxNormalPct = outliers.length ? 38 : 92; /* tallest "normal" if outlier exists */
-      const outlierPct   = 96; /* outlier reaches near top */
-
-      const heightPct = (p) => {
-        if (p.isOutlier) return outlierPct;
-        const rng = maxNormal - minNormal || 1;
-        return minPct + ((p.wealthValue - minNormal) / rng) * (maxNormalPct - minNormal);
-      };
-
-      wrap.innerHTML = sorted.map((p) => {
+      const top12 = sorted.slice(0, 12);
+      wrap.innerHTML = top12.map((p, idx) => {
         const name = t('pp.' + p.id + '.name');
-        const mono = isAr ? p.mono : p.monoEn;
-        const value = t(p.valueLabelKey);
-        const company = t('pp.' + p.id + '.company');
         const title = t('pp.' + p.id + '.title');
-        const h = heightPct(p);
+        const company = t('pp.' + p.id + '.company');
+        const value = t(p.valueLabelKey);
+        const rank = String(idx + 1).padStart(2, '0');
+        const mono = isAr ? p.mono : p.monoEn;
+        const issue = isAr ? 'العدد رقم ' + rank : 'ISSUE No. ' + rank;
+        const editionLabel = isAr ? 'POWER LIST · 2026' : 'POWER LIST · 2026';
+        const hasPhoto = !!p.imageUrl;
+        const photoStyle = hasPhoto
+          ? `background-image:url("${p.imageUrl}"); background-size:cover; background-position:center top;`
+          : `background:linear-gradient(180deg, ${p.sc}, ${p.sc2});`;
         return `
-          <div class="wt-col" data-rank="${p.rank}">
-            <div class="wt-value">${value}</div>
-            <div class="wt-avatar" style="background:linear-gradient(135deg, ${p.sc}, ${p.sc2});">${mono}<span class="wt-flag">${p.flag}</span></div>
-            <div class="wt-bar-wrap">
-              ${p.isOutlier ? '<div class="wt-outlier-tag" data-i18n-ignore>AUM</div>' : ''}
-              <div class="wt-bar" style="--sc:${p.sc};--sc2:${p.sc2};height:${h}%">
-                <span class="wt-rank">${p.rank}</span>
+          <article class="pp-mag-cover" data-id="${p.id}" onclick="openPowerProfile('${p.id}')" style="--sc:${p.sc};--sc2:${p.sc2}">
+            <div class="pp-mag-photo" style="${photoStyle}">
+              ${!hasPhoto ? `<div class="pp-mag-initials">${mono}</div>` : ''}
+              <div class="pp-mag-vignette"></div>
+            </div>
+            <div class="pp-mag-tophead">
+              <span class="pp-mag-edition">CB · ${rank}</span>
+              <span class="pp-mag-edition pp-mag-edition-end">${editionLabel}</span>
+            </div>
+            <div class="pp-mag-flag">${p.flag}</div>
+            <div class="pp-mag-bottom">
+              <div class="pp-mag-rank-row">
+                <span class="pp-mag-rank">RANK ${rank}</span>
+                <span class="pp-mag-dot">·</span>
+                <span class="pp-mag-country">${p.flag}</span>
               </div>
+              <h3 class="pp-mag-name">${name}</h3>
+              <div class="pp-mag-role">${title}</div>
+              <div class="pp-mag-value">${value}</div>
+              <div class="pp-mag-company">${company}</div>
             </div>
-            <div class="wt-name">${name}</div>
-            <div class="wt-tooltip">
-              <div class="wt-tt-name">${name}</div>
-              <div class="wt-tt-title">${title}</div>
-              <div class="wt-tt-company">${company}</div>
-              <div class="wt-tt-value" style="color:${p.sc}">${value}</div>
-            </div>
-          </div>
+          </article>
         `;
       }).join('');
-
       if (window.lucide) lucide.createIcons();
+    }
+
+    /* Power People profile modal */
+    function openPowerProfile(id) {
+      const p = (window.POWER_PEOPLE_BY_ID || {})[id];
+      if (!p) return;
+      const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
+      const name = t('pp.' + p.id + '.name');
+      const title = t('pp.' + p.id + '.title');
+      const company = t('pp.' + p.id + '.company');
+      const value = t(p.valueLabelKey);
+      const overlay = document.getElementById('pp-profile-modal');
+      if (!overlay) return;
+      const elName = document.getElementById('pp-prof-name');
+      const elTitle = document.getElementById('pp-prof-title');
+      const elCompany = document.getElementById('pp-prof-company');
+      const elValue = document.getElementById('pp-prof-value');
+      const elFlag = document.getElementById('pp-prof-flag');
+      const elRank = document.getElementById('pp-prof-rank');
+      const elPhoto = document.getElementById('pp-prof-photo');
+      const mono = isAr ? p.mono : p.monoEn;
+      if (elName) elName.textContent = name;
+      if (elTitle) elTitle.textContent = title;
+      if (elCompany) elCompany.textContent = company;
+      if (elValue) { elValue.textContent = value; elValue.style.color = p.sc; }
+      if (elFlag) elFlag.textContent = p.flag;
+      if (elRank) elRank.textContent = '#' + p.rank;
+      if (elPhoto) {
+        if (p.imageUrl) {
+          elPhoto.style.backgroundImage = 'url("' + p.imageUrl + '")';
+          elPhoto.innerHTML = '';
+        } else {
+          elPhoto.style.backgroundImage = '';
+          elPhoto.style.background = 'linear-gradient(180deg, ' + p.sc + ', ' + p.sc2 + ')';
+          elPhoto.innerHTML = '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:64px; color:#fff; font-weight:900;">' + mono + '</div>';
+        }
+      }
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      overlay.onclick = function (e) { if (e.target === overlay) closePowerProfile(); };
+      document.body.style.overflow = 'hidden';
+      if (window.lucide) try { lucide.createIcons(); } catch (_) {}
+    }
+    function closePowerProfile() {
+      const overlay = document.getElementById('pp-profile-modal');
+      if (overlay) { overlay.classList.remove('is-open'); overlay.setAttribute('aria-hidden', 'true'); }
+      document.body.style.overflow = '';
     }
 
     function renderTicker(){
@@ -15311,6 +15492,17 @@
         try { if (typeof renderMorningBriefing === 'function') renderMorningBriefing(); } catch (e) { console.warn('renderMorningBriefing failed:', e); }
         try { if (typeof renderDashboard === 'function') renderDashboard(); } catch (e) { console.warn('renderDashboard failed:', e); }
         try { if (typeof renderTopCompanies === 'function') renderTopCompanies(); } catch (e) { console.warn('renderTopCompanies failed:', e); }
+        try { if (typeof renderPowerPeople === 'function') renderPowerPeople(); } catch (e) { console.warn('renderPowerPeople failed:', e); }
+        try {
+          var __pm = document.getElementById('pp-profile-modal');
+          if (__pm && __pm.parentElement !== document.body) document.body.appendChild(__pm);
+        } catch (_e) {}
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            var pm = document.getElementById('pp-profile-modal');
+            if (pm && pm.classList.contains('is-open')) closePowerProfile();
+          }
+        });
         try { if (typeof initTop10ApplyForm === 'function') initTop10ApplyForm(); } catch (e) { console.warn('initTop10ApplyForm failed:', e); }
         setTimeout(function () {
           try { if (typeof pullHomepageDataFromApi === 'function') pullHomepageDataFromApi(); } catch (e) { console.warn('pullHomepageDataFromApi failed:', e); }
