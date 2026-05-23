@@ -10741,8 +10741,9 @@
         const issue = isAr ? 'العدد رقم ' + rank : 'ISSUE No. ' + rank;
         const editionLabel = isAr ? 'POWER LIST · 2026' : 'POWER LIST · 2026';
         const hasPhoto = !!p.imageUrl;
+        const safeImg = hasPhoto ? String(p.imageUrl).replace(/'/g, '%27').replace(/"/g,'%22') : '';
         const photoStyle = hasPhoto
-          ? `background-image:url("${p.imageUrl}"); background-size:cover; background-position:center top;`
+          ? `background-image:url('${safeImg}'); background-size:cover; background-position:center top;`
           : `background:linear-gradient(180deg, ${p.sc}, ${p.sc2});`;
         return `
           <article class="pp-mag-cover" data-id="${p.id}" onclick="openPowerProfile('${p.id}')" style="--sc:${p.sc};--sc2:${p.sc2}">
