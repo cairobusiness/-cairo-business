@@ -15247,12 +15247,30 @@
       panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
       if (closeBtn) closeBtn.onclick = () => { panel.classList.add('hidden'); };
       try {
+        // Build live-data context to ground the AI in real 2026 prices
+        const liveCtx = {};
+        try {
+          if (typeof DASHBOARD_DATA !== 'undefined' && Array.isArray(DASHBOARD_DATA)) {
+            const g = (sym) => { const d = DASHBOARD_DATA.find(x => x.symbol === sym); return d && d.value != null ? d.value : null; };
+            const v1 = g('USD/EGP'); if (v1 != null) liveCtx.USDEGP = v1;
+            const v2 = g('EUR/EGP'); if (v2 != null) liveCtx.EUREGP = v2;
+            const v3 = g('SAR/EGP'); if (v3 != null) liveCtx.SAREGP = v3;
+            const v4 = g('EGX30');   if (v4 != null) liveCtx.EGX30   = v4;
+            const v5 = g('Gold');    if (v5 != null) liveCtx.gold    = v5;
+            const v6 = g('Silver');  if (v6 != null) liveCtx.silver  = v6;
+            const v7 = g('Brent');   if (v7 != null) liveCtx.brent   = v7;
+          }
+          if (typeof CRYPTO_DATA !== 'undefined' && Array.isArray(CRYPTO_DATA)) {
+            const btc = CRYPTO_DATA.find(c => c.sym === 'BTC'); if (btc && btc.price) liveCtx.btc = btc.price;
+          }
+        } catch(_) {}
         const res = await fetch('https://cairo-business-backend.vercel.app/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: [{ role: 'user', content: question }],
             lang: (typeof currentLang !== 'undefined' ? currentLang : 'ar'),
+            context: liveCtx,
           }),
         });
         if (!res.ok || !res.body) {
