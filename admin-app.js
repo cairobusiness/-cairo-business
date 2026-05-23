@@ -483,6 +483,179 @@ function slugify(s) {
     .slice(0, 80);
 }
 
+// ═════════════════════════════════════════════════════════════
+// AI Assistant — 10 actions powered by Groq + Tavily
+// ═════════════════════════════════════════════════════════════
+
+function useHeadline(idx) {
+  const v = (window.__headlineVariants || [])[idx];
+  if (v) {
+    document.getElementById('f_titleAr').value = v;
+    document.getElementById('ai-status').innerHTML = '';
+  }
+}
+
+async function callAI(action, payload) {
+  const r = await api('/api/admin/ai-assistant', { method: 'POST', body: JSON.stringify({ action, ...payload }) });
+  if (!r.ok) throw new Error(r.data?.error || 'AI request failed');
+  return r.data.data;
+}
+
+function showAIStatus(msg, type) {
+  const el = document.getElementById('ai-status');
+  if (!el) return;
+  const color = type === 'error' ? 'var(--red)' : (type === 'success' ? 'var(--green)' : 'var(--gold)');
+  el.innerHTML = '<div style="padding:8px 12px;background:rgba(255,255,255,0.05);border-radius:8px;color:' + color + ';font-size:12px;">' + msg + '</div>';
+}
+
+async function aiGenerateSEO() {
+  const titleAr = (document.getElementById('f_titleAr') || {}).value || '';
+  const excerptAr = (document.getElementById('f_excerptAr') || {}).value || '';
+  if (!titleAr) { alert('اكتب العنوان أولاً'); return; }
+  showAIStatus('🤖 جاري توليد SEO تلقائياً...', 'info');
+  try {
+    const d = await callAI('generate-seo', { titleAr, excerptAr });
+    if (d.seoTitle) document.getElementById('f_seoTitle').value = d.seoTitle;
+    if (d.metaDescription) document.getElementById('f_metaDescription').value = d.metaDescription;
+    if (d.slug) document.getElementById('f_slug').value = d.slug;
+    if (d.keywords) document.getElementById('f_metaKeywords').value = d.keywords;
+    updateSEOScore();
+    showAIStatus('✅ تم توليد SEO بنجاح', 'success');
+  } catch (e) { showAIStatus('❌ ' + e.message, 'error'); }
+}
+
+async function aiTranslate() {
+  const titleAr = (document.getElementById('f_titleAr') || {}).value || '';
+  const excerptAr = (document.getElementById('f_excerptAr') || {}).value || '';
+  if (!titleAr) { alert('اكتب العنوان العربي أولاً'); return; }
+  showAIStatus('🌐 جاري الترجمة...', 'info');
+  try {
+    const d = await callAI('translate', { titleAr, excerptAr });
+    if (d.titleEn) document.getElementById('f_titleEn').value = d.titleEn;
+    if (d.excerptEn) document.getElementById('f_excerptEn').value = d.excerptEn;
+    showAIStatus('✅ تمت الترجمة', 'success');
+  } catch (e) { showAIStatus('❌ ' + e.message, 'error'); }
+}
+
+async function aiSuggestHeadlines() {
+  const titleAr = (document.getElementById('f_titleAr') || {}).value || '';
+  const excerptAr = (document.getElementById('f_excerptAr') || {}).value || '';
+  if (!excerptAr) { alert('اكتب الملخص أولاً'); return; }
+  showAIStatus('💡 جاري اقتراح 5 عناوين بديلة...', 'info');
+  try {
+    const d = await callAI('headline-variants', { titleAr, excerptAr });
+    const variants = (d.variants || []);
+    window.__headlineVariants = variants;
+    const html = '<div style="background:var(--card-2);padding:12px;border-radius:10px;margin-top:8px;"><div style="font-size:11px;color:var(--gold);margin-bottom:8px;font-weight:700;">اقتراحات الـ AI — اضغط لاستخدام:</div>' +
+      variants.map((v, i) => '<div onclick="useHeadline(' + i + ')" style="padding:8px 10px;margin:4px 0;background:rgba(255,255,255,0.04);border-radius:6px;cursor:pointer;font-size:13px;border:1px solid transparent;"><span style="color:var(--gold);font-weight:700;margin-inline-end:6px;">' + (i + 1) + '.</span>' + escapeHtml(v) + '</div>').join('') +
+      '</div>';
+    document.getElementById('ai-status').innerHTML = html;
+  } catch (e) { showAIStatus('❌ ' + e.message, 'error'); }
+}
+
+async function aiSuggestTags() {
+  const titleAr = (document.getElementById('f_titleAr') || {}).value || '';
+  const excerptAr = (document.getElementById('f_excerptAr') || {}).value || '';
+  if (!titleAr) { alert('اكتب العنوان أولاً'); return; }
+  showAIStatus('🏷️ جاري اقتراح التصنيف والـ tags...', 'info');
+  try {
+    const d = await callAI('suggest-tags', { titleAr, excerptAr });
+    if (d.category) {
+      const sel = document.getElementById('f_category');
+      if (sel) sel.value = d.category;
+    }
+    const html = '<div style="background:var(--card-2);padding:12px;border-radius:10px;margin-top:8px;font-size:12px;">' +
+      '<div><b>التصنيف المقترح:</b> ' + (d.category || '—') + '</div>' +
+      '<div style="margin-top:6px;"><b>Tags:</b> ' + ((d.tags || []).map(t => '<span class="pill" style="margin-inline-end:4px;">' + escapeHtml(t) + '</span>').join('')) + '</div>' +
+      '<div style="margin-top:6px;"><b>شركات مذكورة:</b> ' + ((d.companies || []).join('، ') || '—') + '</div>' +
+      '<div style="margin-top:6px;"><b>أشخاص مذكورين:</b> ' + ((d.people || []).join('، ') || '—') + '</div>' +
+      '</div>';
+    document.getElementById('ai-status').innerHTML = html;
+  } catch (e) { showAIStatus('❌ ' + e.message, 'error'); }
+}
+
+async function aiSentiment() {
+  const titleAr = (document.getElementById('f_titleAr') || {}).value || '';
+  const excerptAr = (document.getElementById('f_excerptAr') || {}).value || '';
+  if (!titleAr) { alert('اكتب الخبر أولاً'); return; }
+  showAIStatus('🎭 جاري تحليل المشاعر...', 'info');
+  try {
+    const d = await callAI('sentiment', { text: titleAr + '. ' + excerptAr });
+    const emoji = { positive: '🟢 إيجابي', negative: '🔴 سلبي', neutral: '🟡 محايد' };
+    document.getElementById('ai-status').innerHTML = '<div style="background:var(--card-2);padding:12px;border-radius:10px;font-size:13px;"><b>' + (emoji[d.sentiment] || d.sentiment) + '</b> · ثقة ' + Math.round((d.confidence || 0) * 100) + '%<br><span style="color:var(--text-2);font-size:12px;">' + escapeHtml(d.reason || '') + '</span></div>';
+  } catch (e) { showAIStatus('❌ ' + e.message, 'error'); }
+}
+
+async function aiSpellcheck() {
+  const excerptAr = (document.getElementById('f_excerptAr') || {}).value || '';
+  if (!excerptAr) { alert('اكتب الملخص أولاً'); return; }
+  showAIStatus('✓ جاري المراجعة الإملائية...', 'info');
+  try {
+    const d = await callAI('spellcheck', { text: excerptAr, lang: 'ar' });
+    if (d.corrected && confirm('🔍 وجدت أخطاء/تحسينات:\n\n' + (d.changes || []).join('\n') + '\n\nاستبدل النص؟')) {
+      document.getElementById('f_excerptAr').value = d.corrected;
+    }
+    showAIStatus('✅ تمت المراجعة (' + (d.changes || []).length + ' تعديل)', 'success');
+  } catch (e) { showAIStatus('❌ ' + e.message, 'error'); }
+}
+
+async function aiFromUrl() {
+  const url = prompt('الصق رابط الخبر من Reuters/Bloomberg/CNBC وسأكتبه بالعربي:');
+  if (!url) return;
+  showAIStatus('🔗 جاري قراءة الرابط وكتابة الخبر...', 'info');
+  try {
+    const d = await callAI('from-url', { url });
+    if (d.titleAr) document.getElementById('f_titleAr').value = d.titleAr;
+    if (d.titleEn) document.getElementById('f_titleEn').value = d.titleEn;
+    if (d.excerptAr) document.getElementById('f_excerptAr').value = d.excerptAr;
+    if (d.excerptEn) document.getElementById('f_excerptEn').value = d.excerptEn;
+    if (d.category) document.getElementById('f_category').value = d.category;
+    showAIStatus('✅ تم توليد الخبر من الرابط', 'success');
+  } catch (e) { showAIStatus('❌ ' + e.message, 'error'); }
+}
+
+async function aiTopicIdeas() {
+  showAIStatus('💭 جاري جلب أفكار موضوعات اليوم...', 'info');
+  try {
+    const d = await callAI('topic-ideas', {});
+    const html = '<div style="background:var(--card-2);padding:12px;border-radius:10px;font-size:12px;"><div style="font-weight:700;color:var(--gold);margin-bottom:8px;">💡 أفكار موضوعات اليوم:</div>' +
+      (d.topics || []).map((t, i) => '<div style="padding:8px;border-bottom:1px solid var(--border);"><div><span style="color:var(--gold);font-weight:700;">' + (i + 1) + '.</span> ' + escapeHtml(t.title || '') + '</div><div style="color:var(--text-2);font-size:11px;margin-top:4px;">' + escapeHtml(t.angle || '') + (t.url ? ' · <a href="' + t.url + '" target="_blank" style="color:var(--gold);">المصدر</a>' : '') + '</div></div>').join('') +
+      '</div>';
+    document.getElementById('ai-status').innerHTML = html;
+  } catch (e) { showAIStatus('❌ ' + e.message, 'error'); }
+}
+
+async function aiSummarize() {
+  const body = prompt('الصق النص الكامل للمقالة وسأطلع لك ملخص:');
+  if (!body) return;
+  showAIStatus('📝 جاري التلخيص...', 'info');
+  try {
+    const d = await callAI('summarize', { body });
+    if (d.excerpt) {
+      document.getElementById('f_excerptAr').value = d.excerpt;
+      showAIStatus('✅ تم التلخيص', 'success');
+    }
+  } catch (e) { showAIStatus('❌ ' + e.message, 'error'); }
+}
+
+async function aiSocialPosts() {
+  const titleAr = (document.getElementById('f_titleAr') || {}).value || '';
+  const excerptAr = (document.getElementById('f_excerptAr') || {}).value || '';
+  if (!titleAr) { alert('اكتب الخبر أولاً'); return; }
+  showAIStatus('📱 جاري توليد بوستات السوشيال ميديا...', 'info');
+  try {
+    const d = await callAI('social-posts', { titleAr, excerptAr });
+    const html = '<div style="background:var(--card-2);padding:12px;border-radius:10px;font-size:12px;">' +
+      '<div style="margin-bottom:10px;"><b>𝕏 Twitter:</b><br><div style="background:rgba(0,0,0,0.2);padding:8px;border-radius:6px;margin-top:4px;cursor:pointer;" onclick="navigator.clipboard.writeText(this.textContent)">' + escapeHtml(d.twitter || '') + '</div></div>' +
+      '<div style="margin-bottom:10px;"><b>💼 LinkedIn:</b><br><div style="background:rgba(0,0,0,0.2);padding:8px;border-radius:6px;margin-top:4px;cursor:pointer;" onclick="navigator.clipboard.writeText(this.textContent)">' + escapeHtml(d.linkedin || '') + '</div></div>' +
+      '<div style="margin-bottom:10px;"><b>📸 Instagram:</b><br><div style="background:rgba(0,0,0,0.2);padding:8px;border-radius:6px;margin-top:4px;cursor:pointer;" onclick="navigator.clipboard.writeText(this.textContent)">' + escapeHtml(d.instagram || '') + '</div></div>' +
+      '<div><b>💬 WhatsApp:</b><br><div style="background:rgba(0,0,0,0.2);padding:8px;border-radius:6px;margin-top:4px;cursor:pointer;" onclick="navigator.clipboard.writeText(this.textContent)">' + escapeHtml(d.whatsapp || '') + '</div></div>' +
+      '<div style="margin-top:8px;font-size:10px;color:var(--text-3);">اضغط على أي بوست للنسخ</div>' +
+      '</div>';
+    document.getElementById('ai-status').innerHTML = html;
+  } catch (e) { showAIStatus('❌ ' + e.message, 'error'); }
+}
+
 function setupListView(title) {
   currentEntityKey = title.key;
   renderTabs();
@@ -884,6 +1057,7 @@ function renderList() {
   container.innerHTML = '<div class="item-grid">' + html + '</div>';
 }
 
+
 function openCreateModal() {
   editingId = null;
   const ent = currentEntity();
@@ -933,32 +1107,43 @@ function renderForm(item) {
     if (f.type === 'checkbox') return '<div class="field ' + full + '">' + input + '</div>';
     return '<div class="field ' + full + '"><label>' + f.label + '</label>' + input + '</div>';
   }).join('');
-  // Image picker for news (imageUrl field)
+
   if (ent.key === 'news') {
-    html += '<div class="field field-full"><label>رفع صورة من جهازك</label><button type="button" class="btn btn-ghost btn-sm" onclick="pickAndCompressImage(\'f_imageUrl\')">اختار صورة</button><div id="f_imageUrl-status" style="font-size:11px;color:var(--text-3);margin-top:6px"></div><div id="f_imageUrl-preview" style="margin-top:10px;"></div></div>';
-    // SEO collapsible section
-    html += '<details class="seo-collapse" style="grid-column:1/-1;"><summary>🔍 أدوات SEO (أتوماتيكية لمحركات البحث) <span id="seo-score-chip"></span></summary><div class="form-grid">' +
-      '<div class="field field-full"><label>SEO Title (الأفضل 30-65 حرف)</label><input id="f_seoTitle" type="text" value="' + escapeHtml(item.seoTitle || item.titleAr || '') + '" oninput="updateSEOScore()" /></div>' +
-      '<div class="field field-full"><label>Meta Description (120-160 حرف)</label><textarea id="f_metaDescription" oninput="updateSEOScore()">' + escapeHtml(item.metaDescription || item.excerptAr || '') + '</textarea></div>' +
-      '<div class="field"><label>URL Slug</label><input id="f_slug" type="text" dir="ltr" value="' + escapeHtml(item.slug || '') + '" placeholder="cbe-holds-rate" oninput="updateSEOScore()" /></div>' +
-      '<div class="field"><label>&nbsp;</label><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'f_slug\').value=slugify(document.getElementById(\'f_titleEn\').value);updateSEOScore()">اقتراح slug تلقائي</button></div>' +
-      '<div class="field field-full"><label>OG Image URL (1200×630)</label><input id="f_ogImage" type="url" dir="ltr" value="' + escapeHtml(item.ogImage || item.imageUrl || '') + '" placeholder="https://..." /></div>' +
-      '<div class="field field-full"><label>Meta Keywords (مفصولة بفواصل)</label><input id="f_metaKeywords" type="text" value="' + escapeHtml(item.metaKeywords || '') + '" placeholder="اقتصاد, أعمال, مصر" /></div>' +
-      '<div class="field field-full" id="seo-analysis" style="font-size:12px;color:var(--text-2);"></div>' +
+    // AI Assistant toolbar
+    html = '<div class="field field-full" style="background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(212,175,55,0.02));border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:12px;margin-bottom:8px;">' +
+      '<div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:8px;letter-spacing:0.1em;">🤖 مساعد كايرو AI — 10 أدوات</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;">' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="aiGenerateSEO()">🔍 SEO تلقائي</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="aiTranslate()">🌐 ترجم</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="aiSummarize()">📝 ولّد ملخص</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="aiSuggestHeadlines()">💡 5 عناوين</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="aiSpellcheck()">✓ تصحيح</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="aiSentiment()">🎭 مشاعر</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="aiSuggestTags()">🏷️ tags</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="aiFromUrl()">🔗 من URL</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="aiTopicIdeas()">💭 أفكار</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="aiSocialPosts()">📱 سوشيال</button>' +
+      '</div><div id="ai-status" style="margin-top:8px;"></div></div>' + html;
+    // SEO collapsible
+    html += '<details class="seo-collapse" style="grid-column:1/-1;"><summary>🔍 أدوات SEO لمحركات البحث <span id="seo-score-chip"></span></summary><div class="form-grid">' +
+      '<div class="field field-full"><label>SEO Title</label><input id="f_seoTitle" type="text" value="' + escapeHtml(item.seoTitle || item.titleAr || '') + '" oninput="updateSEOScore()" /></div>' +
+      '<div class="field field-full"><label>Meta Description</label><textarea id="f_metaDescription" oninput="updateSEOScore()">' + escapeHtml(item.metaDescription || item.excerptAr || '') + '</textarea></div>' +
+      '<div class="field"><label>URL Slug</label><input id="f_slug" type="text" dir="ltr" value="' + escapeHtml(item.slug || '') + '" oninput="updateSEOScore()" /></div>' +
+      '<div class="field field-full"><label>OG Image URL</label><input id="f_ogImage" type="url" dir="ltr" value="' + escapeHtml(item.ogImage || item.imageUrl || '') + '" /></div>' +
+      '<div class="field field-full"><label>Meta Keywords</label><input id="f_metaKeywords" type="text" value="' + escapeHtml(item.metaKeywords || '') + '" /></div>' +
+      '<div class="field field-full" id="seo-analysis" style="font-size:12px;"></div>' +
       '</div></details>';
   }
+
   grid.innerHTML = html;
-  // Live SEO scoring
   if (ent.key === 'news') setTimeout(updateSEOScore, 100);
-  // Add Preview button to modal footer
+  // Add Preview button
   setTimeout(() => {
     const footer = document.querySelector('.modal-footer');
     if (footer && ent.key === 'news' && !document.getElementById('preview-btn')) {
       const btn = document.createElement('button');
-      btn.id = 'preview-btn';
-      btn.className = 'btn btn-ghost';
+      btn.id = 'preview-btn'; btn.className = 'btn btn-ghost'; btn.type = 'button';
       btn.textContent = '👁️ معاينة مباشرة';
-      btn.type = 'button';
       btn.onclick = previewNews;
       footer.insertBefore(btn, footer.firstChild);
     }
@@ -998,7 +1183,6 @@ async function saveItem() {
     if (f.required && (val === '' || val == null)) missing.push(f.label);
     if (val !== '' && val != null) payload[f.id] = val;
   }
-  // Collect SEO fields for news
   if (ent.key === 'news') {
     ['seoTitle', 'metaDescription', 'slug', 'ogImage', 'metaKeywords'].forEach(k => {
       const el = document.getElementById('f_' + k);
@@ -1014,16 +1198,9 @@ async function saveItem() {
     if (!r.ok) { msg.innerHTML = '<div class="msg msg-error">' + escapeHtml(r.data?.error || 'فشل الحفظ') + '</div>'; return; }
     closeModal();
     await loadList();
-  } catch (e) {
-    msg.innerHTML = '<div class="msg msg-error">حدث خطأ في الاتصال</div>';
-  } finally { btn.disabled = false; btn.textContent = 'حفظ'; }
+  } catch (e) { msg.innerHTML = '<div class="msg msg-error">خطأ في الاتصال</div>'; }
+  finally { btn.disabled = false; btn.textContent = 'حفظ'; }
 }
-
-const DEFAULT_BRIEFING_ITEMS = Array.from({length:5}, (_,i) => ({num:i+1,title_ar:'',title_en:'',sector_ar:'',sector_en:'',impact:'neutral'}));
-const DEFAULT_BRIEFING_RATES = [
-  { symbol:'USD/EGP', name_ar:'دولار/جنيه', name_en:'USD/EGP', value:'52.92', change:'0.2', category:'currency' },
-  { symbol:'EGX30', name_ar:'EGX30', name_en:'EGX30', value:'31245', change:'1.8', category:'index' }
-];
 
 async function switchToBriefing() {
   currentEntityKey = '__briefing__';
@@ -1036,15 +1213,15 @@ async function switchToBriefing() {
   container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   const r = await api('/api/admin/briefing');
   let briefing = (r.ok && r.data && r.data.data) || null;
-  const items = (briefing && briefing.items) || DEFAULT_BRIEFING_ITEMS;
-  const rates = (briefing && briefing.rates) || DEFAULT_BRIEFING_RATES;
-  const deal = (briefing && briefing.dealOfDay) || { title_ar:'', title_en:'', value:'' };
+  const items = (briefing && briefing.items) || [{num:1,title_ar:'',title_en:''}];
+  const rates = (briefing && briefing.rates) || [];
+  const deal = (briefing && briefing.dealOfDay) || {};
   let html = '<div class="form-grid" style="grid-template-columns:1fr;">';
-  html += '<div class="field field-full"><label>تاريخ النشرة</label><input id="bf-date" type="date" value="' + (briefing && briefing.date ? new Date(briefing.date).toISOString().slice(0,10) : new Date().toISOString().slice(0,10)) + '" /></div>';
-  html += '<div class="field field-full"><label>أهم 5 أخبار (JSON)</label><textarea id="bf-items" style="min-height:200px;font-family:monospace;">' + JSON.stringify(items, null, 2) + '</textarea></div>';
+  html += '<div class="field field-full"><label>تاريخ</label><input id="bf-date" type="date" value="' + (briefing && briefing.date ? new Date(briefing.date).toISOString().slice(0,10) : new Date().toISOString().slice(0,10)) + '" /></div>';
+  html += '<div class="field field-full"><label>أخبار (JSON)</label><textarea id="bf-items" style="min-height:200px;font-family:monospace;">' + JSON.stringify(items, null, 2) + '</textarea></div>';
   html += '<div class="field field-full"><label>أسعار (JSON)</label><textarea id="bf-rates" style="min-height:160px;font-family:monospace;">' + JSON.stringify(rates, null, 2) + '</textarea></div>';
-  html += '<div class="field field-full"><label>صفقة اليوم (JSON)</label><textarea id="bf-deal" style="min-height:120px;font-family:monospace;">' + JSON.stringify(deal, null, 2) + '</textarea></div>';
-  html += '<div class="field field-full"><button class="btn btn-primary" onclick="saveBriefing()">حفظ النشرة</button></div>';
+  html += '<div class="field field-full"><label>صفقة (JSON)</label><textarea id="bf-deal" style="min-height:120px;font-family:monospace;">' + JSON.stringify(deal, null, 2) + '</textarea></div>';
+  html += '<div class="field field-full"><button class="btn btn-primary" onclick="saveBriefing()">حفظ</button></div>';
   html += '</div>';
   container.innerHTML = html;
 }
@@ -1056,10 +1233,11 @@ async function saveBriefing() {
     const rates = JSON.parse(document.getElementById('bf-rates').value);
     const dealOfDay = JSON.parse(document.getElementById('bf-deal').value);
     const r = await api('/api/admin/briefing', { method: 'POST', body: JSON.stringify({ date, items, rates, dealOfDay }) });
-    if (!r.ok) { alert('فشل الحفظ: ' + (r.data?.error || 'خطأ')); return; }
-    alert('تم حفظ النشرة');
+    if (!r.ok) { alert('فشل: ' + (r.data?.error || 'خطأ')); return; }
+    alert('تم الحفظ');
   } catch (e) { alert('خطأ في JSON: ' + e.message); }
 }
 
-document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+const _lp = document.getElementById('login-password');
+if (_lp) _lp.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 boot();
