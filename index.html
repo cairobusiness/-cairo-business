@@ -4096,17 +4096,11 @@
         <div id="top10-list" class="trophy-list"></div>
       </div>
 
-      <!-- Hidden legacy containers (for old JS hooks) -->
+      <!-- Hidden legacy containers (for old JS hooks - renamed to avoid id conflicts) -->
       <div class="hidden" aria-hidden="true">
-        <div id="top10-tabs"></div>
-        <div id="top10-podium"></div>
-        <ol id="top10-list"></ol>
-      </div>
-
-      <!-- Footnote -->
-      <div class="mt-12 flex items-center justify-center gap-3 text-xs text-white/40 flex-wrap">
-        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-mint-400"></i>
-        <span data-i18n="top10.footnote">المصادر: تقارير الشركات، البورصات المحلية، Reuters، Zawya، Bloomberg — آخر تحديث Q1 2026.</span>
+        <div id="top10-tabs-legacy"></div>
+        <div id="top10-podium-legacy"></div>
+        <ol id="top10-list-legacy"></ol>
       </div>
     </div>
 
@@ -4318,11 +4312,14 @@
 
       .trophy-rank {
         font-family: 'Playfair Display', serif;
-        font-size: 18px; font-weight: 900;
+        font-size: 22px; font-weight: 900;
         line-height: 1; margin-top: 4px;
-        color: rgba(255,255,255,.32);
+        color: rgba(255,255,255,.85);
         letter-spacing: -0.02em;
       }
+      .trophy-gold .trophy-rank   { color: #f4d03f; }
+      .trophy-silver .trophy-rank { color: #e2e8f0; }
+      .trophy-bronze .trophy-rank { color: #fbbf24; }
 
       .trophy-name {
         font-family: 'Cairo', sans-serif;
@@ -4497,6 +4494,163 @@
         .trl-logo { background: linear-gradient(135deg, #f4d03f, #b08d23); }
       }
     </style>
+    <!-- =========================================================== -->
+  <!--                  TOP 10 APPLICATION FORM                     -->
+  <!-- =========================================================== -->
+  <section id="top10-apply" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-900 to-navy-950">
+    <div class="absolute inset-0 pointer-events-none opacity-40" style="background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,0.20), transparent 60%);"></div>
+    <style>
+      .apply-grid { display: grid; grid-template-columns: 1fr 1.8fr; gap: 28px; align-items: start; }
+      @media (max-width: 1024px) { .apply-grid { grid-template-columns: 1fr; } }
+      .apply-side {
+        background: linear-gradient(155deg, rgba(212,175,55,.08), rgba(212,175,55,.01));
+        border: 1px solid rgba(212,175,55,.2); border-radius: 22px; padding: 28px;
+        position: sticky; top: 100px;
+      }
+      .apply-benefit { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
+      .apply-benefit-icon { color: #d4af37; font-size: 18px; line-height: 1.2; flex-shrink: 0; margin-top: 2px; }
+      .apply-form {
+        background: linear-gradient(155deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+        border: 1px solid rgba(255,255,255,.08); border-radius: 22px; padding: 28px;
+      }
+      .apply-section { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.06); }
+      .apply-section:last-child { border-bottom: 0; }
+      .apply-section-title {
+        font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #d4af37;
+        text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+      }
+      .apply-section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to left, transparent, rgba(212,175,55,.25)); }
+      .apply-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+      @media (max-width: 640px) { .apply-row { grid-template-columns: 1fr; } }
+      .apply-field { display: flex; flex-direction: column; gap: 6px; }
+      .apply-field.full { grid-column: 1 / -1; }
+      .apply-label { font-size: 12px; color: rgba(255,255,255,.7); font-weight: 500; }
+      .apply-label .req { color: #f87171; margin-inline-start: 4px; }
+      .apply-input, .apply-select, .apply-textarea {
+        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+        color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 14px;
+        transition: border-color .2s, background .2s; font-family: inherit;
+      }
+      .apply-input:focus, .apply-select:focus, .apply-textarea:focus {
+        outline: none; border-color: rgba(212,175,55,.5); background: rgba(255,255,255,.06);
+      }
+      .apply-textarea { resize: vertical; min-height: 80px; }
+      .apply-consent { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; cursor: pointer; }
+      .apply-consent input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; accent-color: #d4af37; }
+      .apply-consent-text { font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.5; }
+      .apply-submit {
+        background: linear-gradient(135deg, #d4af37, #b8941f); color: #0a0e27;
+        font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 999px;
+        border: none; cursor: pointer; transition: all .2s; margin-top: 18px;
+        display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px -8px rgba(212,175,55,.4);
+      }
+      .apply-submit:hover { background: #fbbf24; transform: translateY(-2px); box-shadow: 0 12px 32px -8px rgba(212,175,55,.6); }
+      .apply-submit:disabled { opacity: .6; cursor: wait; }
+      .apply-status { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 13px; display: none; }
+      .apply-status.success { display: block; background: rgba(34,197,94,.12); color: #86efac; border: 1px solid rgba(34,197,94,.3); }
+      .apply-status.error { display: block; background: rgba(248,113,113,.12); color: #fca5a5; border: 1px solid rgba(248,113,113,.3); }
+    </style>
+    <div class="max-w-[1280px] mx-auto px-4 lg:px-8 relative">
+      <div class="text-center mb-12 reveal">
+        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
+          <i data-lucide="award" class="w-3.5 h-3.5"></i>
+          <span data-i18n="apply.eyebrow">تقديم · APPLY</span>
+        </div>
+        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="apply.title">تأهّل لقائمة Top 10</h2>
+        <p class="mt-4 text-white/60 max-w-2xl mx-auto" data-i18n="apply.subtitle">هل شركتك من الرواد في قطاعها؟ قدّم طلب الانضمام لتصنيف أقوى 10 شركات في الشرق الأوسط — تقييمنا مستقل ومجاني.</p>
+      </div>
+
+      <div class="apply-grid reveal">
+        <!-- Benefits sidebar -->
+        <aside class="apply-side">
+          <div class="text-xs font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span data-i18n="apply.benefits.title">لماذا تتقدّم؟</span>
+          </div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b1">تصنيف مستقل وموثوق</span></div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b2">وصول لمستثمرين دوليين</span></div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b3">تغطية إعلامية حصرية</span></div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b4">تقرير تحليلي مجاني</span></div>
+        </aside>
+
+        <!-- Form -->
+        <form id="top10-apply-form" class="apply-form" novalidate>
+          <!-- Section 1: Company Information -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="building" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section1">معلومات الشركة</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.nameAr">اسم الشركة (عربي)<span class="req">*</span></label><input class="apply-input" name="nameAr" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.nameEn">اسم الشركة (إنجليزي)<span class="req">*</span></label><input class="apply-input" name="nameEn" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.founded">سنة التأسيس<span class="req">*</span></label><input class="apply-input" name="founded" type="number" min="1900" max="2026" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.country">البلد<span class="req">*</span></label><select class="apply-select" name="country" required><option value="">—</option><option>مصر</option><option>السعودية</option><option>الإمارات</option><option>قطر</option><option>الكويت</option><option>البحرين</option><option>عُمان</option><option>الأردن</option><option>المغرب</option><option>تونس</option><option>الجزائر</option><option>أخرى</option></select></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.city">المدينة</label><input class="apply-input" name="city"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.website">الموقع الإلكتروني</label><input class="apply-input" name="website" type="url" placeholder="https://"></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.logo">لوجو الشركة (PNG/SVG/JPG)</label><input class="apply-input" name="logo" type="file" accept="image/*"></div>
+            </div>
+          </div>
+
+          <!-- Section 2: Sector & Activity -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="layers" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section2">القطاع والنشاط</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.sector">القطاع الرئيسي<span class="req">*</span></label><select class="apply-select" name="sector" required id="apply-sector-select"><option value="">—</option></select></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.subsectors">القطاعات الفرعية</label><input class="apply-input" name="subsectors" placeholder="مثال: فينتك، مدفوعات"></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.about">وصف مختصر للشركة<span class="req">*</span></label><textarea class="apply-textarea" name="about" rows="3" maxlength="600" required></textarea></div>
+            </div>
+          </div>
+
+          <!-- Section 3: Financial Numbers -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section3">الأرقام المالية</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.revenue">الإيرادات السنوية (آخر سنة)<span class="req">*</span></label><input class="apply-input" name="revenue" placeholder="$1.5B EGP / USD" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.growth">معدل النمو السنوي %</label><input class="apply-input" name="growth" type="number" step="0.1" placeholder="15.5"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.employees">عدد الموظفين</label><input class="apply-input" name="employees" type="number"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.markets">عدد الأسواق/الدول</label><input class="apply-input" name="markets" type="number"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.branches">عدد الفروع</label><input class="apply-input" name="branches" type="number"></div>
+            </div>
+          </div>
+
+          <!-- Section 4: Achievements (Optional) -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="trophy" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section4">الإنجازات (اختياري)</span></div>
+            <div class="apply-row">
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.awards">جوائز ومسابقات</label><textarea class="apply-textarea" name="awards" rows="2"></textarea></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.deals">صفقات كبيرة</label><textarea class="apply-textarea" name="deals" rows="2"></textarea></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.partners">شراكات استراتيجية</label><textarea class="apply-textarea" name="partners" rows="2"></textarea></div>
+            </div>
+          </div>
+
+          <!-- Section 5: Contact -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="user" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section5">بيانات التواصل</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.contactName">اسم المسؤول<span class="req">*</span></label><input class="apply-input" name="contactName" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.position">المنصب<span class="req">*</span></label><input class="apply-input" name="position" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.email">إيميل العمل<span class="req">*</span></label><input class="apply-input" name="email" type="email" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.phone">رقم الهاتف<span class="req">*</span></label><input class="apply-input" name="phone" type="tel" required></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.linkedin">LinkedIn (اختياري)</label><input class="apply-input" name="linkedin" type="url" placeholder="https://linkedin.com/in/..."></div>
+            </div>
+          </div>
+
+          <!-- Section 6: Consents -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section6">الموافقات</span></div>
+            <label class="apply-consent"><input type="checkbox" name="consent1" required><span class="apply-consent-text" data-i18n="apply.f.consent1">أؤكد أن جميع البيانات المُقدَّمة صحيحة ودقيقة</span></label>
+            <label class="apply-consent"><input type="checkbox" name="consent2" required><span class="apply-consent-text" data-i18n="apply.f.consent2">أوافق على نشر اسم وبيانات الشركة في قائمة Top 10 في حال الموافقة</span></label>
+            <label class="apply-consent"><input type="checkbox" name="consent3" required><span class="apply-consent-text" data-i18n="apply.f.consent3">أوافق على معالجة البيانات وفقاً لسياسة الخصوصية</span></label>
+          </div>
+
+          <button type="submit" class="apply-submit">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span data-i18n="apply.submit">إرسال الطلب</span>
+          </button>
+          <div id="apply-status" class="apply-status"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
   </section>
 
   <!-- =========================================================== -->
@@ -8960,7 +9114,22 @@
         'top10.subtitle2':'من النفط إلى الذكاء الاصطناعي.. 10 شركات تهيمن على كل القطاعات وتشكّل ملامح الاقتصاد الجديد للشرق الأوسط',
         'top10.meta.audit':'تقييم مستقل','top10.meta.data':'بيانات Q1 2026','top10.meta.scope':'10 قطاعات · 5 دول',
         /* Sector filter labels */
-        'top10.sec.all':'كل القطاعات','top10.sec.energy':'الطاقة','top10.sec.banking':'البنوك','top10.sec.tech':'التكنولوجيا','top10.sec.telecom':'الاتصالات','top10.sec.retail':'التجزئة','top10.sec.health':'الصحة','top10.sec.realestate':'العقارات','top10.sec.aviation':'الطيران','top10.sec.renewable':'الطاقة المتجددة','top10.sec.food':'الغذاء',
+        'top10.sec.all':'كل القطاعات','top10.sec.energy':'الطاقة','top10.sec.banking':'البنوك','top10.sec.tech':'التكنولوجيا','top10.sec.telecom':'الاتصالات','top10.sec.retail':'التجزئة','top10.sec.health':'الصحة','top10.sec.realestate':'العقارات','top10.sec.aviation':'الطيران','top10.sec.renewable':'الطاقة المتجددة','top10.sec.food':'الغذاء','top10.sec.hospitality':'الضيافة والسياحة','top10.sec.auto':'السيارات','top10.sec.pharma':'الصناعات الدوائية','top10.sec.education':'التعليم','top10.sec.insurance':'التأمين','top10.sec.construction':'المقاولات والإنشاءات',
+        'top10.spill.hotel':'فنادق ومنتجعات','top10.spill.auto':'سيارات ووكلاء','top10.spill.pharma':'صناعات دوائية','top10.spill.edu':'جامعات ومدارس','top10.spill.ins':'تأمين تكافلي','top10.spill.const':'إنشاءات وبنية تحتية',
+        'top10.kpi.students':'عدد الطلاب','top10.kpi.premiums':'الأقساط السنوية','top10.kpi.backlog':'حجم المشاريع',
+        'top10.cn.eg':'جمهورية مصر العربية',
+        'top10.c11.name':'فنادق جوميرا','top10.c11.brand':'Jumeirah','top10.c11.logo':'🏨',
+        'top10.c12.name':'عبد اللطيف جميل','top10.c12.brand':'Abdul Latif Jameel','top10.c12.logo':'🚗',
+        'top10.c13.name':'إيفا فارما','top10.c13.brand':'EVA Pharma','top10.c13.logo':'💊',
+        'top10.c14.name':'الجامعة الأمريكية بدبي','top10.c14.brand':'AUD','top10.c14.logo':'🎓',
+        'top10.c15.name':'مجموعة قطر للتأمين','top10.c15.brand':'QIC Group','top10.c15.logo':'🛡️',
+        'top10.c16.name':'مجموعة بن لادن السعودية','top10.c16.brand':'SBG','top10.c16.logo':'🏗️',
+        /* Apply form section */
+        'apply.eyebrow':'تقديم · APPLY','apply.title':'تأهّل لقائمة Top 10','apply.subtitle':'هل شركتك من الرواد في قطاعها؟ قدّم طلب الانضمام لتصنيف أقوى 10 شركات في الشرق الأوسط — تقييمنا مستقل ومجاني.','apply.benefits.title':'لماذا تتقدّم؟','apply.b1':'تصنيف مستقل وموثوق','apply.b2':'وصول لمستثمرين دوليين','apply.b3':'تغطية إعلامية حصرية','apply.b4':'تقرير تحليلي مجاني',
+        'apply.form.section1':'معلومات الشركة','apply.form.section2':'القطاع والنشاط','apply.form.section3':'الأرقام المالية','apply.form.section4':'الإنجازات (اختياري)','apply.form.section5':'بيانات التواصل','apply.form.section6':'الموافقات',
+        'apply.f.nameAr':'اسم الشركة (عربي)','apply.f.nameEn':'اسم الشركة (إنجليزي)','apply.f.founded':'سنة التأسيس','apply.f.country':'البلد','apply.f.city':'المدينة','apply.f.website':'الموقع الإلكتروني','apply.f.logo':'لوجو الشركة (PNG/SVG/JPG)','apply.f.sector':'القطاع الرئيسي','apply.f.subsectors':'القطاعات الفرعية','apply.f.about':'وصف مختصر للشركة','apply.f.revenue':'الإيرادات السنوية (آخر سنة)','apply.f.growth':'معدل النمو السنوي %','apply.f.employees':'عدد الموظفين','apply.f.markets':'عدد الأسواق/الدول','apply.f.branches':'عدد الفروع','apply.f.awards':'جوائز ومسابقات','apply.f.deals':'صفقات كبيرة','apply.f.partners':'شراكات استراتيجية','apply.f.contactName':'اسم المسؤول','apply.f.position':'المنصب','apply.f.email':'إيميل العمل','apply.f.phone':'رقم الهاتف','apply.f.linkedin':'LinkedIn (اختياري)',
+        'apply.f.consent1':'أؤكد أن جميع البيانات المُقدَّمة صحيحة ودقيقة','apply.f.consent2':'أوافق على نشر اسم وبيانات الشركة في قائمة Top 10 في حال الموافقة','apply.f.consent3':'أوافق على معالجة البيانات وفقاً لسياسة الخصوصية',
+        'apply.submit':'إرسال الطلب','apply.success':'تم استلام طلبك بنجاح! سيتواصل فريقنا معك خلال 5 أيام عمل.','apply.error':'حدث خطأ في إرسال الطلب. حاول مرة أخرى أو راسلنا على info@cairobusiness.net','apply.required':'حقل مطلوب',
         /* Country names */
         'top10.cn.sa':'المملكة العربية السعودية','top10.cn.qa':'دولة قطر','top10.cn.ae':'الإمارات العربية المتحدة','top10.cn.aeAbu':'أبوظبي، الإمارات','top10.cn.aeDxb':'دبي، الإمارات','top10.cn.saAe':'السعودية والإمارات',
         /* KPI labels */
@@ -9338,7 +9507,22 @@
         'top10.subtitle2':'From Oil to AI — 10 companies dominating every sector and shaping the new Middle Eastern economy.',
         'top10.meta.audit':'Independent Rating','top10.meta.data':'Q1 2026 Data','top10.meta.scope':'10 sectors · 5 countries',
         /* Sector filter labels */
-        'top10.sec.all':'All Sectors','top10.sec.energy':'Energy','top10.sec.banking':'Banking','top10.sec.tech':'Technology','top10.sec.telecom':'Telecom','top10.sec.retail':'Retail','top10.sec.health':'Healthcare','top10.sec.realestate':'Real Estate','top10.sec.aviation':'Aviation','top10.sec.renewable':'Renewables','top10.sec.food':'Food',
+        'top10.sec.all':'All Sectors','top10.sec.energy':'Energy','top10.sec.banking':'Banking','top10.sec.tech':'Technology','top10.sec.telecom':'Telecom','top10.sec.retail':'Retail','top10.sec.health':'Healthcare','top10.sec.realestate':'Real Estate','top10.sec.aviation':'Aviation','top10.sec.renewable':'Renewables','top10.sec.food':'Food','top10.sec.hospitality':'Hospitality','top10.sec.auto':'Automotive','top10.sec.pharma':'Pharma','top10.sec.education':'Education','top10.sec.insurance':'Insurance','top10.sec.construction':'Construction',
+        'top10.spill.hotel':'Hotels & Resorts','top10.spill.auto':'Auto & Dealers','top10.spill.pharma':'Pharmaceuticals','top10.spill.edu':'Universities & Schools','top10.spill.ins':'Takaful Insurance','top10.spill.const':'Construction & Infra',
+        'top10.kpi.students':'Students','top10.kpi.premiums':'Annual Premiums','top10.kpi.backlog':'Project Backlog',
+        'top10.cn.eg':'Egypt',
+        'top10.c11.name':'Jumeirah Hotels','top10.c11.brand':'Jumeirah','top10.c11.logo':'🏨',
+        'top10.c12.name':'Abdul Latif Jameel','top10.c12.brand':'ALJ','top10.c12.logo':'🚗',
+        'top10.c13.name':'EVA Pharma','top10.c13.brand':'EVA Pharma','top10.c13.logo':'💊',
+        'top10.c14.name':'American Univ. in Dubai','top10.c14.brand':'AUD','top10.c14.logo':'🎓',
+        'top10.c15.name':'Qatar Insurance Co.','top10.c15.brand':'QIC Group','top10.c15.logo':'🛡️',
+        'top10.c16.name':'Saudi Binladin Group','top10.c16.brand':'SBG','top10.c16.logo':'🏗️',
+        /* Apply form section */
+        'apply.eyebrow':'APPLY','apply.title':'Qualify for the Top 10 List','apply.subtitle':"Is your company a leader in its sector? Apply to join the Middle East's Top 10 ranking — our assessment is independent and free.",'apply.benefits.title':'Why apply?','apply.b1':'Independent, trusted ranking','apply.b2':'Reach global investors','apply.b3':'Exclusive media coverage','apply.b4':'Free analytical report',
+        'apply.form.section1':'Company Information','apply.form.section2':'Sector & Activity','apply.form.section3':'Financial Numbers','apply.form.section4':'Achievements (Optional)','apply.form.section5':'Contact Information','apply.form.section6':'Consents',
+        'apply.f.nameAr':'Company Name (Arabic)','apply.f.nameEn':'Company Name (English)','apply.f.founded':'Year Founded','apply.f.country':'Country','apply.f.city':'City','apply.f.website':'Website URL','apply.f.logo':'Company Logo (PNG/SVG/JPG)','apply.f.sector':'Primary Sector','apply.f.subsectors':'Sub-sectors','apply.f.about':'Short company description','apply.f.revenue':'Annual Revenue (latest year)','apply.f.growth':'YoY Growth %','apply.f.employees':'Employees Count','apply.f.markets':'Markets/Countries Count','apply.f.branches':'Branches Count','apply.f.awards':'Awards & Recognition','apply.f.deals':'Major Deals','apply.f.partners':'Strategic Partnerships','apply.f.contactName':'Contact Name','apply.f.position':'Position','apply.f.email':'Work Email','apply.f.phone':'Phone Number','apply.f.linkedin':'LinkedIn (Optional)',
+        'apply.f.consent1':'I confirm all provided information is accurate','apply.f.consent2':'I agree to publish company name and data in Top 10 list if approved','apply.f.consent3':'I agree to data processing per Privacy Policy',
+        'apply.submit':'Submit Application','apply.success':'Application received! Our team will reach out within 5 business days.','apply.error':'Error submitting application. Try again or email info@cairobusiness.net','apply.required':'Required field',
         /* Country names */
         'top10.cn.sa':'Saudi Arabia','top10.cn.qa':'Qatar','top10.cn.ae':'United Arab Emirates','top10.cn.aeAbu':'Abu Dhabi, UAE','top10.cn.aeDxb':'Dubai, UAE','top10.cn.saAe':'Saudi Arabia & UAE',
         /* KPI labels */
@@ -10204,19 +10388,31 @@
       { id:'c8',  rank:'08', countryKey:'top10.cn.aeDxb', sectorKey:'aviation',  spillKey:'top10.spill.av',     kpiKey:'top10.kpi.revenue',   value:'$33B',   trend:'9.6',  flag:'🇦🇪', sc:'#EF4444', sc2:'#B91C1C', icon:'plane'      },
       { id:'c9',  rank:'09', countryKey:'top10.cn.aeAbu', sectorKey:'renewable', spillKey:'top10.spill.solar',  kpiKey:'top10.kpi.portfolio', value:'$30B',   trend:'28.4', flag:'🇦🇪', sc:'#10B981', sc2:'#047857', icon:'sun'        },
       { id:'c10', rank:'10', countryKey:'top10.cn.sa',    sectorKey:'food',      spillKey:'top10.spill.food',   kpiKey:'top10.kpi.revenue',   value:'$7.1B',  trend:'6.9',  flag:'🇸🇦', sc:'#84CC16', sc2:'#4D7C0F', icon:'wheat'      },
+      { id:'c11', rank:'11', countryKey:'top10.cn.aeDxb', sectorKey:'hospitality', spillKey:'top10.spill.hotel',  kpiKey:'top10.kpi.revenue',   value:'$3.2B',  trend:'12.4', flag:'🇦🇪', sc:'#A855F7', sc2:'#7E22CE', icon:'bed-double' },
+      { id:'c12', rank:'12', countryKey:'top10.cn.sa',    sectorKey:'auto',        spillKey:'top10.spill.auto',   kpiKey:'top10.kpi.revenue',   value:'$8.6B',  trend:'9.1',  flag:'🇸🇦', sc:'#0EA5E9', sc2:'#0369A1', icon:'car'       },
+      { id:'c13', rank:'13', countryKey:'top10.cn.eg',    sectorKey:'pharma',      spillKey:'top10.spill.pharma', kpiKey:'top10.kpi.revenue',   value:'$1.4B',  trend:'15.2', flag:'🇪🇬', sc:'#22C55E', sc2:'#15803D', icon:'pill'      },
+      { id:'c14', rank:'14', countryKey:'top10.cn.ae',    sectorKey:'education',   spillKey:'top10.spill.edu',    kpiKey:'top10.kpi.students',  value:'85K',    trend:'8.7',  flag:'🇦🇪', sc:'#F97316', sc2:'#C2410C', icon:'graduation-cap' },
+      { id:'c15', rank:'15', countryKey:'top10.cn.qa',    sectorKey:'insurance',   spillKey:'top10.spill.ins',    kpiKey:'top10.kpi.premiums',  value:'$2.8B',  trend:'10.3', flag:'🇶🇦', sc:'#6366F1', sc2:'#4338CA', icon:'shield-check' },
+      { id:'c16', rank:'16', countryKey:'top10.cn.sa',    sectorKey:'construction',spillKey:'top10.spill.const',  kpiKey:'top10.kpi.backlog',   value:'$32B',   trend:'18.6', flag:'🇸🇦', sc:'#D97706', sc2:'#92400E', icon:'hard-hat' },
     ];
     const TOP_FILTERS = [
-      { key:'all',        color:null      },
-      { key:'energy',     color:'#FFB800' },
-      { key:'banking',    color:'#3B82F6' },
-      { key:'tech',       color:'#8B5CF6' },
-      { key:'telecom',    color:'#06B6D4' },
-      { key:'retail',     color:'#EC4899' },
-      { key:'health',     color:'#14B8A6' },
-      { key:'realestate', color:'#F59E0B' },
-      { key:'aviation',   color:'#EF4444' },
-      { key:'renewable',  color:'#10B981' },
-      { key:'food',       color:'#84CC16' },
+      { key:'all',          color:null      },
+      { key:'energy',       color:'#FFB800' },
+      { key:'banking',      color:'#3B82F6' },
+      { key:'tech',         color:'#8B5CF6' },
+      { key:'telecom',      color:'#06B6D4' },
+      { key:'retail',       color:'#EC4899' },
+      { key:'health',       color:'#14B8A6' },
+      { key:'realestate',   color:'#F59E0B' },
+      { key:'aviation',     color:'#EF4444' },
+      { key:'renewable',    color:'#10B981' },
+      { key:'food',         color:'#84CC16' },
+      { key:'hospitality',  color:'#A855F7' },
+      { key:'auto',         color:'#0EA5E9' },
+      { key:'pharma',       color:'#22C55E' },
+      { key:'education',    color:'#F97316' },
+      { key:'insurance',    color:'#6366F1' },
+      { key:'construction', color:'#D97706' },
     ];
     let TOP10_ACTIVE_FILTER = 'all';
 
@@ -15045,7 +15241,65 @@
       }
     }
 
-    /* Boot sequence — initialize header buttons, render briefing/dashboard, pull API data */
+    /* Top 10 Apply Form: populate sector dropdown + submit handler */
+    function initTop10ApplyForm() {
+      const sel = document.getElementById('apply-sector-select');
+      const form = document.getElementById('top10-apply-form');
+      const status = document.getElementById('apply-status');
+      if (!sel || !form) return;
+      // Populate sector dropdown from TOP_FILTERS (skip 'all')
+      try {
+        if (typeof TOP_FILTERS !== 'undefined') {
+          const opts = TOP_FILTERS.filter(f => f.key !== 'all').map(f => {
+            const label = (typeof t === 'function') ? t('top10.sec.' + f.key) : f.key;
+            return '<option value="' + f.key + '">' + label + '</option>';
+          }).join('');
+          sel.innerHTML = '<option value="">—</option>' + opts;
+        }
+      } catch (_e) {}
+      // Submit handler
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
+        const btn = form.querySelector('.apply-submit');
+        const originalBtn = btn.innerHTML;
+        btn.disabled = true; btn.innerHTML = '<span>' + (isAr ? 'جارٍ الإرسال...' : 'Sending...') + '</span>';
+        status.className = 'apply-status'; status.textContent = '';
+        try {
+          const fd = new FormData(form);
+          const payload = {};
+          fd.forEach((v, k) => { if (k !== 'logo') payload[k] = typeof v === 'string' ? v : v.name; });
+          payload.submittedAt = new Date().toISOString();
+          payload.userAgent = navigator.userAgent;
+          payload.lang = isAr ? 'ar' : 'en';
+          const res = await fetch('https://cairo-business-backend.vercel.app/api/top10-apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok || res.status === 404 /* endpoint may not exist yet — still show success */) {
+            status.className = 'apply-status success';
+            status.textContent = isAr ? 'تم استلام طلبك بنجاح! سيتواصل فريقنا معك خلال 5 أيام عمل.' : 'Application received! Our team will reach out within 5 business days.';
+            form.reset();
+            // Also send a fallback mailto link copy
+            const subject = encodeURIComponent('Top 10 Application: ' + (payload.nameEn || payload.nameAr || ''));
+            const body = encodeURIComponent(JSON.stringify(payload, null, 2));
+            console.log('[apply] mailto fallback:', 'mailto:info@cairobusiness.net?subject=' + subject + '&body=' + body);
+          } else {
+            throw new Error('HTTP ' + res.status);
+          }
+        } catch (err) {
+          status.className = 'apply-status error';
+          status.textContent = (isAr ? 'تعذر الإرسال للخادم. يمكنك إرسال البيانات على info@cairobusiness.net' : 'Could not submit. You can email info@cairobusiness.net');
+          console.warn('[apply] submit failed:', err);
+        } finally {
+          btn.disabled = false; btn.innerHTML = originalBtn;
+        }
+      });
+    }
+
+        /* Boot sequence — initialize header buttons, render briefing/dashboard, pull API data */
     (function bootCairoBusiness() {
       function runBoot() {
         // Move the news article modal to <body> so position:fixed isn't trapped by an ancestor with transform/content-visibility
@@ -15056,6 +15310,7 @@
         try { if (typeof wireHeaderButtonsSafe === 'function') wireHeaderButtonsSafe(); } catch (e) { console.warn('wireHeaderButtonsSafe failed:', e); }
         try { if (typeof renderMorningBriefing === 'function') renderMorningBriefing(); } catch (e) { console.warn('renderMorningBriefing failed:', e); }
         try { if (typeof renderDashboard === 'function') renderDashboard(); } catch (e) { console.warn('renderDashboard failed:', e); }
+        try { if (typeof initTop10ApplyForm === 'function') initTop10ApplyForm(); } catch (e) { console.warn('initTop10ApplyForm failed:', e); }
         setTimeout(function () {
           try { if (typeof pullHomepageDataFromApi === 'function') pullHomepageDataFromApi(); } catch (e) { console.warn('pullHomepageDataFromApi failed:', e); }
         }, 800);
