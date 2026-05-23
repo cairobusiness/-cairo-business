@@ -5250,126 +5250,6 @@
         <div class="space-y-4" id="news-list"></div>
       </div>
     </div>
-
-    <!-- ===== NEWS ARTICLE MODAL ===== -->
-    <div id="news-article-modal" class="news-modal-overlay" aria-hidden="true">
-      <style>
-        .news-modal-overlay {
-          position: fixed; inset: 0; background: rgba(2,6,23,.85); backdrop-filter: blur(10px);
-          z-index: 9999; display: none; align-items: flex-start; justify-content: center;
-          padding: 40px 20px; overflow-y: auto;
-        }
-        .news-modal-overlay.is-open { display: flex; }
-        .news-modal-card {
-          background: linear-gradient(155deg, #0f1a3d 0%, #0a0e27 100%);
-          border: 1px solid rgba(212,175,55,.25); border-radius: 24px;
-          max-width: 860px; width: 100%; max-height: calc(100vh - 80px);
-          overflow: hidden; display: flex; flex-direction: column;
-          box-shadow: 0 30px 80px rgba(0,0,0,.6);
-          animation: nm-in .25s ease-out;
-        }
-        @keyframes nm-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
-        .news-modal-header {
-          position: relative; height: 280px; background: #1a2b4d center/cover no-repeat;
-          flex-shrink: 0;
-        }
-        .news-modal-header::after {
-          content: ''; position: absolute; inset: 0;
-          background: linear-gradient(to top, rgba(10,14,39,.95) 0%, rgba(10,14,39,.4) 50%, transparent 100%);
-        }
-        .news-modal-close {
-          position: absolute; top: 18px; inset-inline-end: 18px; z-index: 2;
-          width: 38px; height: 38px; border-radius: 50%;
-          background: rgba(10,14,39,.8); border: 1px solid rgba(255,255,255,.15);
-          color: #fff; display: grid; place-items: center; cursor: pointer;
-          transition: all .2s;
-        }
-        .news-modal-close:hover { background: #d4af37; color: #0a0e27; border-color: #d4af37; }
-        .news-modal-badges {
-          position: absolute; top: 18px; inset-inline-start: 18px; z-index: 2;
-          display: flex; gap: 8px;
-        }
-        .news-modal-badge {
-          font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
-          padding: 5px 10px; border-radius: 999px;
-        }
-        .news-modal-badge.cat { background: rgba(212,175,55,.9); color: #0a0e27; }
-        .news-modal-badge.score { background: rgba(248,113,113,.9); color: #fff; }
-        .news-modal-body { padding: 24px 32px 32px; overflow-y: auto; flex: 1; }
-        .news-modal-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: rgba(255,255,255,.55); margin-bottom: 10px; }
-        .news-modal-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.3); }
-        .news-modal-title { font-family: var(--font-display, inherit); font-size: 28px; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 14px; }
-        .news-modal-ai {
-          background: linear-gradient(135deg, rgba(212,175,55,.08), rgba(212,175,55,.03));
-          border: 1px solid rgba(212,175,55,.25); border-radius: 14px;
-          padding: 16px 18px; margin: 18px 0;
-        }
-        .news-modal-ai-head {
-          display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-          font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #fbbf24; text-transform: uppercase;
-        }
-        .news-modal-ai-head::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fbbf24; animation: pulse-dot 1.5s infinite; }
-        .news-modal-ai-body { font-size: 14px; color: rgba(255,255,255,.85); line-height: 1.7; }
-        .news-modal-ai-body ul { margin: 6px 0 0; padding-inline-start: 18px; }
-        .news-modal-ai-body li { margin-bottom: 4px; }
-        .news-modal-content { font-size: 16px; color: rgba(255,255,255,.78); line-height: 1.85; }
-        .news-modal-content p { margin-bottom: 14px; }
-        .news-modal-actions { display: flex; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.06); }
-        .news-modal-btn {
-          display: inline-flex; align-items: center; gap: 6px;
-          font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px;
-          border: 1px solid rgba(212,175,55,.4); color: #fbbf24; cursor: pointer;
-          background: transparent; transition: all .2s;
-        }
-        .news-modal-btn:hover { background: rgba(251,191,36,.1); border-color: #fbbf24; }
-        .news-modal-btn.primary { background: #d4af37; color: #0a0e27; border-color: #d4af37; }
-        .news-modal-btn.primary:hover { background: #fbbf24; }
-        @media (max-width: 640px) {
-          .news-modal-overlay { padding: 0; }
-          .news-modal-card { border-radius: 0; max-height: 100vh; }
-          .news-modal-header { height: 200px; }
-          .news-modal-body { padding: 20px; }
-          .news-modal-title { font-size: 22px; }
-        }
-      </style>
-      <div class="news-modal-card" onclick="event.stopPropagation()">
-        <div class="news-modal-header" id="news-modal-image">
-          <button class="news-modal-close" onclick="closeNewsArticle()" aria-label="Close">
-            <i data-lucide="x" class="w-5 h-5"></i>
-          </button>
-          <div class="news-modal-badges">
-            <span class="news-modal-badge cat" id="news-modal-cat">—</span>
-            <span class="news-modal-badge score">AI <span id="news-modal-score">—</span></span>
-          </div>
-        </div>
-        <div class="news-modal-body">
-          <div class="news-modal-meta">
-            <span id="news-modal-time" class="num">—</span>
-            <span class="dot"></span>
-            <span id="news-modal-author">—</span>
-          </div>
-          <h2 class="news-modal-title" id="news-modal-title">—</h2>
-          <div class="news-modal-ai">
-            <div class="news-modal-ai-head">
-              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-              <span data-i18n="news.modal.aiSummary">ملخص AI · أهم 3 نقاط</span>
-            </div>
-            <div class="news-modal-ai-body" id="news-modal-ai-body">—</div>
-          </div>
-          <div class="news-modal-content" id="news-modal-content">—</div>
-          <div class="news-modal-actions">
-            <button class="news-modal-btn primary" onclick="generateAiSummary()">
-              <i data-lucide="sparkles" class="w-4 h-4"></i>
-              <span data-i18n="news.modal.regenerate">جدّد الملخص</span>
-            </button>
-            <button class="news-modal-btn" onclick="closeNewsArticle()">
-              <i data-lucide="x" class="w-4 h-4"></i>
-              <span data-i18n="news.modal.close">إغلاق</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </section>
 
   <!-- =========================================================== -->
@@ -15098,5 +14978,125 @@
       }
     })();
   </script>
+
+  <!-- ===== NEWS ARTICLE MODAL ===== -->
+    <div id="news-article-modal" class="news-modal-overlay" aria-hidden="true">
+      <style>
+        .news-modal-overlay {
+          position: fixed; inset: 0; background: rgba(2,6,23,.85); backdrop-filter: blur(10px);
+          z-index: 9999; display: none; align-items: flex-start; justify-content: center;
+          padding: 40px 20px; overflow-y: auto;
+        }
+        .news-modal-overlay.is-open { display: flex; }
+        .news-modal-card {
+          background: linear-gradient(155deg, #0f1a3d 0%, #0a0e27 100%);
+          border: 1px solid rgba(212,175,55,.25); border-radius: 24px;
+          max-width: 860px; width: 100%; max-height: calc(100vh - 80px);
+          overflow: hidden; display: flex; flex-direction: column;
+          box-shadow: 0 30px 80px rgba(0,0,0,.6);
+          animation: nm-in .25s ease-out;
+        }
+        @keyframes nm-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+        .news-modal-header {
+          position: relative; height: 280px; background: #1a2b4d center/cover no-repeat;
+          flex-shrink: 0;
+        }
+        .news-modal-header::after {
+          content: ''; position: absolute; inset: 0;
+          background: linear-gradient(to top, rgba(10,14,39,.95) 0%, rgba(10,14,39,.4) 50%, transparent 100%);
+        }
+        .news-modal-close {
+          position: absolute; top: 18px; inset-inline-end: 18px; z-index: 2;
+          width: 38px; height: 38px; border-radius: 50%;
+          background: rgba(10,14,39,.8); border: 1px solid rgba(255,255,255,.15);
+          color: #fff; display: grid; place-items: center; cursor: pointer;
+          transition: all .2s;
+        }
+        .news-modal-close:hover { background: #d4af37; color: #0a0e27; border-color: #d4af37; }
+        .news-modal-badges {
+          position: absolute; top: 18px; inset-inline-start: 18px; z-index: 2;
+          display: flex; gap: 8px;
+        }
+        .news-modal-badge {
+          font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+          padding: 5px 10px; border-radius: 999px;
+        }
+        .news-modal-badge.cat { background: rgba(212,175,55,.9); color: #0a0e27; }
+        .news-modal-badge.score { background: rgba(248,113,113,.9); color: #fff; }
+        .news-modal-body { padding: 24px 32px 32px; overflow-y: auto; flex: 1; }
+        .news-modal-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: rgba(255,255,255,.55); margin-bottom: 10px; }
+        .news-modal-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.3); }
+        .news-modal-title { font-family: var(--font-display, inherit); font-size: 28px; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 14px; }
+        .news-modal-ai {
+          background: linear-gradient(135deg, rgba(212,175,55,.08), rgba(212,175,55,.03));
+          border: 1px solid rgba(212,175,55,.25); border-radius: 14px;
+          padding: 16px 18px; margin: 18px 0;
+        }
+        .news-modal-ai-head {
+          display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+          font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #fbbf24; text-transform: uppercase;
+        }
+        .news-modal-ai-head::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fbbf24; animation: pulse-dot 1.5s infinite; }
+        .news-modal-ai-body { font-size: 14px; color: rgba(255,255,255,.85); line-height: 1.7; }
+        .news-modal-ai-body ul { margin: 6px 0 0; padding-inline-start: 18px; }
+        .news-modal-ai-body li { margin-bottom: 4px; }
+        .news-modal-content { font-size: 16px; color: rgba(255,255,255,.78); line-height: 1.85; }
+        .news-modal-content p { margin-bottom: 14px; }
+        .news-modal-actions { display: flex; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.06); }
+        .news-modal-btn {
+          display: inline-flex; align-items: center; gap: 6px;
+          font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px;
+          border: 1px solid rgba(212,175,55,.4); color: #fbbf24; cursor: pointer;
+          background: transparent; transition: all .2s;
+        }
+        .news-modal-btn:hover { background: rgba(251,191,36,.1); border-color: #fbbf24; }
+        .news-modal-btn.primary { background: #d4af37; color: #0a0e27; border-color: #d4af37; }
+        .news-modal-btn.primary:hover { background: #fbbf24; }
+        @media (max-width: 640px) {
+          .news-modal-overlay { padding: 0; }
+          .news-modal-card { border-radius: 0; max-height: 100vh; }
+          .news-modal-header { height: 200px; }
+          .news-modal-body { padding: 20px; }
+          .news-modal-title { font-size: 22px; }
+        }
+      </style>
+      <div class="news-modal-card" onclick="event.stopPropagation()">
+        <div class="news-modal-header" id="news-modal-image">
+          <button class="news-modal-close" onclick="closeNewsArticle()" aria-label="Close">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+          <div class="news-modal-badges">
+            <span class="news-modal-badge cat" id="news-modal-cat">—</span>
+            <span class="news-modal-badge score">AI <span id="news-modal-score">—</span></span>
+          </div>
+        </div>
+        <div class="news-modal-body">
+          <div class="news-modal-meta">
+            <span id="news-modal-time" class="num">—</span>
+            <span class="dot"></span>
+            <span id="news-modal-author">—</span>
+          </div>
+          <h2 class="news-modal-title" id="news-modal-title">—</h2>
+          <div class="news-modal-ai">
+            <div class="news-modal-ai-head">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span data-i18n="news.modal.aiSummary">ملخص AI · أهم 3 نقاط</span>
+            </div>
+            <div class="news-modal-ai-body" id="news-modal-ai-body">—</div>
+          </div>
+          <div class="news-modal-content" id="news-modal-content">—</div>
+          <div class="news-modal-actions">
+            <button class="news-modal-btn primary" onclick="generateAiSummary()">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              <span data-i18n="news.modal.regenerate">جدّد الملخص</span>
+            </button>
+            <button class="news-modal-btn" onclick="closeNewsArticle()">
+              <i data-lucide="x" class="w-4 h-4"></i>
+              <span data-i18n="news.modal.close">إغلاق</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 </body>
 </html>
