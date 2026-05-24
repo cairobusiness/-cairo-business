@@ -16178,6 +16178,23 @@
             parentForm.addEventListener('submit', (e) => { e.preventDefault(); });
           }
         }
+        /* Wire suggestion chips below the hero search to ask Cairo AI */
+        document.querySelectorAll('[data-ai-chip]').forEach(chip => {
+          if (chip._wired) return;
+          chip._wired = true;
+          chip.addEventListener('click', (e) => {
+            e.preventDefault();
+            /* Strip leading emoji + whitespace so the prompt reads naturally */
+            const raw = (chip.textContent || '').trim();
+            const cleaned = raw.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]+/u, '').trim() || raw;
+            const input = document.getElementById('ai-search-input');
+            if (input) {
+              input.value = cleaned;
+              try { input.focus(); } catch(_) {}
+            }
+            try { askCairoAI(cleaned); } catch(_) {}
+          });
+        });
         const askBtns = Array.from(document.querySelectorAll('button')).filter(b => {
           const t = b.textContent.trim();
           return /^(اسأل|Ask)$/i.test(t);
