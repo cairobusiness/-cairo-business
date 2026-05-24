@@ -1312,33 +1312,144 @@ async function switchToBriefing() {
   document.getElementById('search-input').style.display = 'none';
   document.querySelector('.actions button.btn-primary').style.display = 'none';
   document.getElementById('stats-section').innerHTML = '';
+  await loadBriefingUI();
+}
+
+async function loadBriefingUI() {
   const container = document.getElementById('list-container');
   container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   const r = await api('/api/admin/briefing');
-  let briefing = (r.ok && r.data && r.data.data) || null;
-  const items = (briefing && briefing.items) || [{num:1,title_ar:'',title_en:''}];
+  const briefing = (r.ok && r.data && r.data.data) || null;
+  const items = (briefing && briefing.items) || [{num:1,title_ar:'',title_en:'',sector_ar:'',sector_en:'',impact:'neutral'}];
   const rates = (briefing && briefing.rates) || [];
   const deal = (briefing && briefing.dealOfDay) || {};
-  let html = '<div class="form-grid" style="grid-template-columns:1fr;">';
-  html += '<div class="field field-full"><label>تاريخ</label><input id="bf-date" type="date" value="' + (briefing && briefing.date ? new Date(briefing.date).toISOString().slice(0,10) : new Date().toISOString().slice(0,10)) + '" /></div>';
-  html += '<div class="field field-full"><label>أخبار (JSON)</label><textarea id="bf-items" style="min-height:200px;font-family:monospace;">' + JSON.stringify(items, null, 2) + '</textarea></div>';
-  html += '<div class="field field-full"><label>أسعار (JSON)</label><textarea id="bf-rates" style="min-height:160px;font-family:monospace;">' + JSON.stringify(rates, null, 2) + '</textarea></div>';
-  html += '<div class="field field-full"><label>صفقة (JSON)</label><textarea id="bf-deal" style="min-height:120px;font-family:monospace;">' + JSON.stringify(deal, null, 2) + '</textarea></div>';
-  html += '<div class="field field-full"><button class="btn btn-primary" onclick="saveBriefing()">حفظ</button></div>';
+  const dateStr = briefing && briefing.date ? new Date(briefing.date).toISOString().slice(0,10) : new Date().toISOString().slice(0,10);
+
+  let html = '';
+
+  /* === Auto-generate banner === */
+  html += '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:18px 20px;margin-bottom:22px;">';
+  html += '  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
+  html += '    <div style="flex:1;min-width:240px;">';
+  html += '      <div style="font-size:16px;font-weight:700;color:#F4D03F;margin-bottom:4px;">🤖 توليد بريفينج جديد بالذكاء الاصطناعي</div>';
+  html += '      <div style="font-size:13px;opacity:0.75;line-height:1.6;">يتم تلقائياً كل يوم الساعة 7 صباحاً. اضغط الزر لتشغيله الآن يدوياً — هيقرأ آخر أخبار + أسعار + فرص ويولّد بريفينج اليوم.</div>';
+  html += '    </div>';
+  html += '    <button class="btn btn-primary" id="bf-regen-btn" onclick="regenerateBriefingNow()" style="font-size:14px;padding:12px 22px;">🤖 ولّد الآن</button>';
+  html += '  </div>';
+  html += '  <div id="bf-regen-status" style="margin-top:12px;font-size:13px;line-height:1.6;display:none;"></div>';
   html += '</div>';
+
+  /* === Items list (5 items in friendly inputs, not raw JSON) === */
+  html += '<div class="field field-full" style="margin-bottom:18px;">';
+  html += '  <label>📅 تاريخ النشرة</label>';
+  html += '  <input id="bf-date" type="date" value="' + dateStr + '" style="max-width:200px;" />';
+  html += '</div>';
+
+  html += '<div style="margin-bottom:8px;font-weight:700;color:#F4D03F;font-size:14px;">📰 أهم 5 أحداث اليوم</div>';
+  html += '<div id="bf-items-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px;">';
+  for (let i = 0; i < 5; i++) {
+    const it = items[i] || { num: i+1, title_ar: '', title_en: '', sector_ar: '', sector_en: '', impact: 'neutral' };
+    html += '  <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;padding:12px;">';
+    html += '    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">';
+    html += '      <div style="width:28px;height:28px;border-radius:50%;background:#F4D03F;color:#0A0E27;display:grid;place-items:center;font-weight:900;font-size:13px;">' + (i+1) + '</div>';
+    html += '      <select data-bf-impact="' + i + '" style="font-size:12px;padding:5px 10px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;">';
+    html += '        <option value="positive"' + (it.impact==='positive'?' selected':'') + '>📈 إيجابي</option>';
+    html += '        <option value="negative"' + (it.impact==='negative'?' selected':'') + '>📉 سلبي</option>';
+    html += '        <option value="neutral"' + (it.impact==='neutral'?' selected':'') + '>⚪ حيادي</option>';
+    html += '      </select>';
+    html += '      <input data-bf-sectorAr="' + i + '" type="text" placeholder="القطاع بالعربية" value="' + escapeAttr(it.sector_ar || '') + '" style="flex:1;font-size:12px;padding:5px 10px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;" />';
+    html += '      <input data-bf-sectorEn="' + i + '" type="text" placeholder="Sector" dir="ltr" value="' + escapeAttr(it.sector_en || '') + '" style="flex:1;font-size:12px;padding:5px 10px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;" />';
+    html += '    </div>';
+    html += '    <input data-bf-titleAr="' + i + '" type="text" placeholder="العنوان بالعربية" value="' + escapeAttr(it.title_ar || '') + '" style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;margin-bottom:6px;" />';
+    html += '    <input data-bf-titleEn="' + i + '" type="text" placeholder="English title" dir="ltr" value="' + escapeAttr(it.title_en || '') + '" style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;" />';
+    html += '  </div>';
+  }
+  html += '</div>';
+
+  /* === Deal of the day === */
+  html += '<div style="margin-bottom:8px;font-weight:700;color:#F4D03F;font-size:14px;">💎 صفقة اليوم</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;padding:14px;margin-bottom:22px;display:grid;grid-template-columns:1fr 1fr 120px 120px;gap:10px;">';
+  html += '  <input id="bf-deal-nameAr" type="text" placeholder="اسم الصفقة بالعربية" value="' + escapeAttr(deal.name_ar || '') + '" style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;" />';
+  html += '  <input id="bf-deal-nameEn" type="text" placeholder="Deal name in English" dir="ltr" value="' + escapeAttr(deal.name_en || '') + '" style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;" />';
+  html += '  <input id="bf-deal-value" type="text" placeholder="$3 مليار" value="' + escapeAttr(deal.value || '') + '" style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;text-align:center;" />';
+  html += '  <input id="bf-deal-score" type="number" min="0" max="100" placeholder="85" value="' + (deal.score || 0) + '" style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;text-align:center;" />';
+  html += '</div>';
+
+  /* === Advanced: raw JSON for rates (kept as textarea since rates come from scrapers) === */
+  html += '<details style="margin-bottom:18px;">';
+  html += '  <summary style="cursor:pointer;opacity:0.7;font-size:13px;">⚙️ الأسعار (JSON متقدم — تتحدث تلقائياً من الـ scrapers)</summary>';
+  html += '  <textarea id="bf-rates" style="width:100%;min-height:140px;font-family:monospace;font-size:11px;margin-top:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;padding:10px;color:inherit;">' + escapeAttr(JSON.stringify(rates, null, 2)) + '</textarea>';
+  html += '</details>';
+
+  html += '<div style="display:flex;gap:10px;justify-content:flex-end;">';
+  html += '  <button class="btn btn-ghost" onclick="loadBriefingUI()">🔄 تحديث الصفحة</button>';
+  html += '  <button class="btn btn-primary" onclick="saveBriefing()" style="font-size:14px;padding:10px 24px;">💾 حفظ التغييرات</button>';
+  html += '</div>';
+
   container.innerHTML = html;
+}
+
+function escapeAttr(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function regenerateBriefingNow() {
+  const btn = document.getElementById('bf-regen-btn');
+  const status = document.getElementById('bf-regen-status');
+  if (!btn || !status) return;
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  const original = btn.textContent;
+  btn.textContent = '⏳ جاري التوليد...';
+  status.style.display = 'block';
+  status.innerHTML = '<span style="color:#F4D03F">⏳ جاري الاتصال بالـ AI وقراءة آخر البيانات...</span>';
+  try {
+    const res = await fetch('https://cairo-business-backend.vercel.app/api/cron/generate-briefing', { cache: 'no-store' });
+    const j = await res.json();
+    if (!j.success) {
+      status.innerHTML = '<span style="color:#ef4444">❌ فشل التوليد: ' + (j.error || 'unknown') + '</span>';
+      return;
+    }
+    const action = j.meta?.action || 'updated';
+    const ic = (j.data?.items || []).length;
+    const rc = (j.data?.rates || []).length;
+    status.innerHTML = '<span style="color:#16a34a">✓ تم التوليد بنجاح — ' + action + ' بريفينج بـ ' + ic + ' عناوين و' + rc + ' سعر</span><br>' +
+      '<span style="opacity:0.7;font-size:12px;">جاري تحديث الصفحة بالمحتوى الجديد...</span>';
+    /* Reload the form to show new content */
+    setTimeout(() => { loadBriefingUI(); }, 1200);
+  } catch (e) {
+    status.innerHTML = '<span style="color:#ef4444">❌ خطأ في الاتصال: ' + (e.message || e) + '</span>';
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.textContent = original;
+  }
 }
 
 async function saveBriefing() {
   try {
     const date = document.getElementById('bf-date').value;
-    const items = JSON.parse(document.getElementById('bf-items').value);
-    const rates = JSON.parse(document.getElementById('bf-rates').value);
-    const dealOfDay = JSON.parse(document.getElementById('bf-deal').value);
+    /* Collect 5 items from the friendly inputs */
+    const items = [];
+    for (let i = 0; i < 5; i++) {
+      const tAr = (document.querySelector('[data-bf-titleAr="' + i + '"]')?.value || '').trim();
+      const tEn = (document.querySelector('[data-bf-titleEn="' + i + '"]')?.value || '').trim();
+      const sAr = (document.querySelector('[data-bf-sectorAr="' + i + '"]')?.value || '').trim();
+      const sEn = (document.querySelector('[data-bf-sectorEn="' + i + '"]')?.value || '').trim();
+      const imp = document.querySelector('[data-bf-impact="' + i + '"]')?.value || 'neutral';
+      items.push({ num: i+1, title_ar: tAr, title_en: tEn, sector_ar: sAr, sector_en: sEn, impact: imp });
+    }
+    const rates = JSON.parse(document.getElementById('bf-rates').value || '[]');
+    const dealOfDay = {
+      name_ar: (document.getElementById('bf-deal-nameAr')?.value || '').trim(),
+      name_en: (document.getElementById('bf-deal-nameEn')?.value || '').trim(),
+      value: (document.getElementById('bf-deal-value')?.value || '').trim(),
+      score: Number(document.getElementById('bf-deal-score')?.value || 0)
+    };
     const r = await api('/api/admin/briefing', { method: 'POST', body: JSON.stringify({ date, items, rates, dealOfDay }) });
     if (!r.ok) { alert('فشل: ' + (r.data?.error || 'خطأ')); return; }
-    alert('تم الحفظ');
-  } catch (e) { alert('خطأ في JSON: ' + e.message); }
+    alert('✓ تم حفظ النشرة الصباحية');
+  } catch (e) { alert('خطأ: ' + e.message); }
 }
 
 const _lp = document.getElementById('login-password');
