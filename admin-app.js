@@ -367,6 +367,92 @@ const ENTITIES = {
       'القيمة الإجمالية': '$' + items.reduce((s,d)=>s+(d.value||0),0).toLocaleString() + 'M',
       'فرص ساخنة 🔥': items.filter(d=>d.isHot).length
     })
+  },
+  startups: {
+    key: 'startups', icon: '🚀', nameAr: 'الشركات الناشئة', singularAr: 'شركة ناشئة',
+    endpoint: '/api/admin/startups',
+    fields: [
+      { id: 'nameAr', label: 'الاسم بالعربية *', type: 'text', required: true },
+      { id: 'nameEn', label: 'Name in English *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'sector', label: 'القطاع *', type: 'select', required: true, options: [
+        ['fintech','فينتك'],['edtech','تعليم'],['healthtech','صحة'],['ecommerce','تجارة'],
+        ['logistics','لوجستيات'],['saas','SaaS'],['ai','ذكاء اصطناعي'],['proptech','عقارات تقنية'],
+        ['agritech','زراعة'],['cleantech','طاقة نظيفة'],['other','أخرى']
+      ]},
+      { id: 'stage', label: 'المرحلة *', type: 'select', required: true, options: [
+        ['pre-seed','Pre-Seed'],['seed','Seed'],['series-a','Series A'],['series-b','Series B'],
+        ['series-c','Series C+'],['growth','Growth'],['unicorn','Unicorn 🦄']
+      ]},
+      { id: 'raised', label: 'إجمالي التمويل (مليون $) *', type: 'number', required: true, step: '0.1', min: 0 },
+      { id: 'founded', label: 'سنة التأسيس *', type: 'number', required: true, min: 1990, max: 2030 },
+      { id: 'employees', label: 'عدد الموظفين', type: 'number', nullable: true, min: 0 },
+      { id: 'investors', label: 'المستثمرون (مفصول بفاصلة)', type: 'text', nullable: true, placeholder: 'Sequoia, A16z, BECO Capital' },
+      { id: 'milestones', label: 'إنجازات (مفصول بفاصلة)', type: 'text', nullable: true },
+      { id: 'description', label: 'الوصف', type: 'textarea', full: true, nullable: true }
+    ],
+    list: {
+      title: s => s.nameAr,
+      excerpt: s => (s.description || '').slice(0, 140) + ((s.description || '').length > 140 ? '...' : ''),
+      emoji: '🚀',
+      badges: s => [
+        { text: s.stage, kind: 'gold' },
+        { text: s.sector, kind: 'blue' },
+        ...(s.stage === 'unicorn' ? [{ text: '🦄', kind: 'green' }] : [])
+      ],
+      meta: s => ['$' + (s.raised || 0).toLocaleString() + 'M raised', 'تأسست ' + s.founded, ...(s.employees ? [s.employees + ' موظف'] : [])]
+    },
+    stats: items => ({
+      'إجمالي الشركات': items.length,
+      'إجمالي التمويل': '$' + items.reduce((sm,s)=>sm+(s.raised||0),0).toLocaleString() + 'M',
+      'يونيكورن': items.filter(s=>s.stage==='unicorn').length
+    })
+  },
+  compounds: {
+    key: 'compounds', icon: '🏙️', nameAr: 'الكمبوندات', singularAr: 'كمبوند',
+    endpoint: '/api/admin/compounds',
+    fields: [
+      { id: 'nameAr', label: 'اسم الكمبوند بالعربية *', type: 'text', required: true },
+      { id: 'nameEn', label: 'Name in English *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'developer', label: 'المطوّر', type: 'text', nullable: true, placeholder: 'TMG, Emaar, SODIC...' },
+      { id: 'cityAr', label: 'المدينة بالعربية', type: 'text', nullable: true, placeholder: 'القاهرة الجديدة' },
+      { id: 'cityEn', label: 'City in English', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'areaAr', label: 'المنطقة بالعربية', type: 'text', nullable: true, placeholder: 'التجمع الخامس' },
+      { id: 'areaEn', label: 'Area in English', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'sizeFromM2', label: 'أصغر وحدة (م²)', type: 'number', nullable: true, min: 0 },
+      { id: 'sizeToM2', label: 'أكبر وحدة (م²)', type: 'number', nullable: true, min: 0 },
+      { id: 'priceFromEgp', label: 'سعر يبدأ من (جنيه)', type: 'number', nullable: true, step: '10000', min: 0 },
+      { id: 'priceToEgp', label: 'سعر يصل إلى (جنيه)', type: 'number', nullable: true, step: '10000', min: 0 },
+      { id: 'unitsCount', label: 'عدد الوحدات', type: 'number', nullable: true, min: 0 },
+      { id: 'deliveryYear', label: 'سنة التسليم', type: 'number', nullable: true, min: 2020, max: 2040 },
+      { id: 'imageUrl', label: 'رابط الصورة', type: 'text', nullable: true, dir: 'ltr', placeholder: 'https://...' },
+      { id: 'detailsUrl', label: 'رابط تفاصيل الكمبوند', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'sortOrder', label: 'ترتيب العرض (الأصغر يظهر أولاً)', type: 'number', default: 0 },
+      { id: 'isFeatured', label: 'كمبوند مميز ⭐ — يظهر في أعلى القائمة', type: 'checkbox', full: true },
+      { id: 'descriptionAr', label: 'الوصف بالعربية', type: 'textarea', full: true, nullable: true },
+      { id: 'descriptionEn', label: 'Description in English', type: 'textarea', full: true, nullable: true, dir: 'ltr' }
+    ],
+    list: {
+      title: c => c.nameAr,
+      excerpt: c => (c.descriptionAr || '').slice(0, 140) + ((c.descriptionAr || '').length > 140 ? '...' : ''),
+      emoji: '🏙️',
+      thumb: c => c.imageUrl || null,
+      badges: c => [
+        ...(c.isFeatured ? [{ text: '⭐ مميز', kind: 'gold' }] : []),
+        ...(c.cityAr ? [{ text: c.cityAr, kind: 'blue' }] : []),
+        ...(c.developer ? [{ text: c.developer, kind: 'green' }] : [])
+      ],
+      meta: c => [
+        ...(c.areaAr ? [c.areaAr] : []),
+        ...(c.sizeFromM2 ? [(c.sizeFromM2) + (c.sizeToM2 ? '-'+c.sizeToM2 : '') + ' م²'] : []),
+        ...(c.priceFromEgp ? ['من ' + (c.priceFromEgp/1000000).toFixed(1) + 'M جنيه'] : []),
+        ...(c.deliveryYear ? ['تسليم ' + c.deliveryYear] : [])
+      ]
+    },
+    stats: items => ({
+      'إجمالي الكمبوندات': items.length,
+      'مميزة ⭐': items.filter(c=>c.isFeatured).length,
+      'مطوّرين مختلفين': new Set(items.map(c=>c.developer).filter(Boolean)).size
+    })
   }
 };
 

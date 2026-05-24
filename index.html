@@ -9995,7 +9995,7 @@
       { key:'capital', label_ar:'🏛️ العاصمة الإدارية', label_en:'🏛️ New Capital' },
       { key:'sokhna', label_ar:'⛱️ العين السخنة', label_en:'⛱️ Ain Sokhna' },
     ];
-    const REAL_ESTATE = [
+    let REAL_ESTATE = [
       { id:'re1', title_ar:'كمبوند مونتين فيو iCity', title_en:'Mountain View iCity', area_ar:'التجمع الخامس', area_en:'New Cairo', filter:'newcairo', developer_ar:'مونتين فيو', developer_en:'Mountain View', price:'4,850,000', psm:'42,500', delta:'-8%', deltaGood:true, aiScore:91, delivery:'Q3 2026', rooms:3, baths:2, size:'165', type_ar:'شقة', type_en:'Apartment', badge_ar:'فرصة AI', badge_en:'AI Deal', color:'from-gold-500/30 to-navy-800', floor:7, parking:1, furnished_ar:'نصف تشطيب', furnished_en:'Semi-Finished',
         desc_ar:'شقة مميزة في قلب التجمع الخامس داخل كمبوند مونتين فيو iCity. تطل على مساحات خضراء واسعة، قريبة من الجامعة الأمريكية وكايرو فيستيفال.',
         desc_en:'Premium apartment in the heart of New Cairo inside Mountain View iCity. Overlooking vast green spaces, close to AUC and Cairo Festival City.',
@@ -10205,7 +10205,7 @@
       { id:8, name_ar:'ريم الشريف', name_en:'Reem Al-Sharif', company:'Palm Hills', position_ar:'مديرة التسويق الإقليمي', position_en:'Regional Marketing VP', type:'promotion', date:'Apr 5', desc_ar:'ترقية من مديرة تسويق', color:'gold' }
     ];
 
-    const DEALS = [
+    let DEALS = [
       { id:1, type_ar:'أرض', type_en:'Land', title_ar:'أرض 5000 م² في الشيخ زايد', title_en:'5000 sqm Land in Sheikh Zayed', location_ar:'الشيخ زايد', location_en:'Sheikh Zayed', value:'EGP 350M', deadline:'May 15', hot:true, desc_ar:'أرض سكنية للتطوير مباشرة' },
       { id:2, type_ar:'شراكة', type_en:'Partnership', title_ar:'شراكة في فندق بالساحل', title_en:'Hotel Partnership - North Coast', location_ar:'الساحل الشمالي', location_en:'North Coast', value:'EGP 120M', deadline:'May 30', hot:false, desc_ar:'فرصة لشريك استثماري' },
       { id:3, type_ar:'مناقصة', type_en:'Tender', title_ar:'مناقصة للمقاول للعاصمة الإدارية', title_en:'Tender - New Capital Roads', location_ar:'العاصمة الإدارية', location_en:'New Capital', value:'EGP 500M', deadline:'May 5', hot:true, desc_ar:'مشروع بنية تحتية حكومي' },
@@ -13054,7 +13054,7 @@
       { key:'riyadh', label_ar:'🇸🇦 الرياض', label_en:'🇸🇦 Riyadh' },
       { key:'qatar', label_ar:'🇶🇦 قطر', label_en:'🇶🇦 Qatar' },
     ];
-    const COMPOUNDS = [
+    let COMPOUNDS = [
       { id:'cp1', name:'Madinaty', name_ar:'مدينتي', developer_ar:'طلعت مصطفى', developer_en:'Talaat Moustafa', area_ar:'التجمع الخامس', area_en:'New Cairo', filter:'newcairo', units:'120,000', psmFrom:'38,000', psmTo:'55,000', aiScore:96, delivery:'2010-2028', totalArea:'33,600', gradient:'from-gold-400 to-amber-700',
         desc_ar:'أكبر مجتمع سكني خاص في الشرق الأوسط. مدينة متكاملة بمساحة 33,600 فدان تضم مولات ومدارس دولية ومستشفيات وملاعب جولف.',
         desc_en:'Largest private residential community in the Middle East. Integrated city on 33,600 acres with malls, international schools, hospitals, and golf courses.',
@@ -13893,7 +13893,7 @@
 
     // ===== STARTUPS DATA =====
     let activeStartupFilter = 'all';
-    const STARTUPS = [
+    let STARTUPS = [
       { id:'mnthalan', name:'MNT-Halan', sector_ar:'فنتك', sector_en:'FinTech', filter:'fintech', stage:'Series E', raised:'$400M', founded:2018, gradient:'from-amber-400 to-orange-600',
         founder_ar:'مounir نبيل', founder_en:'Mounir Nabil', employees:4000,
         desc_ar:'أكبر منصة تمويل رقمي في مصر وأفريقيا. تقدم خدمات الإقراض الصغير، المدفوعات، والتجارة الإلكترونية لملايين المصريين غير المخدومين مصرفياً.',
@@ -13959,6 +13959,153 @@
       { key:'ecommerce', label_ar:'🛒 تجارة', label_en:'🛒 Commerce' },
       { key:'mobility', label_ar:'🚗 تنقل', label_en:'🚗 Mobility' },
     ];
+
+    /* ───────────────────────────────────────────────────────────────
+     * Dynamic content fetchers — override hardcoded arrays from DB.
+     * Each fetcher maps the API response shape into the existing array
+     * shape, then re-renders. Falls back to hardcoded data on failure.
+     * ─────────────────────────────────────────────────────────────── */
+    const CB_API = 'https://cairo-business-backend.vercel.app';
+
+    async function fetchDealsFromAPI() {
+      try {
+        const r = await fetch(CB_API + '/api/deals?limit=12', { cache: 'no-store' });
+        if (!r.ok) return;
+        const j = await r.json();
+        const arr = (j.data || j.items || []);
+        if (!arr.length) return;
+        DEALS = arr.map((d, i) => ({
+          id: d.id || ('deal_' + i),
+          type: (d.type || 'partnership').toLowerCase(),
+          title_ar: d.titleAr || '',
+          title_en: d.titleEn || '',
+          location_ar: d.locationAr || '',
+          location_en: d.locationEn || '',
+          value: d.value != null ? '$' + d.value.toLocaleString() + 'M' : '',
+          deadline: d.deadline,
+          desc_ar: d.descriptionAr || '',
+          desc_en: d.descriptionEn || '',
+          isHot: !!d.isHot,
+          urgency: d.isHot ? 'high' : 'normal',
+        }));
+        if (typeof renderDeals === 'function') renderDeals();
+      } catch (_) { /* keep fallback */ }
+    }
+
+    async function fetchRealEstateFromAPI() {
+      try {
+        const r = await fetch(CB_API + '/api/realestate?limit=12', { cache: 'no-store' });
+        if (!r.ok) return;
+        const j = await r.json();
+        const arr = (j.data || j.items || []);
+        if (!arr.length) return;
+        REAL_ESTATE = arr.map(p => ({
+          id: p.id,
+          title_ar: p.titleAr || '',
+          title_en: p.titleEn || '',
+          area_ar: p.area || '',
+          area_en: p.area || '',
+          developer_ar: p.developer || '',
+          developer_en: p.developer || '',
+          price: p.price ? p.price.toLocaleString() : '',
+          psm: p.size && p.price ? Math.round(p.price / p.size).toLocaleString() : '',
+          size: String(p.size || ''),
+          rooms: p.beds || 0,
+          baths: p.baths || 0,
+          aiScore: p.aiScore || 0,
+          type_ar: p.type || '',
+          type_en: p.type || '',
+          desc_ar: p.description || '',
+          desc_en: p.description || '',
+          filter: 'all',
+          delta: '',
+          deltaGood: true,
+          delivery: '',
+          badge_ar: '',
+          badge_en: '',
+          color: 'from-gold-500/30 to-navy-800',
+          floor: 0,
+          parking: 0,
+          furnished_ar: '',
+          furnished_en: '',
+          aiAnalysis_ar: '',
+          aiAnalysis_en: '',
+          pros_ar: (p.features || '').split(',').map(s => s.trim()).filter(Boolean),
+          pros_en: (p.features || '').split(',').map(s => s.trim()).filter(Boolean),
+        }));
+        if (typeof renderRealEstate === 'function') renderRealEstate();
+      } catch (_) { /* keep fallback */ }
+    }
+
+    async function fetchCompoundsFromAPI() {
+      try {
+        const r = await fetch(CB_API + '/api/compounds?limit=20', { cache: 'no-store' });
+        if (!r.ok) return;
+        const j = await r.json();
+        const arr = (j.data || j.items || []);
+        if (!arr.length) return;
+        COMPOUNDS = arr.map(c => ({
+          id: c.id,
+          name_ar: c.nameAr || '',
+          name_en: c.nameEn || '',
+          developer: c.developer || '',
+          city_ar: c.cityAr || '',
+          city_en: c.cityEn || '',
+          area_ar: c.areaAr || '',
+          area_en: c.areaEn || '',
+          size: (c.sizeFromM2 ? c.sizeFromM2 : 0) + (c.sizeToM2 ? '-' + c.sizeToM2 : '') + ' م²',
+          priceFromEgp: c.priceFromEgp || 0,
+          priceToEgp: c.priceToEgp || 0,
+          price_ar: c.priceFromEgp ? ('من ' + (c.priceFromEgp/1000000).toFixed(1) + 'M جنيه') : '',
+          price_en: c.priceFromEgp ? ('From ' + (c.priceFromEgp/1000000).toFixed(1) + 'M EGP') : '',
+          unitsCount: c.unitsCount || 0,
+          delivery: c.deliveryYear ? String(c.deliveryYear) : '',
+          desc_ar: c.descriptionAr || '',
+          desc_en: c.descriptionEn || '',
+          image: c.imageUrl || '',
+          imageUrl: c.imageUrl || '',
+          isFeatured: !!c.isFeatured,
+          detailsUrl: c.detailsUrl || '',
+        }));
+        if (typeof renderCompounds === 'function') renderCompounds();
+      } catch (_) { /* keep fallback */ }
+    }
+
+    async function fetchStartupsFromAPI() {
+      try {
+        const r = await fetch(CB_API + '/api/startups?limit=20', { cache: 'no-store' });
+        if (!r.ok) return;
+        const j = await r.json();
+        const arr = (j.data || j.items || []);
+        if (!arr.length) return;
+        STARTUPS = arr.map(s => ({
+          id: s.id,
+          name_ar: s.nameAr || '',
+          name_en: s.nameEn || '',
+          sector: s.sector || 'tech',
+          sector_ar: s.sector || '',
+          sector_en: s.sector || '',
+          stage_ar: s.stage || '',
+          stage_en: s.stage || '',
+          raised: s.raised ? '$' + s.raised + 'M' : '',
+          raisedNum: s.raised || 0,
+          founded: s.founded || 2020,
+          employees: s.employees || 0,
+          desc_ar: s.description || '',
+          desc_en: s.description || '',
+          investors: (s.investors || '').split(',').map(x => x.trim()).filter(Boolean),
+          milestones_ar: (s.milestones || '').split(',').map(x => x.trim()).filter(Boolean),
+          milestones_en: (s.milestones || '').split(',').map(x => x.trim()).filter(Boolean),
+        }));
+        if (typeof renderStartups === 'function') renderStartups();
+      } catch (_) { /* keep fallback */ }
+    }
+
+    /* Kick off all 4 fetchers — they re-render once data lands. */
+    fetchDealsFromAPI();
+    fetchRealEstateFromAPI();
+    fetchCompoundsFromAPI();
+    fetchStartupsFromAPI();
 
     function renderStartupFilters() {
       const wrap = document.getElementById('startup-filters');
