@@ -455,6 +455,9 @@ function renderTabs() {
   const briefingTab = (isAdmin || isEditor || isModerator) ? mk('__briefing__', '🌅', 'النشرة الصباحية', 'switchToBriefing') : '';
   // CBI Indices for Admin + Editor
   const cbiTab = (isAdmin || isEditor) ? mk('__cbi__', '📊', 'مؤشرات CBI', 'switchToCBI') : '';
+  // News Drafts (AI-generated, awaiting approval) for Admin + Editor + Moderator
+  const draftsLabel = (typeof draftsCount === 'number' && draftsCount > 0) ? ('مسودات الأخبار (' + draftsCount + ')') : 'مسودات الأخبار';
+  const draftsTab = (isAdmin || isEditor || isModerator) ? mk('__drafts__', '📝', draftsLabel, 'switchToDrafts') : '';
   // Admin-only tabs
   const adminOnlyTabs = isAdmin ? (
     mk('__users__', '👥', 'المستخدمين', 'switchToUsers') +
@@ -467,8 +470,11 @@ function renderTabs() {
   ) : '';
   // Moderator gets messages
   const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + adminOnlyTabs + modOnlyTabs;
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + draftsTab + cbiTab + adminOnlyTabs + modOnlyTabs;
 }
+
+/* Cached count of pending drafts for tab badge — refreshed when drafts tab loads */
+let draftsCount = 0;
 
 // ═════════════════════════════════════════════════════════════
 // Dark/Light theme toggle for admin panel
@@ -1560,6 +1566,145 @@ async function saveCBIRow(slug) {
   const r = await api('/api/admin/cbi/' + encodeURIComponent(slug), { method: 'PUT', body: JSON.stringify({ value, change, aiRationale }) });
   if (r.ok) alert('تم الحفظ ✓');
   else alert('فشل الحفظ: ' + (r.data?.error || 'unknown'));
+}
+
+// ═════════════════════════════════════════════════════════════
+// News Drafts tab — AI-generated drafts awaiting manual approval
+// ═════════════════════════════════════════════════════════════
+async function switchToDrafts() {
+  currentEntityKey = '__drafts__';
+  renderTabs();
+  document.getElementById('page-title').textContent = '📝 مسودات الأخبار — في انتظار المراجعة';
+  document.getElementById('search-input').style.display = 'none';
+  const addBtn = document.querySelector('.actions button.btn-primary');
+  if (addBtn) addBtn.style.display = 'none';
+  document.getElementById('stats-section').innerHTML = '';
+  await loadDraftsUI();
+}
+
+async function loadDraftsUI() {
+  const container = document.getElementById('list-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const r = await api('/api/admin/news?status=DRAFT&limit=100');
+  if (!r.ok) {
+    container.innerHTML = '<div class="msg msg-error">فشل التحميل: ' + escapeHtml(r.data?.error || 'unknown') + '<br><br>لو ده أول مرة، شغّل الـ migration: <a href="https://cairo-business-backend.vercel.app/api/admin/migrate-news-status" target="_blank">/api/admin/migrate-news-status</a></div>';
+    return;
+  }
+  const items = (r.data && r.data.data) || [];
+  draftsCount = items.length;
+  renderTabs();
+
+  let html = '';
+
+  /* Generate Now banner */
+  html += '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:18px 20px;margin-bottom:22px;">';
+  html += '  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
+  html += '    <div style="flex:1;min-width:240px;">';
+  html += '      <div style="font-size:16px;font-weight:700;color:#F4D03F;margin-bottom:4px;">🤖 توليد مسودات جديدة بالذكاء الاصطناعي</div>';
+  html += '      <div style="font-size:13px;opacity:0.75;line-height:1.6;">يقرأ آخر أخبار MENA من Tavily ويترجم للعربي. القطاعات المغطاة: اقتصاد، أعمال، عقارات، طاقة، تكنولوجيا، تجارة، رجال أعمال. <strong>لن يُنشر أي خبر تلقائياً</strong> — لازم تراجعه وتضغط "نشر".</div>';
+  html += '    </div>';
+  html += '    <button class="btn btn-primary" id="drafts-gen-btn" onclick="generateDraftsNow()" style="font-size:14px;padding:12px 22px;">🤖 ولّد مسودات الآن</button>';
+  html += '  </div>';
+  html += '  <div id="drafts-gen-status" style="margin-top:12px;font-size:13px;line-height:1.6;display:none;"></div>';
+  html += '</div>';
+
+  html += '<div style="margin-bottom:14px;font-weight:700;font-size:15px;">📝 ' + items.length + ' مسودة في انتظار المراجعة</div>';
+
+  if (!items.length) {
+    html += '<div class="empty-state"><div class="icon">📝</div><div class="title">لا توجد مسودات</div><div style="margin-top:8px;opacity:0.7;">دوس "ولّد مسودات الآن" أو انتظر التحديث التلقائي كل 15 دقيقة.</div></div>';
+  } else {
+    html += '<div style="display:flex;flex-direction:column;gap:12px;">';
+    for (const it of items) {
+      const dateStr = it.publishedAt ? new Date(it.publishedAt).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+      const thumb = it.imageUrl
+        ? '<img src="' + escapeAttr(it.imageUrl) + '" style="width:120px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display=\'none\'" />'
+        : '<div style="width:120px;height:80px;background:rgba(255,255,255,0.05);border-radius:8px;display:grid;place-items:center;font-size:32px;flex-shrink:0;">📰</div>';
+      html += '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:12px;padding:14px;display:flex;gap:14px;align-items:flex-start;">';
+      html += '  ' + thumb;
+      html += '  <div style="flex:1;min-width:0;">';
+      html += '    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap;">';
+      html += '      <span style="display:inline-block;background:rgba(244,208,63,0.18);color:#F4D03F;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;">' + escapeHtml(it.category || 'business') + '</span>';
+      html += '      <span style="font-size:11px;opacity:0.6;">' + escapeHtml(dateStr) + '</span>';
+      html += '    </div>';
+      html += '    <div style="font-weight:700;font-size:15px;line-height:1.4;margin-bottom:6px;">' + escapeHtml(it.titleAr || '') + '</div>';
+      html += '    <div style="font-size:13px;opacity:0.7;line-height:1.6;max-height:50px;overflow:hidden;">' + escapeHtml((it.excerptAr || '').slice(0, 200)) + (it.excerptAr && it.excerptAr.length > 200 ? '...' : '') + '</div>';
+      html += '    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">';
+      html += '      <button class="btn btn-primary" onclick="publishDraft(\'' + escapeAttr(it.id) + '\')" style="padding:7px 16px;font-size:13px;background:#16a34a;border-color:#16a34a;">✅ نشر</button>';
+      html += '      <button class="btn btn-ghost" onclick="editDraft(\'' + escapeAttr(it.id) + '\')" style="padding:7px 16px;font-size:13px;">✏️ تعديل قبل النشر</button>';
+      html += '      <button class="btn btn-ghost" onclick="rejectDraft(\'' + escapeAttr(it.id) + '\')" style="padding:7px 16px;font-size:13px;color:#ef4444;border-color:#ef4444;">🗑️ رفض</button>';
+      html += '    </div>';
+      html += '  </div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+async function generateDraftsNow() {
+  const btn = document.getElementById('drafts-gen-btn');
+  const status = document.getElementById('drafts-gen-status');
+  if (!btn || !status) return;
+  btn.disabled = true; btn.style.opacity = '0.6';
+  const original = btn.textContent;
+  btn.textContent = '⏳ جاري التوليد...';
+  status.style.display = 'block';
+  status.innerHTML = '<span style="color:#F4D03F">⏳ Tavily بيجيب آخر أخبار 7 قطاعات + Groq بيترجم (قد يستغرق ~45 ثانية)...</span>';
+  try {
+    const res = await fetch('https://cairo-business-backend.vercel.app/api/cron/fetch-news', { cache: 'no-store' });
+    const j = await res.json();
+    if (!j.success) {
+      status.innerHTML = '<span style="color:#ef4444">❌ فشل: ' + (j.error || 'unknown') + '</span>';
+      return;
+    }
+    const inserted = j.meta?.insertedCount || (j.inserted?.length || 0);
+    const skipped = j.meta?.skippedAsDuplicate || 0;
+    status.innerHTML = '<span style="color:#16a34a">✓ تم إضافة ' + inserted + ' مسودة جديدة' + (skipped ? ' · تخطى ' + skipped + ' مكرر' : '') + '</span><br>' +
+      '<span style="opacity:0.7;font-size:12px;">جاري تحديث القائمة...</span>';
+    setTimeout(() => loadDraftsUI(), 1200);
+  } catch (e) {
+    status.innerHTML = '<span style="color:#ef4444">❌ خطأ في الاتصال: ' + (e.message || e) + '</span>';
+  } finally {
+    btn.disabled = false; btn.style.opacity = '1'; btn.textContent = original;
+  }
+}
+
+async function publishDraft(id) {
+  if (!confirm('تأكد إنك راجعت الخبر؟ هينتشر على cairobusiness.net فوراً.')) return;
+  const r = await fetch('https://cairo-business-backend.vercel.app/api/admin/news/' + encodeURIComponent(id) + '/publish?refreshDate=true', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('cb_admin_token') || '') }
+  });
+  const j = await r.json();
+  if (j.success) { await loadDraftsUI(); }
+  else alert('فشل النشر: ' + (j.error || 'unknown'));
+}
+
+async function editDraft(id) {
+  /* Open the standard news edit form for this item */
+  const r = await api('/api/admin/news/' + encodeURIComponent(id));
+  if (!r.ok) { alert('فشل التحميل'); return; }
+  /* Reuse the existing news entity edit modal if available */
+  if (typeof openEditModal === 'function') {
+    openEditModal(r.data.data);
+  } else {
+    /* Fallback: open the article in a basic prompt */
+    const newTitle = prompt('عنوان الخبر:', r.data.data.titleAr || '');
+    if (newTitle == null) return;
+    const newExcerpt = prompt('المقتطف:', r.data.data.excerptAr || '');
+    if (newExcerpt == null) return;
+    const upd = await api('/api/admin/news/' + encodeURIComponent(id), { method: 'PUT', body: JSON.stringify({ titleAr: newTitle, excerptAr: newExcerpt }) });
+    if (upd.ok) await loadDraftsUI();
+    else alert('فشل التعديل: ' + (upd.data?.error || 'unknown'));
+  }
+}
+
+async function rejectDraft(id) {
+  if (!confirm('رفض الخبر ده وحذفه نهائياً؟')) return;
+  const r = await api('/api/admin/news/' + encodeURIComponent(id), { method: 'DELETE' });
+  if (r.ok) { await loadDraftsUI(); }
+  else alert('فشل الرفض: ' + (r.data?.error || 'unknown'));
 }
 
 const _lp = document.getElementById('login-password');
