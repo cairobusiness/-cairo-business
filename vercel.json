@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/share/news/:id",
+      "destination": "https://cairo-business-backend.vercel.app/api/share/news/:id"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/share/news/:id",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=300, s-maxage=300" }
+      ]
+    }
+  ]
+}

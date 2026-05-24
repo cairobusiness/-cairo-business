@@ -404,8 +404,8 @@
 
     function shareTo(channel) {
       if (!CURRENT_ARTICLE) return;
-      /* Use backend share redirector so social media previews work */
-      const shareUrl = 'https://cairo-business-backend.vercel.app/api/share/news/' + encodeURIComponent(CURRENT_ARTICLE.id);
+      /* /share/news/:id is rewritten on Vercel to backend OG endpoint — URL stays on cairobusiness.net */
+      const shareUrl = 'https://cairobusiness.net/share/news/' + encodeURIComponent(CURRENT_ARTICLE.id);
       const title = CURRENT_ARTICLE.titleAr || CURRENT_ARTICLE.titleEn || '';
       let url = '';
       switch (channel) {

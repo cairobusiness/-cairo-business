@@ -11922,10 +11922,10 @@
       } catch (_e) {}
     }
 
-    /* Share + copy link — uses backend OG redirector so social media previews show article info */
+    /* Share + copy link — uses Vercel rewrite to backend OG redirector so URL stays on cairobusiness.net */
     function buildShareUrl(item) {
-      /* Backend route returns HTML with og:title/og:image, then redirects browsers to news.html */
-      return 'https://cairo-business-backend.vercel.app/api/share/news/' + encodeURIComponent(String(item.id));
+      /* /share/news/:id is rewritten on Vercel to the backend route that returns HTML with og:title/og:image */
+      return 'https://cairobusiness.net/share/news/' + encodeURIComponent(String(item.id));
     }
     function shareNewsArticle() {
       const item = window.__currentNewsArticle;
