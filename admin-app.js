@@ -1652,17 +1652,24 @@ async function generateDraftsNow() {
   status.style.display = 'block';
   status.innerHTML = '<span style="color:#F4D03F">⏳ Tavily بيجيب آخر أخبار 7 قطاعات + Groq بيترجم (قد يستغرق ~45 ثانية)...</span>';
   try {
-    const res = await fetch('https://cairo-business-backend.vercel.app/api/cron/fetch-news', { cache: 'no-store' });
+    /* force=true bypasses dedupe so manual test always produces drafts.
+     * days=7 widens search window to find variety. */
+    const res = await fetch('https://cairo-business-backend.vercel.app/api/cron/fetch-news?force=true&days=7', { cache: 'no-store' });
     const j = await res.json();
     if (!j.success) {
       status.innerHTML = '<span style="color:#ef4444">❌ فشل: ' + (j.error || 'unknown') + '</span>';
       return;
     }
     const inserted = j.meta?.insertedCount || (j.inserted?.length || 0);
-    const skipped = j.meta?.skippedAsDuplicate || 0;
-    status.innerHTML = '<span style="color:#16a34a">✓ تم إضافة ' + inserted + ' مسودة جديدة' + (skipped ? ' · تخطى ' + skipped + ' مكرر' : '') + '</span><br>' +
-      '<span style="opacity:0.7;font-size:12px;">جاري تحديث القائمة...</span>';
-    setTimeout(() => loadDraftsUI(), 1200);
+    const fetched = j.meta?.fetched || 0;
+    if (inserted === 0) {
+      status.innerHTML = '<span style="color:#f59e0b">⚠️ تم جلب ' + fetched + ' خبر بس مفيش جديد اتحفظ.</span><br>' +
+        '<span style="opacity:0.7;font-size:12px;">جرّب تاني بعد شوية، الأخبار الجديدة بتظهر تدريجياً.</span>';
+    } else {
+      status.innerHTML = '<span style="color:#16a34a;font-size:14px;font-weight:700;">✓ تم إضافة ' + inserted + ' مسودة جديدة (من إجمالي ' + fetched + ' خبر)</span><br>' +
+        '<span style="opacity:0.7;font-size:12px;">جاري تحديث القائمة...</span>';
+      setTimeout(() => loadDraftsUI(), 1500);
+    }
   } catch (e) {
     status.innerHTML = '<span style="color:#ef4444">❌ خطأ في الاتصال: ' + (e.message || e) + '</span>';
   } finally {
