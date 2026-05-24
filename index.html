@@ -11996,13 +11996,38 @@
         const prompt = (isAr
           ? 'لخّص الخبر التالي في 3 نقاط واضحة وموجزة (Bullet points). كل نقطة جملة قصيرة. ابدأ كل نقطة بـ "- ".\n\nالعنوان: ' + title + '\n\nالنص:\n' + excerpt
           : 'Summarize the following article in 3 clear, concise bullet points. Each bullet is one short sentence. Start each bullet with "- ".\n\nTitle: ' + title + '\n\nText:\n' + excerpt);
-        const res = await fetch('https://cairo-business-backend.vercel.app/api/ai-chat', {
+        const res = await fetch('https://cairo-business-backend.vercel.app/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], lang: isAr ? 'ar' : 'en' })
         });
-        const j = await res.json().catch(() => ({}));
-        let answer = (j && (j.answer || j.text || j.message)) || excerpt.slice(0, 240);
+        /* Consume SSE stream */
+        let answer = '';
+        if (res.ok && res.body) {
+          const reader = res.body.getReader();
+          const dec = new TextDecoder('utf-8');
+          let buffer = '';
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += dec.decode(value, { stream: true });
+            let idx;
+            while ((idx = buffer.indexOf('\n\n')) !== -1) {
+              const frame = buffer.slice(0, idx).trim();
+              buffer = buffer.slice(idx + 2);
+              if (!frame.startsWith('data:')) continue;
+              const payload = frame.slice(5).trim();
+              if (payload === '[DONE]') continue;
+              try {
+                const obj = JSON.parse(payload);
+                if (typeof obj.chunk === 'string') answer += obj.chunk;
+                else if (typeof obj.text === 'string') answer += obj.text;
+                else if (typeof obj.answer === 'string') answer = obj.answer;
+              } catch (_e) {}
+            }
+          }
+        }
+        if (!answer) answer = excerpt.slice(0, 240);
         // Render as bullet list
         const bullets = answer.split(/\n+/).map(s => s.replace(/^[-*•]\s*/, '').trim()).filter(Boolean).slice(0, 5);
         elAi.innerHTML = '<ul>' + bullets.map(b => '<li>' + b.replace(/</g, '&lt;') + '</li>').join('') + '</ul>';
@@ -16139,14 +16164,19 @@
           aiInput._wired = true;
           aiInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
+              e.preventDefault();
+              e.stopPropagation();
               const q = (aiInput.value || '').trim();
               if (!q) return;
-              if (typeof askAI === 'function') return askAI(q);
-              if (typeof handleAsk === 'function') return handleAsk(q);
-              if (typeof openAskModal === 'function') return openAskModal(q);
-              window.open('https://www.google.com/search?q=' + encodeURIComponent('cairobusiness.net ' + q), '_blank');
+              try { askCairoAI(q); } catch (_) {}
             }
           });
+          /* If the input is inside a <form>, ensure submit doesn't navigate */
+          const parentForm = aiInput.closest('form');
+          if (parentForm && !parentForm._wired) {
+            parentForm._wired = true;
+            parentForm.addEventListener('submit', (e) => { e.preventDefault(); });
+          }
         }
         const askBtns = Array.from(document.querySelectorAll('button')).filter(b => {
           const t = b.textContent.trim();
@@ -16171,7 +16201,7 @@
       } catch (e) { console.warn('Header wiring failed:', e); }
     }
 
-    /* Cairo AI streaming client */
+    /* Cairo AI streaming client — consumes SSE chunks from /api/ai/chat */
     async function askCairoAI(question) {
       const panel = document.getElementById('ai-answer-panel');
       const textEl = document.getElementById('ai-answer-text');
@@ -16183,17 +16213,60 @@
       if (statusEl) statusEl.textContent = (currentLang === 'ar') ? 'يفكر...' : 'Thinking...';
       if (closeBtn) closeBtn.onclick = function(){ panel.classList.add('hidden'); };
       try {
-        const res = await fetch('https://cairo-business-backend.vercel.app/api/ai-chat', {
+        const res = await fetch('https://cairo-business-backend.vercel.app/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messages: [{ role: 'user', content: question }], lang: currentLang })
         });
-        const j = await res.json().catch(()=>({}));
-        const answer = (j && (j.answer || j.text || j.message)) || ((currentLang === 'ar') ? 'تعذر الحصول على رد الآن.' : 'No response right now.');
-        textEl.textContent = answer;
+        if (!res.ok || !res.body) {
+          throw new Error('HTTP ' + res.status);
+        }
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        let collected = '';
+        if (statusEl) statusEl.textContent = (currentLang === 'ar') ? 'يكتب...' : 'Writing...';
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          /* SSE frames separated by "\n\n", each starts with "data: " */
+          let idx;
+          while ((idx = buffer.indexOf('\n\n')) !== -1) {
+            const frame = buffer.slice(0, idx).trim();
+            buffer = buffer.slice(idx + 2);
+            if (!frame.startsWith('data:')) continue;
+            const payload = frame.slice(5).trim();
+            if (payload === '[DONE]') continue;
+            try {
+              const obj = JSON.parse(payload);
+              if (typeof obj.chunk === 'string') {
+                collected += obj.chunk;
+                textEl.textContent = collected;
+              } else if (typeof obj.text === 'string') {
+                collected += obj.text;
+                textEl.textContent = collected;
+              } else if (typeof obj.answer === 'string') {
+                collected = obj.answer;
+                textEl.textContent = collected;
+              } else if (obj.error) {
+                throw new Error(obj.error);
+              }
+            } catch (parseErr) {
+              /* Plain text fallback */
+              if (payload && payload !== '[DONE]') {
+                collected += payload;
+                textEl.textContent = collected;
+              }
+            }
+          }
+        }
+        if (!collected) {
+          textEl.textContent = (currentLang === 'ar') ? 'تعذر الحصول على رد الآن.' : 'No response right now.';
+        }
         if (statusEl) statusEl.textContent = (currentLang === 'ar') ? 'تم' : 'Done';
       } catch (e) {
-        textEl.textContent = (currentLang === 'ar') ? 'حدث خطأ في الاتصال بالخادم.' : 'Connection error.';
+        textEl.textContent = (currentLang === 'ar') ? ('حدث خطأ في الاتصال: ' + (e.message || e)) : ('Connection error: ' + (e.message || e));
         if (statusEl) statusEl.textContent = (currentLang === 'ar') ? 'خطأ' : 'Error';
       }
     }
