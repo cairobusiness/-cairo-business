@@ -111,7 +111,37 @@
     .seo-score.good{background:rgba(16,185,129,0.12);color:#10b981;}
     .seo-score.warn{background:rgba(245,158,11,0.12);color:#f59e0b;}
     .seo-score.bad{background:rgba(239,68,68,0.12);color:#ef4444;}
+
+    /* Quill rich-text editor styling (for full-article modal) */
+    .ql-toolbar.ql-snow,
+    .ql-container.ql-snow{ border-color:rgba(255,255,255,0.15) !important; background:rgba(255,255,255,0.03); }
+    .ql-editor{ min-height:240px; color:inherit; font-family:'Cairo','Inter',sans-serif; font-size:14px; line-height:1.8; direction:rtl; text-align:right; }
+    .ql-editor.ql-blank::before{ color:rgba(255,255,255,0.35); right:15px; left:auto; font-style:normal; }
+    .ql-snow .ql-stroke{ stroke:rgba(255,255,255,0.7); }
+    .ql-snow .ql-picker{ color:rgba(255,255,255,0.7); }
+    .ql-snow.ql-toolbar button:hover .ql-stroke,
+    .ql-snow .ql-toolbar button:hover .ql-stroke{ stroke:#F4D03F; }
+    .ql-snow.ql-toolbar .ql-active .ql-stroke{ stroke:#F4D03F; }
+
+    /* Full-article modal */
+    .article-modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .article-modal{ background:#0e1230; border:1px solid rgba(255,255,255,0.1); border-radius:16px; max-width:920px; width:100%; max-height:92vh; overflow-y:auto; padding:24px; box-shadow:0 30px 60px -20px rgba(0,0,0,0.6); }
+    .article-modal h2{ margin:0 0 16px; color:#F4D03F; font-size:18px; }
+    .am-field{ display:block; margin-bottom:14px; }
+    .am-field label{ display:block; font-size:12px; color:rgba(255,255,255,0.7); margin-bottom:5px; font-weight:600; }
+    .am-field input, .am-field textarea, .am-field select{ width:100%; padding:9px 12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:inherit; font-family:inherit; font-size:13px; }
+    .am-field textarea{ min-height:60px; resize:vertical; }
+    .am-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .am-tags{ display:flex; flex-wrap:wrap; gap:6px; padding:6px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px; min-height:40px; }
+    .am-tag{ background:rgba(244,208,63,0.15); color:#F4D03F; padding:3px 10px; border-radius:9999px; font-size:12px; display:inline-flex; align-items:center; gap:5px; }
+    .am-tag .x{ cursor:pointer; opacity:0.6; }
+    .am-tag .x:hover{ opacity:1; color:#ef4444; }
+    .am-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); flex-wrap:wrap; }
   </style>
+
+  <!-- Quill rich text editor (loaded once, used in full-article edit modal) -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 </head>
 <body>
   <header id="app-header" style="display:none;">
