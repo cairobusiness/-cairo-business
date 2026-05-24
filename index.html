@@ -4659,46 +4659,353 @@
 
   <!-- =========================================================== -->
   <section id="businessmen" class="lux-section bg-navy-900 relative overflow-hidden">
-    <div class="absolute inset-0 pointer-events-none opacity-30" style="background: radial-gradient(ellipse 60% 40% at 100% 0%, rgba(139,92,246,0.20), transparent 60%), radial-gradient(ellipse 60% 40% at 0% 100%, rgba(212,175,55,0.15), transparent 60%);"></div>
+    <a id="top50" style="position:absolute;top:-80px"></a>
+    <div class="absolute inset-0 pointer-events-none opacity-30" style="background: radial-gradient(ellipse 60% 40% at 100% 0%, rgba(212,175,55,0.18), transparent 60%), radial-gradient(ellipse 60% 40% at 0% 100%, rgba(139,92,246,0.12), transparent 60%);"></div>
     <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
-      <div class="flex items-end justify-between gap-6 mb-12 flex-wrap reveal">
-        <div>
-          <div class="lux-eyebrow mb-4"><i data-lucide="users" class="w-3.5 h-3.5"></i><span data-i18n="bm.eyebrow">صُنّاع القرار · POWER PROFILES</span></div>
-          <h2 class="lux-title text-white" data-i18n="bm.title">رجال الأعمال الأكثر تأثيراً</h2>
-          <div class="lux-divider mt-5 max-w-md"><span class="h"></span><span class="d"></span><span class="h"></span></div>
-          <p class="mt-5 text-white/60 max-w-2xl text-base" data-i18n="bm.subtitle">ملفات مفصّلة لأقوى رجال الأعمال في مصر — سيرتهم، إمبراطورياتهم، استثماراتهم، ومقابلاتهم الحصرية.</p>
-        </div>
-        <a href="#businessmen" class="lux-pill smart-link">
-          <span data-i18n="bm.viewAll">كل الملفات</span>
-          <i data-lucide="arrow-right" class="w-3.5 h-3.5 flip-x"></i>
-        </a>
-      </div>
-
-      <!-- Forbes-style profile cards grid — data-driven from /api/businessmen -->
-      <div class="bm-grid-wrap reveal" id="bm-grid">
-        <div class="bm-grid-toolbar">
-          <div class="bm-grid-toolbar-left">
-            <span class="bm-grid-count"><span id="bm-grid-count-num">—</span> <span data-i18n="bm.count.profiles">شخصية</span></span>
-            <span class="bm-grid-sep">·</span>
-            <span class="bm-grid-meta-item"><i data-lucide="globe-2" class="w-3 h-3"></i><span id="bm-grid-countries-num">—</span> <span data-i18n="bm.count.countries">دولة</span></span>
-            <span class="bm-grid-sep">·</span>
-            <span class="bm-grid-meta-item"><i data-lucide="trending-up" class="w-3 h-3"></i><span id="bm-grid-wealth">—</span> <span data-i18n="bm.count.wealth">إجمالي الثروة</span></span>
+      <div class="bm-book-wrap reveal">
+        <!-- Title Spread -->
+        <div class="bm-book-title">
+          <div class="bm-book-eyebrow"><span data-i18n="bm.eyebrow">صُنّاع القرار</span></div>
+          <h2 class="bm-book-h2" data-i18n="bm.title">أقوى 50 رجل أعمال في مصر</h2>
+          <div class="bm-book-rule"></div>
+          <p class="bm-book-sub" data-i18n="bm.subtitle">ملفات مفصّلة لأقوى رجال الأعمال في مصر — سيرتهم، إمبراطورياتهم، اقتباساتهم، وقراراتهم التي تشكّل الاقتصاد المصري.</p>
+          <div class="bm-book-meta">
+            <span><span id="bm-book-count">—</span> <span data-i18n="bm.book.profiles">شخصية</span></span>
+            <span class="bm-book-meta-sep">—</span>
+            <span><span id="bm-book-wealth">—</span> <span data-i18n="bm.book.wealth">إجمالي الثروة</span></span>
+            <span class="bm-book-meta-sep">—</span>
+            <span data-i18n="bm.book.year">2026</span>
           </div>
-          <div class="bm-grid-filters" id="bm-grid-filters"></div>
         </div>
-        <div class="bm-grid-list" id="bm-grid-list">
-          <!-- cards rendered by renderBusinessmen() -->
+        <!-- Chapter spreads rendered by renderBusinessmen() -->
+        <div class="bm-book-spreads" id="bm-book-spreads"></div>
+        <div class="bm-book-empty hidden" id="bm-book-empty">
+          <div class="bm-book-empty-icon"><i data-lucide="book-open" class="w-8 h-8"></i></div>
+          <div class="bm-book-empty-title" data-i18n="bm.book.emptyTitle">لا توجد فصول بعد</div>
+          <div class="bm-book-empty-sub" data-i18n="bm.book.emptySub">أضف رجال الأعمال من لوحة التحكم → قسم "أقوى 50 في مصر"</div>
         </div>
-        <div class="bm-grid-empty hidden" id="bm-grid-empty">
-          <i data-lucide="users" class="w-8 h-8"></i>
-          <div data-i18n="bm.empty.title">لا توجد بيانات حتى الآن</div>
-          <div class="bm-grid-empty-sub" data-i18n="bm.empty.sub">أضف رجال الأعمال من لوحة التحكم — قسم "رجال الأعمال"</div>
+        <div class="bm-book-foot" id="bm-book-foot">
+          <span class="bm-book-foot-rule"></span>
+          <span class="bm-book-foot-text" data-i18n="bm.book.continued">— يُتبع في الفصل التالي —</span>
+          <span class="bm-book-foot-rule"></span>
         </div>
       </div>
     </div>
 
-    <!-- ===== Forbes-style profile grid — scoped styles ===== -->
+    <!-- ===== Taschen Spread editorial book — scoped styles ===== -->
     <style>
+      .bm-book-wrap {
+        background: #fffbef;
+        color: #1a1410;
+        border-radius: 8px;
+        padding: clamp(28px, 5vw, 64px);
+        box-shadow: 0 30px 80px -30px rgba(0,0,0,.55), 0 1px 0 rgba(0,0,0,.05) inset;
+        position: relative;
+        overflow: hidden;
+      }
+      .bm-book-wrap::before {
+        content:''; position: absolute; inset: 14px;
+        border: 0.5px solid rgba(120,90,40,.18);
+        border-radius: 4px;
+        pointer-events: none;
+      }
+      .bm-book-title {
+        text-align: center;
+        padding: 14px 0 36px;
+        border-bottom: 1px solid #1a1410;
+        margin-bottom: 38px;
+      }
+      .bm-book-eyebrow {
+        font-size: 11px; letter-spacing: .4em; color: #8b7355;
+        text-transform: uppercase; font-weight: 700;
+      }
+      .bm-book-h2 {
+        font-family: 'Playfair Display','Cairo',serif;
+        font-size: clamp(28px, 5vw, 48px);
+        font-weight: 800;
+        color: #1a1410;
+        margin: 14px 0 0;
+        letter-spacing: .02em;
+        line-height: 1.15;
+      }
+      [lang="ar"] .bm-book-h2, html[dir="rtl"] .bm-book-h2 { font-family: 'Cairo','Playfair Display',serif; }
+      .bm-book-rule {
+        width: 80px; height: 1px; background: #1a1410;
+        margin: 22px auto;
+      }
+      .bm-book-sub {
+        font-family: 'Playfair Display','Cairo',serif;
+        font-style: italic;
+        font-size: 14px;
+        color: #4a3520;
+        max-width: 580px;
+        margin: 0 auto;
+        line-height: 1.7;
+      }
+      [lang="ar"] .bm-book-sub, html[dir="rtl"] .bm-book-sub { font-family: 'Cairo',serif; font-style: normal; }
+      .bm-book-meta {
+        display: inline-flex; gap: 12px; flex-wrap: wrap;
+        margin-top: 22px;
+        font-size: 11px; letter-spacing: .25em; color: #8b7355;
+        font-weight: 700;
+      }
+      .bm-book-meta-sep { color: rgba(139,115,85,.5); }
+      .bm-book-spreads { display: flex; flex-direction: column; gap: 64px; }
+      .bm-book-spread {
+        display: grid;
+        grid-template-columns: 1fr 1.1fr;
+        gap: clamp(20px, 4vw, 56px);
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 0.5px solid rgba(26,20,16,.12);
+        padding-bottom: 56px;
+      }
+      .bm-book-spread:last-child { border-bottom: none; padding-bottom: 0; }
+      .bm-book-spread.is-reverse { grid-template-columns: 1.1fr 1fr; }
+      .bm-book-spread.is-reverse .bm-book-photo-col { order: 2; }
+      .bm-book-spread.is-reverse .bm-book-text-col  { order: 1; }
+      @media (max-width: 720px) {
+        .bm-book-spread, .bm-book-spread.is-reverse { grid-template-columns: 1fr; }
+        .bm-book-spread.is-reverse .bm-book-photo-col,
+        .bm-book-spread.is-reverse .bm-book-text-col  { order: initial; }
+      }
+      .bm-book-photo-col { position: relative; }
+      .bm-book-photo {
+        aspect-ratio: 3/4;
+        background: linear-gradient(180deg, var(--bp1, #c4b89c), var(--bp2, #4a3520));
+        background-size: cover;
+        background-position: center top;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 14px 40px -16px rgba(0,0,0,.45);
+        border-radius: 2px;
+      }
+      .bm-book-photo::after {
+        content:''; position: absolute; inset: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(0,0,0,.55) 100%);
+      }
+      .bm-book-photo-initials {
+        position: absolute; inset: 0;
+        display: grid; place-items: center;
+        font-family: 'Playfair Display',serif;
+        font-size: 80px;
+        color: rgba(255,255,255,.25);
+        font-weight: 500;
+      }
+      .bm-book-photo-rank {
+        position: absolute; bottom: 14px; right: 14px;
+        font-family: 'Playfair Display',serif;
+        font-size: 52px;
+        color: rgba(255,255,255,.32);
+        font-weight: 500;
+        line-height: 1;
+        z-index: 2;
+      }
+      .bm-book-photo-flag {
+        position: absolute; top: 14px; left: 14px;
+        background: rgba(0,0,0,.55); color: #d4af37;
+        font-size: 9px; letter-spacing: .3em; font-weight: 700;
+        padding: 4px 10px; border-radius: 2px;
+        z-index: 2;
+      }
+      .bm-book-text-col { padding: 0 4px; }
+      .bm-book-chapter {
+        font-family: 'Playfair Display',serif;
+        font-size: 11px; color: #8b7355;
+        letter-spacing: .35em; font-weight: 700;
+        text-transform: uppercase;
+      }
+      [lang="ar"] .bm-book-chapter, html[dir="rtl"] .bm-book-chapter { font-family: 'Cairo',serif; }
+      .bm-book-name {
+        font-family: 'Playfair Display','Cairo',serif;
+        font-size: clamp(24px, 3.4vw, 38px);
+        font-weight: 800;
+        color: #1a1410;
+        line-height: 1.05;
+        margin: 10px 0;
+        letter-spacing: -.005em;
+      }
+      [lang="ar"] .bm-book-name, html[dir="rtl"] .bm-book-name { font-family: 'Cairo','Playfair Display',serif; letter-spacing: 0; }
+      .bm-book-title-line {
+        font-family: 'Playfair Display','Cairo',serif;
+        font-style: italic;
+        font-size: 14px; color: #4a3520;
+        margin-bottom: 16px;
+      }
+      [lang="ar"] .bm-book-title-line, html[dir="rtl"] .bm-book-title-line { font-family: 'Cairo',serif; font-style: normal; }
+      .bm-book-divider { width: 40px; height: 1px; background: #1a1410; margin: 18px 0; }
+      .bm-book-quote {
+        font-family: 'Playfair Display','Cairo',serif;
+        font-style: italic;
+        font-size: clamp(14px, 1.6vw, 17px);
+        color: #1a1410;
+        line-height: 1.7;
+        margin: 0 0 18px;
+        position: relative;
+        padding-inline-start: 14px;
+      }
+      [lang="ar"] .bm-book-quote, html[dir="rtl"] .bm-book-quote { font-family: 'Cairo',serif; font-style: normal; }
+      .bm-book-quote::before {
+        content: '"'; position: absolute; inset-inline-start: 0; top: -6px;
+        font-size: 32px; color: #8b7355; font-family: 'Playfair Display',serif;
+        line-height: 1;
+      }
+      [dir="rtl"] .bm-book-quote::before { content: '"'; }
+      .bm-book-stats {
+        display: flex; flex-wrap: wrap; gap: 8px 18px;
+        margin: 14px 0 18px;
+        font-size: 11px; letter-spacing: .15em; color: #8b7355; font-weight: 700;
+      }
+      .bm-book-stat-value { color: #1a1410; font-size: 13px; letter-spacing: 0; }
+      .bm-book-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+      .bm-book-cta {
+        background: #1a1410; color: #fffbef;
+        border: 0; padding: 10px 18px;
+        font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: .15em;
+        cursor: pointer; transition: background .2s ease;
+        display: inline-flex; align-items: center; gap: 6px;
+        text-decoration: none;
+      }
+      .bm-book-cta:hover { background: #4a3520; }
+      .bm-book-cta-ghost {
+        background: transparent; color: #1a1410;
+        border: 0.5px solid #1a1410;
+      }
+      .bm-book-cta-ghost:hover { background: #1a1410; color: #fffbef; }
+      .bm-book-empty {
+        text-align: center; padding: 60px 24px;
+        font-family: 'Playfair Display','Cairo',serif;
+        color: #8b7355;
+      }
+      .bm-book-empty-icon { color: #8b7355; margin-bottom: 14px; display: inline-flex; }
+      .bm-book-empty-title { font-size: 18px; color: #1a1410; font-weight: 800; }
+      .bm-book-empty-sub { font-size: 13px; margin-top: 8px; font-style: italic; }
+      .bm-book-foot {
+        display: flex; align-items: center; justify-content: center;
+        gap: 18px; margin-top: 56px;
+        font-size: 10px; letter-spacing: .4em; color: #8b7355; font-weight: 700;
+      }
+      .bm-book-foot-rule { display: inline-block; width: 60px; height: 0.5px; background: #8b7355; }
+
+      /* Dark theme variant — keep cream book but slightly desaturate */
+      html[data-theme="dark"] .bm-book-wrap { background: #fffbef; }
+
+      /* Light theme — make wrap subtly different */
+      html[data-theme="light"] .bm-book-wrap {
+        box-shadow: 0 12px 36px -16px rgba(15,23,42,.18);
+      }
+
+      /* ===== Profile detail overlay ===== */
+      .bm-detail-overlay {
+        position: fixed; inset: 0;
+        background: rgba(10,8,6,.78);
+        backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: none;
+        align-items: flex-start; justify-content: center;
+        padding: 4vh 16px;
+        overflow-y: auto;
+      }
+      .bm-detail-overlay.is-open { display: flex; }
+      .bm-detail-paper {
+        background: #fffbef;
+        color: #1a1410;
+        width: 100%;
+        max-width: 880px;
+        border-radius: 6px;
+        padding: clamp(24px, 4vw, 56px);
+        position: relative;
+        box-shadow: 0 40px 100px -40px rgba(0,0,0,.7);
+      }
+      .bm-detail-close {
+        position: absolute; top: 14px; inset-inline-end: 14px;
+        width: 36px; height: 36px;
+        background: transparent; border: 0.5px solid #1a1410;
+        cursor: pointer; color: #1a1410;
+        display: grid; place-items: center;
+        transition: all .2s ease;
+      }
+      .bm-detail-close:hover { background: #1a1410; color: #fffbef; }
+      .bm-detail-head {
+        display: grid; grid-template-columns: 1fr 1.2fr; gap: 32px;
+        align-items: start; margin-bottom: 32px;
+        padding-bottom: 24px; border-bottom: 1px solid #1a1410;
+      }
+      @media (max-width: 640px) {
+        .bm-detail-head { grid-template-columns: 1fr; }
+      }
+      .bm-detail-photo {
+        aspect-ratio: 3/4;
+        background: linear-gradient(180deg, var(--bp1, #c4b89c), var(--bp2, #4a3520));
+        background-size: cover; background-position: center top;
+        position: relative; overflow: hidden;
+        box-shadow: 0 14px 40px -16px rgba(0,0,0,.4);
+      }
+      .bm-detail-meta-chapter {
+        font-family: 'Playfair Display',serif; font-size: 11px;
+        letter-spacing: .4em; color: #8b7355; font-weight: 700;
+      }
+      .bm-detail-name {
+        font-family: 'Playfair Display','Cairo',serif; font-size: clamp(28px, 4vw, 44px);
+        font-weight: 800; line-height: 1.05; margin: 12px 0 6px;
+      }
+      [lang="ar"] .bm-detail-name, html[dir="rtl"] .bm-detail-name { font-family: 'Cairo','Playfair Display',serif; }
+      .bm-detail-title-line { font-style: italic; color: #4a3520; font-size: 14px; margin-bottom: 18px; }
+      .bm-detail-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .bm-detail-stat {
+        background: rgba(120,90,40,.06); padding: 10px 12px; border-left: 2px solid #8b7355;
+      }
+      .bm-detail-stat-label { font-size: 9px; letter-spacing: .3em; color: #8b7355; font-weight: 700; }
+      .bm-detail-stat-value { font-family: 'Playfair Display','Cairo',serif; font-size: 18px; font-weight: 700; margin-top: 2px; color: #1a1410; }
+      .bm-detail-section { margin-bottom: 28px; }
+      .bm-detail-section-title {
+        font-family: 'Playfair Display','Cairo',serif; font-size: 11px;
+        letter-spacing: .35em; color: #8b7355; font-weight: 700;
+        text-transform: uppercase; margin-bottom: 10px;
+      }
+      .bm-detail-section p, .bm-detail-section .bm-detail-bio {
+        font-family: 'Playfair Display','Cairo',serif; font-size: 15px; line-height: 1.8; color: #1a1410;
+      }
+      [lang="ar"] .bm-detail-section p, html[dir="rtl"] .bm-detail-section p { font-family: 'Cairo',serif; }
+      .bm-detail-quote-block {
+        font-family: 'Playfair Display','Cairo',serif;
+        font-style: italic;
+        font-size: 18px; line-height: 1.7;
+        color: #1a1410;
+        padding: 18px 22px;
+        border-left: 3px solid #1a1410;
+        background: rgba(120,90,40,.05);
+        margin-bottom: 24px;
+      }
+      [lang="ar"] .bm-detail-quote-block, html[dir="rtl"] .bm-detail-quote-block { font-family: 'Cairo',serif; font-style: normal; border-left: 0; border-right: 3px solid #1a1410; }
+      .bm-detail-empire-list {
+        display: flex; flex-wrap: wrap; gap: 8px;
+      }
+      .bm-detail-empire-chip {
+        font-size: 12px; padding: 6px 14px;
+        background: rgba(120,90,40,.08); color: #1a1410;
+        border: 0.5px solid rgba(120,90,40,.3);
+      }
+      .bm-detail-ach { display: flex; flex-direction: column; gap: 8px; }
+      .bm-detail-ach-item {
+        display: flex; gap: 10px; align-items: flex-start;
+        font-family: 'Playfair Display','Cairo',serif; font-size: 14px; color: #1a1410; line-height: 1.7;
+      }
+      [lang="ar"] .bm-detail-ach-item, html[dir="rtl"] .bm-detail-ach-item { font-family: 'Cairo',serif; }
+      .bm-detail-ach-item::before { content: '✦'; color: #8b7355; flex-shrink: 0; margin-top: 2px; }
+      .bm-detail-share {
+        display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap;
+        padding-top: 22px; border-top: 0.5px solid rgba(26,20,16,.15);
+      }
+      .bm-detail-link-input {
+        flex: 1; min-width: 0;
+        font-size: 11px; padding: 8px 12px;
+        background: transparent;
+        border: 0.5px solid rgba(26,20,16,.25);
+        color: #4a3520;
+        font-family: 'Inter', monospace;
+        letter-spacing: 0;
+      }
       .bm-grid-wrap {
         position: relative;
         background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
@@ -9109,7 +9416,7 @@
         'news.eyebrow':'آخر التطورات','news.title':'أخبار تصنع الفارق في قراراتك','news.subtitle':'تغطية فورية لأهم الأحداث الاقتصادية في مصر والشرق الأوسط — فلتّرها حسب اهتمامك.','news.breaking':'عاجل','news.cat.markets':'الأسواق','news.author1':'محمد الغمراوي','news.hero.title':'البنك المركزي يثبّت أسعار الفائدة — إشارة خضراء للمطورين العقاريين','news.hero.excerpt':'قرار لجنة السياسة النقدية بتثبيت الفائدة يضع ضغطاً على البنوك لإعادة إطلاق برامج التمويل العقاري المجمّد، ويفتح نافذة نادرة لمطوري المدن الجديدة قبل نهاية الربع الثالث.','news.aiSummary':'ملخص AI','news.save':'احفظ',
         'ai.eyebrow':'اسأل الخبراء','ai.title':'اسأل وخُذ قرارك','ai.subtitle':'أسئلة حقيقية يطرحها صنّاع القرار — مع إجابات تحليلية من كايرو AI.','ai.online':'متصل الآن','ai.new':'محادثة جديدة','ai.inputPh':'اسأل كايرو بيزنس AI...','ai.msg.user':'قارن بين مدينتي ومراسي من حيث العائد الإيجاري؟','ai.msg.aiText':'بناءً على بيانات الربع الأول ٢٠٢٦: مدينتي يحقق عائداً إيجارياً متوسطه 6.2% سنوياً، بينما مراسي 4.8% موسمياً لكنه يرتفع إلى 11% خلال يونيو–أغسطس [1]. المقارنة الكاملة في الجدول أدناه.','ai.table.metric':'المؤشر','ai.table.yield':'العائد الإيجاري','ai.table.price':'سعر المتر','ai.table.forecast':'توقع ١٢ شهر','ai.action.deepen':'تعميق','ai.action.sources':'المصادر (3)','ai.action.pdf':'تصدير PDF',
         'top10.eyebrow':'تصنيفات القوة','top10.title':'أقوى 10 شركات في الشرق الأوسط','top10.subtitle':'تصنيف حصري يعتمد على الإيرادات والنمو والابتكار — اعرف من يقود السوق.','top10.methodology':'منهجية التقييم','top10.footnote':'المصادر: تقارير الشركات، البورصات المحلية، Reuters، Zawya — آخر تحديث Q1 2026.','top10.rank':'الترتيب','top10.growth':'النمو السنوي','top10.revenue':'الإيراد','top10.score':'النقاط',
-        'bm.eyebrow':'صُنّاع القرار','bm.title':'أقوى رجال الأعمال في الشرق الأوسط','bm.subtitle':'ملفات تفصيلية لأبرز قادة الاقتصاد — ثرواتهم، إمبراطورياتهم، وقراراتهم التي تشكّل المنطقة.','bm.viewAll':'كل الملفات','bm.profile':'الملف الكامل','bm.empire':'الإمبراطورية','bm.net':'صافي الثروة','bm.count.profiles':'شخصية','bm.count.countries':'دولة','bm.count.wealth':'إجمالي الثروة','bm.empty.title':'لا توجد بيانات حتى الآن','bm.empty.sub':'أضف رجال الأعمال من لوحة التحكم — قسم "رجال الأعمال"',
+        'bm.eyebrow':'صُنّاع القرار','bm.title':'أقوى 50 رجل أعمال في مصر','bm.subtitle':'ملفات مفصّلة لأقوى رجال الأعمال في مصر — سيرتهم، إمبراطورياتهم، اقتباساتهم، وقراراتهم التي تشكّل الاقتصاد المصري.','bm.viewAll':'كل الملفات','bm.profile':'الملف الكامل','bm.empire':'الإمبراطورية','bm.net':'صافي الثروة','bm.book.profiles':'شخصية','bm.book.wealth':'إجمالي الثروة','bm.book.year':'2026','bm.book.continued':'— يُتبع في الفصل التالي —','bm.book.emptyTitle':'لا توجد فصول بعد','bm.book.emptySub':'أضف رجال الأعمال من لوحة التحكم → قسم "أقوى 50 في مصر"','bm.count.profiles':'شخصية','bm.count.countries':'دولة','bm.count.wealth':'إجمالي الثروة','bm.empty.title':'لا توجد بيانات حتى الآن','bm.empty.sub':'أضف رجال الأعمال من لوحة التحكم — قسم "رجال الأعمال"',
         'bm.net.eyebrow':'شبكة القوة','bm.net.title':'من يعرف من',
         'bm.net.legendDeal':'صفقة / شراكة مباشرة','bm.net.legendBoard':'تداخل في مجالس الإدارة','bm.net.legendFamily':'روابط عائلية',
         'bm.net.emptyTitle':'اضغط على أي عقدة','bm.net.emptySub':'لاستكشاف إمبراطورية رجل الأعمال',
@@ -11822,16 +12129,22 @@
     };
 
     let BM_ACTIVE_NODE = null;
-    /* Forbes-style profile grid state */
+    /* Taschen Spread book state */
     window.BM_API_DATA = window.BM_API_DATA || null;
-    window.BM_ACTIVE_SECTOR = window.BM_ACTIVE_SECTOR || 'all';
+    window.BM_API_BY_ID = window.BM_API_BY_ID || {};
 
-    /* Fetch businessmen from API and refresh the grid */
+    /* Fetch Top 50 Egyptian businessmen and refresh the book */
     async function pullBusinessmenFromApi() {
       try {
-        const res = await fetch('https://cairo-business-backend.vercel.app/api/businessmen?limit=100', { cache: 'no-store' });
-        const j = await res.json();
-        if (!j || !j.success || !Array.isArray(j.data)) return false;
+        const res = await fetch('https://cairo-business-backend.vercel.app/api/top50egypt', { cache: 'no-store' });
+        let j = await res.json();
+        if (!j || !j.success || !Array.isArray(j.data) || !j.data.length) {
+          /* Fallback: pull all businessmen and filter to Egyptian */
+          const fb = await fetch('https://cairo-business-backend.vercel.app/api/businessmen?limit=100', { cache: 'no-store' });
+          const jb = await fb.json();
+          const arr = (jb && jb.data) || [];
+          j = { success: true, data: arr.filter(b => (b.flag || '').toUpperCase() === 'EG').slice(0, 50) };
+        }
         window.BM_API_DATA = j.data;
         renderBusinessmen();
         return true;
@@ -11853,215 +12166,243 @@
     }
 
     function renderBusinessmen(){
-      const list = document.getElementById('bm-grid-list');
+      const list = document.getElementById('bm-book-spreads');
       if (!list) {
-        /* Backward compatibility — old SVG path may still be queried by other code */
         const svg = document.getElementById('bm-network-svg');
-        if (svg) return; /* old code path no longer used; silent return */
+        if (svg) return;
         return;
       }
       const isAr = currentLang === 'ar';
       const data = (window.BM_API_DATA && window.BM_API_DATA.length) ? window.BM_API_DATA : [];
 
-      /* If no data yet, show empty state */
-      const emptyEl = document.getElementById('bm-grid-empty');
+      /* Cache for deep-link lookups */
+      window.BM_API_BY_ID = {};
+      data.forEach(b => { window.BM_API_BY_ID[b.id] = b; });
+
+      /* Empty state */
+      const emptyEl = document.getElementById('bm-book-empty');
+      const footEl  = document.getElementById('bm-book-foot');
       if (!data.length) {
         list.innerHTML = '';
         if (emptyEl) emptyEl.classList.remove('hidden');
-        document.getElementById('bm-grid-count-num').textContent = '0';
-        document.getElementById('bm-grid-countries-num').textContent = '0';
-        document.getElementById('bm-grid-wealth').textContent = '$0B';
+        if (footEl)  footEl.style.display = 'none';
+        const cn = document.getElementById('bm-book-count');     if (cn) cn.textContent = '0';
+        const wn = document.getElementById('bm-book-wealth');    if (wn) wn.textContent = '—';
         return;
       }
       if (emptyEl) emptyEl.classList.add('hidden');
+      if (footEl)  footEl.style.display = '';
 
-      /* Compute aggregate stats */
-      const totalCount = data.length;
-      const countries = new Set(data.map(d => d.flag).filter(Boolean));
+      /* Aggregate header stats */
       const totalWealth = data.reduce((s, d) => s + (d.netWorth || 0), 0);
-      document.getElementById('bm-grid-count-num').textContent = totalCount;
-      document.getElementById('bm-grid-countries-num').textContent = countries.size;
-      const wealthLabel = totalWealth >= 1000 ? '$' + (totalWealth/1000).toFixed(1) + 'T' : '$' + totalWealth.toFixed(0) + 'B';
-      document.getElementById('bm-grid-wealth').textContent = wealthLabel;
+      const wealthLabel = totalWealth >= 1000 ? '$' + (totalWealth/1000).toFixed(1) + 'T' : '$' + totalWealth.toFixed(1) + 'B';
+      const cn = document.getElementById('bm-book-count');  if (cn) cn.textContent = data.length;
+      const wn = document.getElementById('bm-book-wealth'); if (wn) wn.textContent = wealthLabel;
 
-      /* Build sector filter pills */
-      const sectors = Array.from(new Set(data.map(d => isAr ? (d.sectorAr || d.sectorEn) : (d.sectorEn || d.sectorAr)).filter(Boolean)));
-      const allLabel = isAr ? 'الكل' : 'All';
-      const filtersEl = document.getElementById('bm-grid-filters');
-      if (filtersEl) {
-        filtersEl.innerHTML = ['all', ...sectors].map(s => {
-          const active = (window.BM_ACTIVE_SECTOR || 'all') === s;
-          const label = s === 'all' ? allLabel : s;
-          return `<button class="bm-grid-filter ${active ? 'is-active' : ''}" onclick="setBmSector('${String(s).replace(/'/g,"\\'")}')">${label}</button>`;
-        }).join('');
-      }
+      /* Sort by rank ascending */
+      const sorted = data.slice().sort((a, b) => (a.rank || 999) - (b.rank || 999) || (b.netWorth || 0) - (a.netWorth || 0));
 
-      /* Filter and sort by rank/wealth */
-      let filtered = data.slice();
-      if (window.BM_ACTIVE_SECTOR && window.BM_ACTIVE_SECTOR !== 'all') {
-        filtered = filtered.filter(d => {
-          const s = isAr ? (d.sectorAr || d.sectorEn) : (d.sectorEn || d.sectorAr);
-          return s === window.BM_ACTIVE_SECTOR;
-        });
-      }
-      filtered.sort((a, b) => (a.rank || 999) - (b.rank || 999) || (b.netWorth || 0) - (a.netWorth || 0));
-
-      /* Color ramp by index for the gradient fallback */
+      /* Color ramps used as gradient when no photo */
       const ramps = [
-        ['#FFB800','#FF9500'], ['#F59E0B','#B45309'], ['#06B6D4','#0891B2'],
-        ['#8B5CF6','#6D28D9'], ['#EC4899','#BE185D'], ['#EF4444','#B91C1C'],
-        ['#14B8A6','#0F766E'], ['#3B82F6','#1D4ED8'], ['#10B981','#047857'],
-        ['#A78BFA','#7C3AED'], ['#0EA5E9','#0369A1'], ['#22C55E','#15803D']
+        ['#c4b89c','#4a3520'], ['#94a3b8','#1e293b'], ['#a78bfa','#4c1d95'],
+        ['#34d399','#064e3b'], ['#f87171','#7f1d1d'], ['#fbbf24','#92400e'],
+        ['#60a5fa','#1e3a8a'], ['#f472b6','#9d174d'], ['#2dd4bf','#134e4a'],
+        ['#fb923c','#7c2d12'], ['#4ade80','#14532d'], ['#facc15','#713f12']
       ];
 
-      /* Build cards HTML */
-      list.innerHTML = filtered.map((b, idx) => {
+      /* Build chapter spreads */
+      list.innerHTML = sorted.map((b, idx) => {
         const ramp = ramps[idx % ramps.length];
         const name = isAr ? (b.nameAr || b.nameEn) : (b.nameEn || b.nameAr);
         const title = isAr ? (b.titleAr || b.sectorAr || '') : (b.titleEn || b.sectorEn || '');
         const sectorLabel = isAr ? (b.sectorAr || b.sectorEn) : (b.sectorEn || b.sectorAr);
+        const wealth = b.netWorth ? (b.netWorth >= 1 ? '$' + b.netWorth + 'B' : '$' + (b.netWorth*1000).toFixed(0) + 'M') : '';
+        const companies = (b.companies || '').split(/[,،·]/).map(s => s.trim()).filter(Boolean);
         const initials = bmInitials(name);
-        const flagEm = bmFlagEmoji(b.flag);
-        const countryName = isAr ? bmCountryNameAr(b.flag) : (b.flag || '');
-        const wealth = b.netWorth ? '$' + b.netWorth + 'B' : '';
-        const companies = b.companies || '';
         const rank = b.rank ? String(b.rank).padStart(2, '0') : String(idx + 1).padStart(2, '0');
+        const chapterLabel = isAr ? ('الفصل ' + rank + ' · ' + (sectorLabel || '')) : ('CHAPTER ' + rank + ' · ' + (sectorLabel || ''));
         const hasPhoto = !!b.imageUrl;
         const safeImg = hasPhoto ? String(b.imageUrl).replace(/'/g,'%27').replace(/"/g,'%22') : '';
         const photoStyle = hasPhoto
-          ? `background-image:url('${safeImg}'); --bmc1:${ramp[0]}; --bmc2:${ramp[1]};`
-          : `--bmc1:${ramp[0]}; --bmc2:${ramp[1]};`;
-        const detailsLabel = isAr ? 'الملف الكامل' : 'Full profile';
+          ? `background-image:url('${safeImg}'); --bp1:${ramp[0]}; --bp2:${ramp[1]};`
+          : `--bp1:${ramp[0]}; --bp2:${ramp[1]};`;
+        const quote = (b.quote || b.bio || '').trim();
+        const quoteShort = quote ? (quote.length > 220 ? quote.slice(0, 217) + '…' : quote) : (isAr ? 'صانع قرار يعيد رسم خريطة الأعمال في مصر.' : 'A decision-maker reshaping the business map of Egypt.');
+        const isReverse = idx % 2 === 1;
+        const readLabel = isAr ? 'الملف الكامل' : 'Read profile';
+        const linkLabel = isAr ? 'نسخ الرابط' : 'Copy link';
 
         return `
-          <article class="bm-card" data-id="${b.id}" onclick="openBmProfile('${b.id}')">
-            <div class="bm-card-photo" style="${photoStyle}">
-              <span class="bm-card-rank">#${rank}</span>
-              <span class="bm-card-flag">${flagEm} ${countryName}</span>
-              ${!hasPhoto ? `<div class="bm-card-initials">${initials}</div>` : ''}
-              ${wealth ? `<span class="bm-card-net">${wealth}</span>` : ''}
+          <article class="bm-book-spread ${isReverse ? 'is-reverse' : ''}" data-id="${b.id}" id="profile-${b.id}">
+            <div class="bm-book-photo-col">
+              <div class="bm-book-photo" style="${photoStyle}">
+                ${!hasPhoto ? `<div class="bm-book-photo-initials">${initials}</div>` : ''}
+                <span class="bm-book-photo-flag">${b.flag || ''} · EGYPT</span>
+                <span class="bm-book-photo-rank">${rank}</span>
+              </div>
             </div>
-            <div class="bm-card-body">
-              <div class="bm-card-sector">${sectorLabel || ''}</div>
-              <div class="bm-card-name">${name}</div>
-              <div class="bm-card-title">${title}</div>
-              ${companies ? `<div class="bm-card-companies">${companies}</div>` : ''}
-              <div class="bm-card-cta">
-                <span>${detailsLabel}</span>
-                <i data-lucide="arrow-${isAr ? 'left' : 'right'}" class="w-3 h-3"></i>
+            <div class="bm-book-text-col">
+              <div class="bm-book-chapter">${chapterLabel}</div>
+              <h3 class="bm-book-name">${name}</h3>
+              ${title ? `<div class="bm-book-title-line">${title}</div>` : ''}
+              <div class="bm-book-divider"></div>
+              <p class="bm-book-quote">${quoteShort}</p>
+              <div class="bm-book-stats">
+                ${wealth ? `<span>${isAr ? 'الثروة' : 'NET'} <span class="bm-book-stat-value">${wealth}</span></span>` : ''}
+                ${b.age ? `<span>${isAr ? 'العمر' : 'AGE'} <span class="bm-book-stat-value">${b.age}</span></span>` : ''}
+                ${companies.length ? `<span>${isAr ? 'الشركات' : 'COMPANIES'} <span class="bm-book-stat-value">${companies.slice(0,3).join(' · ')}</span></span>` : ''}
+              </div>
+              <div class="bm-book-actions">
+                <a class="bm-book-cta" href="#top50/${b.id}" onclick="openBmProfile('${b.id}');event.preventDefault();">${readLabel} <i data-lucide="arrow-${isAr ? 'left' : 'right'}" class="w-3 h-3"></i></a>
+                <button class="bm-book-cta bm-book-cta-ghost" onclick="copyBmProfileLink('${b.id}')">${linkLabel} <i data-lucide="link" class="w-3 h-3"></i></button>
               </div>
             </div>
           </article>
         `;
       }).join('');
 
-      /* Cache by id for the profile modal */
-      window.BM_API_BY_ID = {};
-      data.forEach(b => { window.BM_API_BY_ID[b.id] = b; });
-
       if (window.lucide) lucide.createIcons();
     }
 
     function setBmSector(s) {
+      /* kept for backward-compat (unused in Taschen book) */
       window.BM_ACTIVE_SECTOR = s;
       renderBusinessmen();
     }
 
-    /* Open profile modal for an API-driven businessman record */
+    function copyBmProfileLink(id) {
+      try {
+        const url = location.origin + location.pathname + '#top50/' + encodeURIComponent(id);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(() => {
+            const isAr = (typeof currentLang !== 'undefined') ? currentLang === 'ar' : true;
+            try { (window.showToast || alert)(isAr ? 'تم نسخ الرابط ✓' : 'Link copied ✓'); } catch(_) { alert(isAr ? 'تم نسخ الرابط' : 'Link copied'); }
+          });
+        } else {
+          window.prompt('Copy link:', url);
+        }
+      } catch (e) {}
+    }
+
+    /* Open Taschen-style profile detail overlay */
     function openBmProfile(id) {
       const b = (window.BM_API_BY_ID || {})[id];
       if (!b) return;
       const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
-      const modal = document.getElementById('bm-modal');
-      const content = document.getElementById('bm-modal-content');
-      if (!modal || !content) return;
+      let overlay = document.getElementById('bm-detail-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'bm-detail-overlay';
+        overlay.className = 'bm-detail-overlay';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', function (e) {
+          if (e.target === overlay) closeBmProfile();
+        });
+      }
 
       const name = isAr ? (b.nameAr || b.nameEn) : (b.nameEn || b.nameAr);
       const title = isAr ? (b.titleAr || b.sectorAr || '') : (b.titleEn || b.sectorEn || '');
       const sector = isAr ? (b.sectorAr || b.sectorEn) : (b.sectorEn || b.sectorAr);
       const bio = b.bio || (isAr ? 'لم تُضف نبذة بعد.' : 'No biography yet.');
-      const edu = b.education || (isAr ? 'غير محدد' : 'Not specified');
-      const ach = (b.achievements || '').split(/\n|·|•|—/).map(s => s.trim()).filter(Boolean);
+      const edu = b.education || '';
+      const ach = (b.achievements || '').split(/\n+|(?:^|\s)[·•—]\s+/).map(s => s.trim()).filter(Boolean);
       const comps = (b.companies || '').split(/[,،·]/).map(s => s.trim()).filter(Boolean);
-      const flagEm = bmFlagEmoji(b.flag);
-      const countryName = isAr ? bmCountryNameAr(b.flag) : (b.flag || '');
       const wealth = b.netWorth ? '$' + b.netWorth + 'B' : '—';
-      const rank = b.rank ? '#' + b.rank : '—';
+      const rank = b.rank ? String(b.rank).padStart(2, '0') : '—';
       const age = b.age ? String(b.age) : '—';
       const initials = bmInitials(name);
+      const quote = b.quote || '';
 
       const labels = {
-        net: isAr ? 'صافي الثروة' : 'Net Worth',
-        rank: isAr ? 'الترتيب' : 'Rank',
-        comps: isAr ? 'الشركات' : 'Companies',
-        age: isAr ? 'العمر' : 'Age',
-        bio: isAr ? 'نبذة' : 'Biography',
-        education: isAr ? 'التعليم' : 'Education',
-        empire: isAr ? 'الإمبراطورية' : 'Empire',
-        ach: isAr ? 'أبرز الإنجازات' : 'Key Achievements'
+        chapter: isAr ? 'فصل' : 'CHAPTER',
+        net: isAr ? 'الثروة' : 'NET WORTH',
+        rank: isAr ? 'الترتيب' : 'RANK',
+        comps: isAr ? 'الشركات' : 'COMPANIES',
+        age: isAr ? 'العمر' : 'AGE',
+        bio: isAr ? 'السيرة' : 'BIOGRAPHY',
+        quote: isAr ? 'اقتباس' : 'QUOTE',
+        education: isAr ? 'التعليم' : 'EDUCATION',
+        empire: isAr ? 'الإمبراطورية' : 'EMPIRE',
+        ach: isAr ? 'الإنجازات' : 'KEY ACHIEVEMENTS',
+        share: isAr ? 'رابط مباشر' : 'PERMALINK',
+        copy: isAr ? 'نسخ' : 'Copy',
+        close: isAr ? 'إغلاق' : 'Close'
       };
 
       const hasPhoto = !!b.imageUrl;
       const safeImg = hasPhoto ? String(b.imageUrl).replace(/'/g,'%27').replace(/"/g,'%22') : '';
-      const headerBg = hasPhoto
-        ? `background-image:linear-gradient(180deg, rgba(10,14,39,0) 30%, rgba(10,14,39,.85) 100%), url('${safeImg}'); background-size:cover; background-position:center top;`
-        : `background:linear-gradient(135deg, #1f2937, #0a0e27);`;
+      const photoStyle = hasPhoto
+        ? `background-image:url('${safeImg}');`
+        : `background:linear-gradient(180deg, #c4b89c, #4a3520);`;
+      const permalink = location.origin + location.pathname + '#top50/' + encodeURIComponent(b.id);
 
-      content.innerHTML = `
-        <div class="relative h-56 rounded-t-3xl overflow-hidden" style="${headerBg}">
-          ${!hasPhoto ? `<div class="absolute inset-0 grid place-items-center"><div class="font-display font-black text-white/70 text-7xl">${initials}</div></div>` : ''}
-          <span class="absolute top-4 start-4 bg-navy-900/70 text-gold-400 text-xs font-black px-3 py-1 rounded-full">${rank}</span>
-          <span class="absolute top-4 end-4 bg-navy-900/70 text-white text-xs font-bold px-3 py-1 rounded-full">${flagEm} ${countryName}</span>
-          <button onclick="closeBmModal()" class="absolute bottom-4 end-4 w-9 h-9 rounded-full bg-navy-900/70 hover:bg-navy-900 text-white grid place-items-center transition">
-            <i data-lucide="x" class="w-4 h-4"></i>
-          </button>
-        </div>
-        <div class="p-6 space-y-6">
-          <div>
-            <h3 class="font-display text-2xl font-black text-white">${name}</h3>
-            <div class="text-sm text-gold-400 font-semibold mt-1">${title}${sector && title !== sector ? ' · ' + sector : ''}</div>
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="glass-light border border-white/10 rounded-xl p-3 text-center">
-              <div class="text-[10px] text-white/40 uppercase tracking-wider">${labels.net}</div>
-              <div class="text-lg font-bold text-gold-400 num mt-1">${wealth}</div>
-            </div>
-            <div class="glass-light border border-white/10 rounded-xl p-3 text-center">
-              <div class="text-[10px] text-white/40 uppercase tracking-wider">${labels.rank}</div>
-              <div class="text-lg font-bold text-white num mt-1">${rank}</div>
-            </div>
-            <div class="glass-light border border-white/10 rounded-xl p-3 text-center">
-              <div class="text-[10px] text-white/40 uppercase tracking-wider">${labels.comps}</div>
-              <div class="text-lg font-bold text-white num mt-1">${comps.length || '—'}</div>
-            </div>
-            <div class="glass-light border border-white/10 rounded-xl p-3 text-center">
-              <div class="text-[10px] text-white/40 uppercase tracking-wider">${labels.age}</div>
-              <div class="text-lg font-bold text-white num mt-1">${age}</div>
+      overlay.innerHTML = `
+        <div class="bm-detail-paper">
+          <button class="bm-detail-close" onclick="closeBmProfile()" aria-label="${labels.close}"><i data-lucide="x" class="w-4 h-4"></i></button>
+          <div class="bm-detail-head">
+            <div class="bm-detail-photo" style="${photoStyle}">${!hasPhoto ? `<div class="bm-book-photo-initials">${initials}</div>` : ''}</div>
+            <div>
+              <div class="bm-detail-meta-chapter">${labels.chapter} ${rank}${sector ? ' · ' + sector : ''}</div>
+              <h2 class="bm-detail-name">${name}</h2>
+              <div class="bm-detail-title-line">${title}</div>
+              <div class="bm-detail-stats">
+                <div class="bm-detail-stat"><div class="bm-detail-stat-label">${labels.net}</div><div class="bm-detail-stat-value">${wealth}</div></div>
+                <div class="bm-detail-stat"><div class="bm-detail-stat-label">${labels.rank}</div><div class="bm-detail-stat-value">#${rank}</div></div>
+                <div class="bm-detail-stat"><div class="bm-detail-stat-label">${labels.comps}</div><div class="bm-detail-stat-value">${comps.length || '—'}</div></div>
+                <div class="bm-detail-stat"><div class="bm-detail-stat-label">${labels.age}</div><div class="bm-detail-stat-value">${age}</div></div>
+              </div>
             </div>
           </div>
-          <div>
-            <div class="flex items-center gap-2 mb-2"><i data-lucide="user" class="w-4 h-4 text-gold-400"></i><span class="text-sm font-bold text-white">${labels.bio}</span></div>
-            <p class="text-sm text-white/70 leading-relaxed">${bio}</p>
+          ${quote ? `<div class="bm-detail-section"><div class="bm-detail-section-title">${labels.quote}</div><div class="bm-detail-quote-block">${quote}</div></div>` : ''}
+          <div class="bm-detail-section"><div class="bm-detail-section-title">${labels.bio}</div><p class="bm-detail-bio">${bio}</p></div>
+          ${edu ? `<div class="bm-detail-section"><div class="bm-detail-section-title">${labels.education}</div><p>${edu}</p></div>` : ''}
+          ${comps.length ? `<div class="bm-detail-section"><div class="bm-detail-section-title">${labels.empire}</div><div class="bm-detail-empire-list">${comps.map(c => '<span class="bm-detail-empire-chip">' + c + '</span>').join('')}</div></div>` : ''}
+          ${ach.length ? `<div class="bm-detail-section"><div class="bm-detail-section-title">${labels.ach}</div><div class="bm-detail-ach">${ach.map(a => '<div class="bm-detail-ach-item">' + a + '</div>').join('')}</div></div>` : ''}
+          <div class="bm-detail-share">
+            <div class="bm-detail-section-title" style="margin:auto 8px auto 0">${labels.share}</div>
+            <input class="bm-detail-link-input" value="${permalink}" readonly onclick="this.select()" />
+            <button class="bm-book-cta" onclick="copyBmProfileLink('${b.id}')"><i data-lucide="copy" class="w-3 h-3"></i> ${labels.copy}</button>
           </div>
-          ${edu && edu !== '—' && edu !== 'غير محدد' && edu !== 'Not specified' ? `<div>
-            <div class="flex items-center gap-2 mb-2"><i data-lucide="graduation-cap" class="w-4 h-4 text-gold-400"></i><span class="text-sm font-bold text-white">${labels.education}</span></div>
-            <p class="text-sm text-white/70">${edu}</p>
-          </div>` : ''}
-          ${comps.length ? `<div>
-            <div class="flex items-center gap-2 mb-3"><i data-lucide="building-2" class="w-4 h-4 text-gold-400"></i><span class="text-sm font-bold text-white">${labels.empire}</span></div>
-            <div class="flex flex-wrap gap-2">${comps.map(c => '<span class="text-xs bg-white/5 border border-white/10 text-white/80 rounded-lg px-3 py-1.5">' + c + '</span>').join('')}</div>
-          </div>` : ''}
-          ${ach.length ? `<div>
-            <div class="flex items-center gap-2 mb-3"><i data-lucide="trophy" class="w-4 h-4 text-gold-400"></i><span class="text-sm font-bold text-white">${labels.ach}</span></div>
-            <div class="space-y-2">${ach.map(a => '<div class="flex items-start gap-2"><span class="text-gold-400 mt-0.5">✦</span><span class="text-sm text-white/70">' + a + '</span></div>').join('')}</div>
-          </div>` : ''}
         </div>`;
 
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+      overlay.classList.add('is-open');
       document.body.style.overflow = 'hidden';
+      try { history.replaceState(null, '', '#top50/' + encodeURIComponent(b.id)); } catch(_) {}
       if (window.lucide) lucide.createIcons();
     }
+
+    function closeBmProfile() {
+      const overlay = document.getElementById('bm-detail-overlay');
+      if (overlay) overlay.classList.remove('is-open');
+      document.body.style.overflow = '';
+      try { if ((location.hash || '').startsWith('#top50/')) history.replaceState(null, '', '#top50'); } catch(_) {}
+    }
+
+    function tryOpenBmProfileFromHash() {
+      const m = (location.hash || '').match(/^#top50\/(.+)$/);
+      if (!m) return;
+      const id = decodeURIComponent(m[1]);
+      let attempts = 0;
+      const tick = () => {
+        attempts++;
+        if (window.BM_API_BY_ID && window.BM_API_BY_ID[id]) openBmProfile(id);
+        else if (attempts < 25) setTimeout(tick, 300);
+      };
+      tick();
+    }
+    window.addEventListener('hashchange', function () {
+      if ((location.hash || '').match(/^#top50\/(.+)$/)) tryOpenBmProfileFromHash();
+      else {
+        const o = document.getElementById('bm-detail-overlay');
+        if (o && o.classList.contains('is-open')) closeBmProfile();
+      }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        const o = document.getElementById('bm-detail-overlay');
+        if (o && o.classList.contains('is-open')) closeBmProfile();
+      }
+    });
 
     /* Legacy noop placeholders for old code paths */
     function __legacyRenderBusinessmen(){
@@ -15939,7 +16280,9 @@
         }, 600);
         setTimeout(function () {
           if (typeof pullBusinessmenFromApi === 'function') {
-            pullBusinessmenFromApi().catch(function(){});
+            pullBusinessmenFromApi().then(function(){
+              try { if (typeof tryOpenBmProfileFromHash === 'function') tryOpenBmProfileFromHash(); } catch(_e){}
+            }).catch(function(){});
           } else if (typeof renderBusinessmen === 'function') {
             try { renderBusinessmen(); } catch (_e) {}
           }

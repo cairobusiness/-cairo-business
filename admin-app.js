@@ -210,6 +210,8 @@ const ENTITIES = {
       { id: 'sectorEn', label: 'Sector in English *', type: 'text', required: true, dir: 'ltr' },
       { id: 'imageUrl', label: '📷 رابط الصورة الشخصية', type: 'url', dir: 'ltr', nullable: true, full: true, placeholder: 'https://...' },
       { id: 'isPowerPerson', label: '⭐ عرض في قسم "أقوى الشخصيات في البيزنس" (المجلة)', type: 'checkbox', full: true },
+      { id: 'isTop50Egypt', label: '📕 عرض في قسم "أقوى 50 رجل أعمال في مصر" (كتاب Taschen)', type: 'checkbox', full: true },
+      { id: 'quote', label: '"اقتباس مميز (يظهر في صفحة الكتاب)', type: 'textarea', full: true, nullable: true, placeholder: 'اقتباس قصير يلخّص فلسفته أو إنجازه...' },
       { id: 'netWorth', label: 'الثروة (مليار $)', type: 'number', nullable: true, step: '0.01' },
       { id: 'rank', label: 'الترتيب', type: 'number', nullable: true, min: 1 },
       { id: 'age', label: 'العمر', type: 'number', nullable: true, min: 18 },
@@ -225,6 +227,7 @@ const ENTITIES = {
       thumb: b => b.imageUrl, emoji: '👔',
       badges: b => [
         ...(b.isPowerPerson ? [{ text: '⭐ مجلة', kind: 'gold' }] : []),
+        ...(b.isTop50Egypt ? [{ text: '📕 Top 50', kind: 'gold' }] : []),
         { text: b.sectorAr || b.sectorEn, kind: 'gold' },
         ...(b.rank ? [{ text: '#' + b.rank, kind: 'blue' }] : []),
         ...(b.netWorth ? [{ text: '$' + b.netWorth + 'B', kind: 'green' }] : [])
@@ -237,6 +240,56 @@ const ENTITIES = {
         'إجمالي رجال الأعمال': items.length,
         'إجمالي الثروات': '$' + items.reduce((s,b)=>s+(b.netWorth||0),0).toFixed(1) + 'B',
         'متوسط العمر': withAge.length ? Math.round(withAge.reduce((s,b)=>s+b.age,0) / withAge.length) + ' سنة' : '—'
+      };
+    }
+  },
+  top50egypt: {
+    key: 'top50egypt', icon: '📕', nameAr: 'أقوى 50 في مصر', singularAr: 'رجل أعمال (Top 50)',
+    endpoint: '/api/admin/businessmen',
+    filterFn: items => (items || []).filter(b => b.isTop50Egypt === true || b.isTop50Egypt === 'true'),
+    defaults: { isTop50Egypt: true, flag: 'EG' },
+    publicLink: id => 'https://cairobusiness.net/#top50/' + id,
+    sectionLink: 'https://cairobusiness.net/#top50',
+    fields: [
+      { id: 'nameAr', label: 'الاسم بالعربية *', type: 'text', required: true },
+      { id: 'nameEn', label: 'Name in English *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'titleAr', label: 'المنصب بالعربية', type: 'text', nullable: true, placeholder: 'رئيس مجلس الإدارة، مؤسس...' },
+      { id: 'titleEn', label: 'Title in English', type: 'text', dir: 'ltr', nullable: true, placeholder: 'Chairman, Founder...' },
+      { id: 'sectorAr', label: 'القطاع بالعربية *', type: 'text', required: true, placeholder: 'صناعة، عقارات، اتصالات...' },
+      { id: 'sectorEn', label: 'Sector in English *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'imageUrl', label: '📷 رابط الصورة الشخصية (يظهر في الكتاب)', type: 'url', dir: 'ltr', nullable: true, full: true, placeholder: 'https://...' },
+      { id: 'quote', label: '"اقتباس مميز (يظهر بخط مائل في صفحة الكتاب)', type: 'textarea', full: true, nullable: true, placeholder: 'سطرين عن فلسفته أو أكبر إنجاز...' },
+      { id: 'bio', label: 'السيرة الذاتية الكاملة (تظهر في الصفحة التفصيلية)', type: 'textarea', full: true, nullable: true },
+      { id: 'achievements', label: 'الإنجازات (سطر لكل إنجاز)', type: 'textarea', full: true, nullable: true, placeholder: 'إنجاز 1\nإنجاز 2\nإنجاز 3...' },
+      { id: 'companies', label: 'الشركات (مفصول بفاصلة أو ·)', type: 'text', nullable: true, placeholder: 'OCI · Adidas · LafargeHolcim' },
+      { id: 'netWorth', label: 'الثروة (مليار $)', type: 'number', nullable: true, step: '0.01' },
+      { id: 'rank', label: 'الترتيب في الـ Top 50 *', type: 'number', nullable: true, min: 1, max: 50, placeholder: '1' },
+      { id: 'age', label: 'العمر', type: 'number', nullable: true, min: 18 },
+      { id: 'education', label: 'التعليم', type: 'text', nullable: true },
+      { id: 'flag', label: 'كود الدولة', type: 'text', dir: 'ltr', nullable: true, placeholder: 'EG' },
+      { id: 'isTop50Egypt', label: '📕 مفعّل في قسم الـ Top 50 (لا تطفّيها إلا لو عايز تشيله من القسم)', type: 'checkbox', full: true },
+      { id: 'isPowerPerson', label: '⭐ عرض كمان في قسم "أقوى الشخصيات في البيزنس" (المجلة)', type: 'checkbox', full: true }
+    ],
+    list: {
+      title: b => '#' + (b.rank || '—') + ' · ' + (b.nameAr || b.nameEn),
+      excerpt: b => (b.quote || b.titleAr || b.bio || '').slice(0, 160) + ((b.quote || b.titleAr || b.bio || '').length > 160 ? '...' : ''),
+      thumb: b => b.imageUrl, emoji: '📕',
+      badges: b => [
+        ...(b.rank ? [{ text: '#' + b.rank, kind: 'gold' }] : [{ text: 'بدون ترتيب', kind: 'red' }]),
+        { text: b.sectorAr || b.sectorEn, kind: 'blue' },
+        ...(b.netWorth ? [{ text: '$' + b.netWorth + 'B', kind: 'green' }] : []),
+        ...(b.imageUrl ? [{ text: '📷', kind: 'green' }] : [{ text: 'بدون صورة', kind: 'red' }])
+      ],
+      meta: b => [b.flag || '—', ...(b.companies ? [b.companies.split(/[,،·]/)[0].trim()] : [])]
+    },
+    stats: items => {
+      const filtered = (items || []).filter(b => b.isTop50Egypt);
+      const withPhoto = filtered.filter(b => b.imageUrl);
+      const totalWealth = filtered.reduce((s,b) => s + (b.netWorth||0), 0);
+      return {
+        'إجمالي الـ Top 50': filtered.length + ' / 50',
+        'بصور': withPhoto.length,
+        'إجمالي الثروة': '$' + (totalWealth >= 1000 ? (totalWealth/1000).toFixed(1) + 'T' : totalWealth.toFixed(1) + 'B')
       };
     }
   },
@@ -1018,9 +1071,36 @@ async function loadList() {
     container.innerHTML = '<div class="msg msg-error">تعذّر التحميل: ' + (r.data?.error || 'خطأ') + '</div>';
     return;
   }
-  currentItems = r.data.data || [];
+  let items = r.data.data || [];
+  if (typeof ent.filterFn === 'function') {
+    try { items = ent.filterFn(items) || []; } catch (e) { console.warn('filterFn failed', e); }
+  }
+  currentItems = items;
   renderStats();
   renderList();
+  /* Render section-level links if entity exposes them */
+  renderEntityLinks();
+}
+
+function renderEntityLinks() {
+  const ent = currentEntity();
+  if (!ent) return;
+  let host = document.getElementById('entity-links');
+  if (!host) {
+    const stats = document.getElementById('stats-section');
+    if (!stats) return;
+    host = document.createElement('div');
+    host.id = 'entity-links';
+    host.style.cssText = 'margin:14px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center;';
+    stats.parentElement.insertBefore(host, stats.nextSibling);
+  }
+  host.innerHTML = '';
+  if (ent.sectionLink) {
+    host.innerHTML += '<span style="font-size:12px;opacity:.7">رابط السكشن الكامل:</span>' +
+      '<input readonly value="' + ent.sectionLink + '" onclick="this.select()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border,#333);background:transparent;color:inherit;min-width:280px;border-radius:6px" />' +
+      '<button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(\'' + ent.sectionLink + '\').then(()=>alert(\'تم نسخ الرابط ✓\'))">📋 نسخ</button>' +
+      '<a href="' + ent.sectionLink + '" target="_blank" class="btn btn-ghost btn-sm">🔗 افتح في تبويبة جديدة</a>';
+  }
 }
 
 function renderStats() {
@@ -1049,12 +1129,15 @@ function renderList() {
     const thumb = thumbUrl
       ? '<div class="item-thumb"><img src="' + escapeHtml(thumbUrl) + '" onerror="this.parentElement.innerHTML=\'' + ent.list.emoji + '\'" /></div>'
       : '<div class="item-thumb">' + ent.list.emoji + '</div>';
+    const linkBtn = (typeof ent.publicLink === 'function') ?
+      '<button class="btn btn-ghost btn-sm" onclick="copyEntityLink(\'' + item.id + '\')" title="نسخ رابط مباشر">🔗 رابط</button>' : '';
     return '<div class="item-row">' + thumb +
       '<div><div class="item-meta">' + badges + (metaItems.length ? '<span>•</span>' : '') + metaHtml + '</div>' +
       '<div class="item-title">' + escapeHtml(title) + '</div>' +
       (excerpt ? '<div class="item-excerpt">' + escapeHtml(excerpt) + '</div>' : '') +
       '</div>' +
       '<div class="item-actions">' +
+      linkBtn +
       '<button class="btn btn-ghost btn-sm" onclick="editItem(\'' + item.id + '\')">✏️ تعديل</button>' +
       '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'' + item.id + '\')">🗑️ حذف</button>' +
       '</div></div>';
@@ -1067,7 +1150,8 @@ function openCreateModal() {
   editingId = null;
   const ent = currentEntity();
   document.getElementById('modal-title').textContent = ent.singularAr + ' جديد';
-  renderForm({});
+  const initial = (ent && typeof ent.defaults === 'object') ? Object.assign({}, ent.defaults) : {};
+  renderForm(initial);
   document.getElementById('item-modal').classList.add('open');
 }
 
@@ -1079,6 +1163,20 @@ function editItem(id) {
   document.getElementById('modal-title').textContent = 'تعديل ' + ent.singularAr;
   renderForm(item);
   document.getElementById('item-modal').classList.add('open');
+}
+
+function copyEntityLink(id) {
+  const ent = currentEntity();
+  if (!ent || typeof ent.publicLink !== 'function') return;
+  const url = ent.publicLink(id);
+  if (!url) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => alert('تم نسخ الرابط ✓\n' + url));
+    } else {
+      window.prompt('انسخ الرابط:', url);
+    }
+  } catch (e) { window.prompt('انسخ الرابط:', url); }
 }
 
 function closeModal() {
