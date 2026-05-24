@@ -3391,1273 +3391,6 @@
   <!-- =========================================================== -->
   <!--                     MORNING BRIEFING                          -->
   <!-- =========================================================== -->
-  <section id="morning-briefing" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-950 to-navy-900">
-    <div class="absolute inset-0 pointer-events-none opacity-50 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(212,175,55,0.15),transparent_60%)]"></div>
-    <style>
-      /* Bloomberg-style timeline for morning briefing */
-      .mb-timeline { position: relative; padding-inline-start: 28px; }
-      [dir="rtl"] .mb-timeline { padding-inline-start: 0; padding-inline-end: 28px; }
-      .mb-timeline::before {
-        content: ''; position: absolute; top: 8px; bottom: 8px; width: 2px;
-        background: linear-gradient(to bottom, rgba(212,175,55,.5), rgba(212,175,55,.1));
-        inset-inline-start: 8px;
-      }
-      [dir="rtl"] .mb-timeline::before { inset-inline-start: auto; inset-inline-end: 8px; }
-      .mb-tl-item { position: relative; padding: 10px 14px 14px; margin-bottom: 6px; border-radius: 10px; transition: background .2s; cursor: pointer; }
-      .mb-tl-item:hover { background: rgba(255,255,255,.04); }
-      .mb-tl-dot {
-        position: absolute; width: 14px; height: 14px; border-radius: 50%;
-        top: 14px; inset-inline-start: -27px;
-        box-shadow: 0 0 0 3px rgba(2,6,23,1), 0 0 12px currentColor;
-      }
-      [dir="rtl"] .mb-tl-dot { inset-inline-start: auto; inset-inline-end: -27px; }
-      .mb-tl-dot.bullish { background: #34d399; color: #34d399; }
-      .mb-tl-dot.bearish { background: #f87171; color: #f87171; }
-      .mb-tl-dot.neutral { background: #fbbf24; color: #fbbf24; }
-      .mb-tl-time {
-        font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 1.5px;
-        color: rgba(212,175,55,.85); font-weight: 700; margin-bottom: 4px;
-      }
-      .mb-tl-title { color: #fff; font-size: 15px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; }
-      .mb-tl-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-      .mb-tl-sector { font-size: 11px; color: rgba(255,255,255,.5); }
-      .mb-tl-pill {
-        font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: .5px;
-      }
-      .mb-tl-pill.bullish { background: rgba(52,211,153,.12); color: #6ee7b7; }
-      .mb-tl-pill.bearish { background: rgba(248,113,113,.12); color: #fca5a5; }
-      .mb-tl-pill.neutral { background: rgba(251,191,36,.12); color: #fcd34d; }
-      .mb-deal-card {
-        background: linear-gradient(155deg, #0f1a3d 0%, #1a2a5e 100%);
-        border: 1px solid rgba(212,175,55,.25); border-radius: 16px; padding: 22px;
-        position: sticky; top: 100px;
-      }
-      .mb-deal-tag {
-        display: inline-flex; align-items: center; gap: 6px;
-        font-family: 'Courier New', monospace; font-size: 10px; font-weight: 700;
-        letter-spacing: 2px; color: #fbbf24;
-        background: rgba(251,191,36,.1); padding: 4px 10px; border-radius: 4px;
-        border: 1px solid rgba(251,191,36,.3); margin-bottom: 14px;
-      }
-      .mb-deal-tag::before { content:''; width:6px; height:6px; border-radius:50%; background:#fbbf24; animation: pulse-dot 1.5s infinite; }
-      @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:.4; } }
-      .mb-deal-value {
-        font-family: 'Courier New', monospace; font-size: 32px; font-weight: 700; color: #fff;
-        letter-spacing: -1px; line-height: 1; margin: 8px 0;
-      }
-      .mb-deal-score { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
-      .mb-deal-score-bar { flex: 1; height: 4px; background: rgba(255,255,255,.1); border-radius: 2px; overflow: hidden; }
-      .mb-deal-score-fill { height: 100%; background: linear-gradient(90deg, #fbbf24, #d4af37); border-radius: 2px; }
-      .mb-deal-link {
-        display: inline-flex; align-items: center; gap: 6px;
-        color: #fbbf24; font-weight: 600; font-size: 13px;
-        padding: 8px 14px; border: 1px solid rgba(251,191,36,.4); border-radius: 999px;
-        margin-top: 14px; transition: all .2s;
-      }
-      .mb-deal-link:hover { background: rgba(251,191,36,.1); border-color: #fbbf24; }
-    </style>
-    <div class="max-w-[1280px] mx-auto px-4 lg:px-8 relative">
-      <div class="text-center mb-12 reveal">
-        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
-          <i data-lucide="sunrise" class="w-3.5 h-3.5"></i>
-          <span data-i18n="briefing.eyebrow">الموجز اليومي للمستثمر</span>
-        </div>
-        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="briefing.title">ما تحتاج لمعرفته اليوم</h2>
-        <p class="mt-3 text-white/60 max-w-2xl mx-auto" data-i18n="briefing.subtitle">5 أخبار حصرية + صفقة اليوم — كل صباح قبل الساعة 7 ص</p>
-        <div class="mt-4 inline-flex items-center gap-2 text-[11px] text-white/40 font-mono">
-          <span class="live-dot"></span>
-          <span id="briefing-last-update" data-i18n="briefing.lastUpdate">آخر تحديث 6:45 ص</span>
-        </div>
-      </div>
-
-      <div class="grid lg:grid-cols-[1.6fr_1fr] gap-8 reveal">
-        <!-- Timeline -->
-        <div>
-          <div class="text-xs font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
-            <i data-lucide="flame" class="w-3.5 h-3.5"></i>
-            <span data-i18n="briefing.top5">أهم 5 أحداث اليوم</span>
-          </div>
-          <div id="briefing-items" class="mb-timeline"></div>
-        </div>
-
-        <!-- Deal of the Day -->
-        <div>
-          <div class="text-xs font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
-            <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-            <span data-i18n="briefing.dealOfDay">صفقة اليوم</span>
-          </div>
-          <div class="mb-deal-card">
-            <span class="mb-deal-tag" data-i18n="briefing.exclusive">EXCLUSIVE · حصري</span>
-            <div class="text-[11px] text-white/50 font-mono uppercase tracking-widest mb-1" data-i18n="briefing.dealValue">قيمة الصفقة</div>
-            <div class="mb-deal-value" id="briefing-deal-value">—</div>
-            <h3 id="briefing-deal-title" class="text-base font-bold text-white mb-1">—</h3>
-            <p id="briefing-deal-sector" class="text-xs text-white/50 mb-3">—</p>
-            <div class="mb-deal-score">
-              <span class="text-[10px] font-mono text-white/60 tracking-widest" data-i18n="briefing.score">SCORE</span>
-              <div class="mb-deal-score-bar"><div class="mb-deal-score-fill" id="briefing-deal-score-fill" style="width:0%"></div></div>
-              <span class="text-sm font-mono font-bold text-gold-400" id="briefing-deal-score">—</span>
-            </div>
-            <a href="#deal-room" class="mb-deal-link">
-              <span data-i18n="briefing.viewAll">شاهد جميع الصفقات</span>
-              <i data-lucide="arrow-left" class="w-4 h-4 flip-x"></i>
-            </a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- =========================================================== -->
-  <!--                  LIVE INVESTOR DASHBOARD                      -->
-  <!-- =========================================================== -->
-  <section id="live-dashboard" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-900 to-navy-950">
-    <div class="absolute inset-0 pointer-events-none opacity-50 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(212,175,55,0.18),transparent_60%)]"></div>
-    <style>
-      .country-strip { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; scrollbar-width: thin; }
-      .country-strip::-webkit-scrollbar { height: 4px; }
-      .country-strip::-webkit-scrollbar-thumb { background: rgba(212,175,55,.3); border-radius: 2px; }
-      .country-pill {
-        flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px;
-        padding: 8px 14px; border-radius: 999px;
-        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
-        color: rgba(255,255,255,.7); font-size: 13px; cursor: pointer; transition: all .2s;
-        white-space: nowrap;
-      }
-      .country-pill:hover { background: rgba(255,255,255,.08); color: #fff; }
-      .country-pill.is-active { background: linear-gradient(135deg, #d4af37, #b8941f); color: #1a1a2e; border-color: #d4af37; font-weight: 600; }
-      .country-pill-flag { font-size: 16px; }
-      .country-pill-score {
-        font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700;
-        background: rgba(0,0,0,.2); padding: 2px 6px; border-radius: 4px;
-      }
-      .country-pill.is-active .country-pill-score { background: rgba(0,0,0,.15); color: #1a1a2e; }
-
-      .pulse-card, .vitals-card {
-        background: linear-gradient(155deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-        border: 1px solid rgba(212,175,55,.15);
-        border-radius: 20px; padding: 24px;
-      }
-      .pulse-gauge-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
-      .pulse-gauge-svg { width: 200px; height: 200px; transform: rotate(-90deg); }
-      .pulse-gauge-track { fill: none; stroke: rgba(255,255,255,.06); stroke-width: 12; }
-      #pulse-gauge-arc { fill: none; stroke: #d4af37; stroke-width: 12; stroke-linecap: round; transition: stroke-dasharray .8s ease; filter: drop-shadow(0 0 8px rgba(212,175,55,.5)); }
-      .pulse-gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-      .pulse-gauge-val { font-size: 56px; font-weight: 900; color: #fff; line-height: 1; font-family: 'Courier New', monospace; }
-      .pulse-gauge-out { font-size: 11px; color: rgba(255,255,255,.4); letter-spacing: 2px; margin-top: 4px; }
-
-      .vital-row { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
-      .vital-row:last-child { border-bottom: none; }
-      .vital-row-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-      .vital-name { font-size: 13px; color: rgba(255,255,255,.7); }
-      .vital-value { font-family: 'Courier New', monospace; font-size: 14px; font-weight: 700; }
-      .vital-bar { height: 4px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden; }
-      .vital-bar-fill { height: 100%; border-radius: 2px; transition: width .8s ease; }
-
-      .brief-grid {
-        display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
-      }
-      @media (max-width: 1024px) { .brief-grid { grid-template-columns: repeat(2, 1fr); } }
-      @media (max-width: 600px)  { .brief-grid { grid-template-columns: 1fr; } }
-      .brief-col {
-        background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
-        border-radius: 14px; padding: 14px 14px 8px;
-      }
-      .brief-col-head {
-        display: flex; align-items: center; gap: 6px;
-        font-size: 11px; font-weight: 700; letter-spacing: 2px;
-        color: #d4af37; text-transform: uppercase;
-        padding-bottom: 10px; margin-bottom: 6px;
-        border-bottom: 1px solid rgba(212,175,55,.15);
-      }
-      .brief-col-head svg, .brief-col-head i { width: 14px; height: 14px; }
-      .brief-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
-      .brief-row:last-child { border-bottom: none; }
-      .brief-row-label { font-size: 12px; color: rgba(255,255,255,.65); }
-      .brief-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-      .brief-row-value { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: #fff; }
-      .brief-row-trend { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; font-family: 'Courier New', monospace; }
-      .brief-row-trend.up   { color: #6ee7b7; background: rgba(52,211,153,.1); }
-      .brief-row-trend.down { color: #fca5a5; background: rgba(248,113,113,.1); }
-      .brief-row-trend.flat { color: #fcd34d; background: rgba(251,191,36,.1); }
-    </style>
-    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
-      <div class="text-center mb-10 reveal">
-        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
-          <i data-lucide="activity" class="w-3.5 h-3.5"></i>
-          <span data-i18n="dashboard.eyebrow">لوحة المستثمر · كل الأرقام في مكان واحد</span>
-        </div>
-        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="dashboard.title">صحة الاقتصاد لحظة بلحظة</h2>
-        <p id="pulse-eyebrow-text" class="mt-3 text-white/60 max-w-2xl mx-auto text-sm tracking-widest"></p>
-      </div>
-
-      <!-- Country selector strip -->
-      <div class="country-strip reveal" id="country-strip-scroll"></div>
-
-      <!-- Pulse gauge + Vitals -->
-      <div class="grid lg:grid-cols-[1fr_1.4fr] gap-6 mb-10 reveal">
-        <div class="pulse-card">
-          <div class="text-[11px] font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
-            <i data-lucide="heart-pulse" class="w-3.5 h-3.5"></i>
-            <span data-i18n="dashboard.pulse.title">مؤشر صحة الاقتصاد</span>
-          </div>
-          <div class="pulse-gauge-wrap">
-            <svg class="pulse-gauge-svg" viewBox="0 0 160 160">
-              <circle class="pulse-gauge-track" cx="80" cy="80" r="68"/>
-              <circle id="pulse-gauge-arc" cx="80" cy="80" r="68" stroke-dasharray="0 427"/>
-            </svg>
-            <div class="pulse-gauge-center">
-              <div id="pulse-gauge-value" class="pulse-gauge-val">—</div>
-              <div id="pulse-gauge-out" class="pulse-gauge-out">/ 100</div>
-            </div>
-          </div>
-          <div class="text-center mt-4">
-            <span id="pulse-status-label" class="inline-block text-sm font-bold tracking-wide px-3 py-1 rounded-full bg-gold-500/10 text-gold-300">—</span>
-          </div>
-        </div>
-
-        <div class="vitals-card">
-          <div class="text-[11px] font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
-            <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
-            <span data-i18n="dashboard.vitals.title">المؤشرات الحيوية الستة</span>
-          </div>
-          <div id="pulse-vitals-list"></div>
-        </div>
-      </div>
-
-      <!-- 5-column investor brief -->
-      <div class="reveal">
-        <div class="text-[11px] font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
-          <i data-lucide="layers" class="w-3.5 h-3.5"></i>
-          <span data-i18n="dashboard.brief.title">الموجز الاستثماري — 5 محاور</span>
-        </div>
-        <div class="brief-grid" id="investor-brief-grid"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- =========================================================== -->
-  <!--                     LIVE MARKETS DASHBOARD                   -->
-  <!-- =========================================================== -->
-  <section id="markets" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-900 to-navy-800">
-    <div class="absolute inset-0 pointer-events-none opacity-50 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(212,175,55,0.20),transparent_60%)]"></div>
-    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
-      <div class="flex items-end justify-between gap-6 mb-10 flex-wrap reveal">
-        <div>
-          <div class="lux-eyebrow mb-4"><i data-lucide="activity" class="w-3.5 h-3.5"></i><span data-i18n="markets.eyebrow">LIVE MARKETS · EGX TERMINAL</span></div>
-          <h2 class="lux-title text-white" data-i18n="markets.title">الأسواق المالية لحظة بلحظة</h2>
-          <p class="mt-5 text-white/60 max-w-xl text-base" data-i18n="markets.subtitle">متابعة فورية للبورصة المصرية EGX — أسعار الأسهم، الذهب، الدولار، وأسعار الصرف لحظة بلحظة.</p>
-        </div>
-        <div class="flex items-center gap-3 text-xs text-white/50"><span class="live-dot"></span><span class="uppercase tracking-widest" data-i18n="markets.lastUpdate">آخر تحديث</span><span class="num font-mono text-gold-300">14:32 GMT+2</span></div>
-      </div>
-      <!-- Tabs -->
-      <div class="flex gap-2 mb-8" id="market-tabs">
-        <button class="market-tab lux-pill is-active" data-tab="stocks" data-i18n="markets.stocks">الأسهم</button>
-        <button class="market-tab lux-pill" data-tab="commodities" data-i18n="markets.commodities">السلع</button>
-        <button class="market-tab lux-pill" data-tab="currencies" data-i18n="markets.currencies">العملات</button>
-      </div>
-      <!-- Cards -->
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" id="market-cards"></div>
-    </div>
-  </section>
-
-  <!-- =========================================================== -->
-  <!--                   CRYPTOCURRENCY MARKET                      -->
-  <!-- =========================================================== -->
-  <section id="crypto" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-800 to-navy-900">
-    <div class="absolute inset-0 pointer-events-none opacity-30" style="background:radial-gradient(ellipse 80% 40% at 50% 0%, rgba(244,208,63,.18), transparent 60%), radial-gradient(ellipse 60% 40% at 100% 100%, rgba(139,92,246,.15), transparent 60%);"></div>
-    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
-
-      <!-- Header -->
-      <div class="mb-10 flex items-end justify-between flex-wrap gap-6 reveal">
-        <div>
-          <div class="lux-eyebrow mb-4"><i data-lucide="bitcoin" class="w-3.5 h-3.5"></i><span data-i18n="crypto.eyebrow">CRYPTO · LIVE PRICES</span></div>
-          <h2 class="lux-title text-white" data-i18n="crypto.title">العملات الرقمية</h2>
-          <p class="mt-4 text-white/55 max-w-2xl text-base" data-i18n="crypto.subtitle">أسعار العملات الرقمية الرئيسية لحظة بلحظة — الـ market cap، التغيّر 24h و 7d، ورسوم بيانية مصغّرة.</p>
-        </div>
-        <div class="crypto-meta-wrap">
-          <div class="crypto-meta-pill">
-            <span class="crypto-meta-lbl" data-i18n="crypto.totalCap">Total cap</span>
-            <span class="crypto-meta-val">$3.24T</span>
-            <span class="crypto-meta-delta up">▲ 2.1%</span>
-          </div>
-          <div class="crypto-meta-pill">
-            <span class="crypto-meta-lbl" data-i18n="crypto.btcDom">BTC dom.</span>
-            <span class="crypto-meta-val">52.4%</span>
-          </div>
-          <div class="crypto-meta-pill">
-            <span class="crypto-meta-lbl" data-i18n="crypto.fearGreed">Fear/Greed</span>
-            <span class="crypto-meta-val crypto-fg">72</span>
-            <span class="crypto-meta-delta up" data-i18n="crypto.fgLevel">Greed</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 4 Hero crypto cards -->
-      <div class="crypto-hero-row" id="crypto-hero"></div>
-
-      <!-- Filter pills -->
-      <div class="crypto-filters" id="crypto-filters">
-        <button type="button" class="crypto-filter is-active" data-filter="all" data-i18n="crypto.filter.all">All</button>
-        <button type="button" class="crypto-filter" data-filter="gainers" data-i18n="crypto.filter.gainers">Top gainers</button>
-        <button type="button" class="crypto-filter" data-filter="losers" data-i18n="crypto.filter.losers">Top losers</button>
-        <button type="button" class="crypto-filter" data-filter="stable" data-i18n="crypto.filter.stable">Stablecoins</button>
-      </div>
-
-      <!-- Coin table -->
-      <div class="crypto-table-wrap">
-        <div class="crypto-table-head">
-          <div class="crypto-th crypto-th-rank">#</div>
-          <div class="crypto-th crypto-th-name" data-i18n="crypto.col.name">Name</div>
-          <div class="crypto-th crypto-th-price" data-i18n="crypto.col.price">Price</div>
-          <div class="crypto-th crypto-th-24h" data-i18n="crypto.col.24h">24h</div>
-          <div class="crypto-th crypto-th-7d" data-i18n="crypto.col.7d">7d</div>
-          <div class="crypto-th crypto-th-cap" data-i18n="crypto.col.cap">Market cap</div>
-          <div class="crypto-th crypto-th-chart" data-i18n="crypto.col.chart">7d chart</div>
-        </div>
-        <div class="crypto-table-body" id="crypto-table-body"></div>
-      </div>
-
-      <!-- Footer note -->
-      <div class="crypto-foot">
-        <span class="crypto-foot-item"><span class="live-dot"></span><span data-i18n="crypto.footLive">Live · CoinGecko + Binance feed</span></span>
-        <span class="crypto-foot-sep">·</span>
-        <span data-i18n="crypto.footDisclaimer">Prices are indicative. Not financial advice.</span>
-      </div>
-    </div>
-
-    <!-- Scoped styling for crypto section -->
-    <style>
-      /* === Meta pills (right side of header) === */
-      .crypto-meta-wrap {
-        display: flex; gap: 8px; flex-wrap: wrap;
-      }
-      .crypto-meta-pill {
-        display: inline-flex; align-items: center; gap: 8px;
-        padding: 8px 14px;
-        background: rgba(255,255,255,.04);
-        border: 1px solid rgba(244,208,63,.18);
-        border-radius: 999px;
-        font-size: 11px; font-weight: 600;
-        color: rgba(255,255,255,.75);
-      }
-      .crypto-meta-lbl {
-        font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
-        color: rgba(255,255,255,.5); font-weight: 700;
-      }
-      .crypto-meta-val {
-        font-family: 'JetBrains Mono', monospace; font-weight: 800;
-        color: #F4D03F;
-      }
-      .crypto-meta-delta {
-        font-family: 'JetBrains Mono', monospace; font-weight: 700;
-        font-size: 10px;
-      }
-      .crypto-meta-delta.up { color: #34d399; }
-      .crypto-meta-delta.down { color: #f87171; }
-      .crypto-fg { color: #34d399 !important; }
-
-      /* === Hero cards (top 4: BTC, ETH, BNB, SOL) === */
-      .crypto-hero-row {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 14px;
-        margin-bottom: 24px;
-      }
-      @media (max-width: 900px) { .crypto-hero-row { grid-template-columns: repeat(2, 1fr); } }
-      @media (max-width: 540px) { .crypto-hero-row { grid-template-columns: 1fr; } }
-
-      .crypto-hero {
-        position: relative;
-        background:
-          linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.01) 60%),
-          rgba(15,21,53,.55);
-        border: 1px solid rgba(255,255,255,.10);
-        border-radius: 18px;
-        padding: 18px;
-        transition: transform .35s cubic-bezier(.2,.8,.2,1), border-color .35s, box-shadow .35s;
-        overflow: hidden;
-      }
-      .crypto-hero::before {
-        content:''; position:absolute; top:0; left:0; right:0; height:2px;
-        background: linear-gradient(90deg, transparent, var(--cc, #F4D03F), transparent);
-      }
-      .crypto-hero:hover {
-        transform: translateY(-4px);
-        border-color: color-mix(in srgb, var(--cc, #F4D03F) 40%, transparent);
-        box-shadow: 0 30px 60px -20px color-mix(in srgb, var(--cc, #F4D03F) 35%, transparent);
-      }
-      .crypto-hero-head {
-        display: flex; align-items: center; gap: 10px;
-        margin-bottom: 12px;
-      }
-      .crypto-hero-logo {
-        width: 38px; height: 38px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--cc, #F4D03F), color-mix(in srgb, var(--cc, #F4D03F) 50%, #0A0E27));
-        color: #fff;
-        font-weight: 900; font-size: 11px;
-        display: grid; place-items: center;
-        flex-shrink: 0;
-        font-family: 'Inter', sans-serif;
-        box-shadow: 0 6px 16px -4px var(--cc, rgba(244,208,63,.4));
-      }
-      .crypto-hero-id { flex: 1; min-width: 0; }
-      .crypto-hero-symbol {
-        font-family: 'JetBrains Mono', monospace; font-weight: 800;
-        font-size: 13px; color: #fff;
-        letter-spacing: .04em;
-      }
-      .crypto-hero-name {
-        font-size: 11px; color: rgba(255,255,255,.55);
-        margin-top: 1px;
-      }
-      .crypto-hero-rank {
-        font-size: 9px; font-weight: 700;
-        padding: 3px 7px;
-        border-radius: 5px;
-        background: rgba(244,208,63,.10);
-        color: #F4D03F;
-        font-family: 'JetBrains Mono', monospace;
-      }
-      .crypto-hero-price {
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 800;
-        font-size: 24px;
-        color: #fff;
-        letter-spacing: -.01em;
-        line-height: 1;
-      }
-      .crypto-hero-delta {
-        display: inline-flex; align-items: center; gap: 4px;
-        margin-top: 6px;
-        font-family: 'JetBrains Mono', monospace; font-weight: 700;
-        font-size: 12px;
-        padding: 3px 9px;
-        border-radius: 999px;
-      }
-      .crypto-hero-delta.up   { background: rgba(52,211,153,.12);  color: #34d399; border: 1px solid rgba(52,211,153,.25); }
-      .crypto-hero-delta.down { background: rgba(248,113,113,.12); color: #f87171; border: 1px solid rgba(248,113,113,.25); }
-      .crypto-hero-spark {
-        margin-top: 14px;
-        height: 44px;
-      }
-      .crypto-hero-spark svg { width: 100%; height: 100%; display: block; }
-      .crypto-hero-foot {
-        display: flex; justify-content: space-between;
-        margin-top: 12px;
-        padding-top: 10px;
-        border-top: 1px solid rgba(255,255,255,.06);
-        font-size: 9px;
-        color: rgba(255,255,255,.5);
-      }
-      .crypto-hero-foot-num {
-        font-family: 'JetBrains Mono', monospace; font-weight: 700;
-        color: rgba(255,255,255,.8);
-      }
-
-      /* === Filter pills === */
-      .crypto-filters {
-        display: flex; gap: 8px; flex-wrap: wrap;
-        margin-bottom: 14px;
-      }
-      .crypto-filter {
-        padding: 8px 16px;
-        font-size: 12px; font-weight: 600;
-        color: rgba(255,255,255,.65);
-        background: rgba(255,255,255,.04);
-        border: 1px solid rgba(255,255,255,.10);
-        border-radius: 999px;
-        cursor: pointer;
-        transition: all .2s ease;
-        font-family: inherit;
-      }
-      .crypto-filter:hover {
-        background: rgba(244,208,63,.10);
-        border-color: rgba(244,208,63,.30);
-        color: #F4D03F;
-      }
-      .crypto-filter.is-active {
-        background: linear-gradient(135deg, rgba(244,208,63,.22), rgba(212,175,55,.10));
-        border-color: rgba(244,208,63,.55);
-        color: #FBE38C;
-        box-shadow: 0 4px 16px -4px rgba(244,208,63,.30);
-      }
-
-      /* === Table === */
-      .crypto-table-wrap {
-        background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
-        border: 1px solid rgba(255,255,255,.08);
-        border-radius: 18px;
-        overflow: hidden;
-        backdrop-filter: blur(12px) saturate(140%);
-        -webkit-backdrop-filter: blur(12px) saturate(140%);
-      }
-      .crypto-table-head, .crypto-row {
-        display: grid;
-        grid-template-columns: 40px 1.6fr 1fr 0.8fr 0.8fr 1.1fr 1fr;
-        align-items: center;
-        gap: 10px;
-        padding: 12px 18px;
-      }
-      .crypto-table-head {
-        background: rgba(244,208,63,.04);
-        border-bottom: 1px solid rgba(244,208,63,.15);
-      }
-      .crypto-th {
-        font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
-        color: #F4D03F; font-weight: 800;
-      }
-      .crypto-th-rank { text-align: center; }
-      .crypto-th-price, .crypto-th-24h, .crypto-th-7d, .crypto-th-cap { text-align: end; }
-
-      .crypto-row {
-        border-bottom: 1px dashed rgba(255,255,255,.06);
-        transition: background .2s ease, transform .2s ease;
-        cursor: pointer;
-      }
-      .crypto-row:last-child { border-bottom: 0; }
-      .crypto-row:hover { background: rgba(244,208,63,.04); }
-
-      .crypto-rank {
-        text-align: center;
-        font-family: 'JetBrains Mono', monospace; font-weight: 700;
-        font-size: 12px;
-        color: rgba(255,255,255,.55);
-      }
-      .crypto-row-id {
-        display: flex; align-items: center; gap: 10px;
-        min-width: 0;
-      }
-      .crypto-logo-sm {
-        width: 30px; height: 30px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--cc, #F4D03F), color-mix(in srgb, var(--cc, #F4D03F) 50%, #0A0E27));
-        color: #fff; font-weight: 800; font-size: 9px;
-        display: grid; place-items: center;
-        flex-shrink: 0;
-        font-family: 'Inter', sans-serif;
-      }
-      .crypto-row-id-text {
-        display: flex; flex-direction: column; min-width: 0;
-      }
-      .crypto-row-name {
-        font-weight: 700; font-size: 13px;
-        color: #fff;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-      .crypto-row-symbol {
-        font-family: 'JetBrains Mono', monospace; font-weight: 600;
-        font-size: 10px;
-        color: rgba(255,255,255,.5);
-        letter-spacing: .04em;
-      }
-
-      .crypto-num {
-        font-family: 'JetBrains Mono', monospace; font-weight: 700;
-        font-size: 13px;
-        color: #fff;
-        text-align: end;
-      }
-      .crypto-delta {
-        font-family: 'JetBrains Mono', monospace; font-weight: 700;
-        font-size: 11px;
-        text-align: end;
-      }
-      .crypto-delta.up   { color: #34d399; }
-      .crypto-delta.down { color: #f87171; }
-      .crypto-delta.flat { color: rgba(255,255,255,.45); }
-
-      .crypto-row-spark {
-        height: 36px;
-      }
-      .crypto-row-spark svg { width: 100%; height: 100%; display: block; }
-
-      @media (max-width: 900px) {
-        .crypto-table-head, .crypto-row {
-          grid-template-columns: 30px 1.4fr 1fr 0.8fr 1fr;
-          padding: 10px 14px;
-        }
-        .crypto-th-7d, .crypto-th-chart,
-        .crypto-row > :nth-child(5), .crypto-row > :nth-child(7) { display: none; }
-      }
-      @media (max-width: 540px) {
-        .crypto-table-head, .crypto-row {
-          grid-template-columns: 26px 1.3fr 1fr 0.8fr;
-        }
-        .crypto-th-cap, .crypto-row > :nth-child(6) { display: none; }
-      }
-
-      .crypto-foot {
-        display: flex; align-items: center; gap: 10px;
-        margin-top: 14px;
-        font-size: 11px; color: rgba(255,255,255,.45);
-        flex-wrap: wrap;
-      }
-      .crypto-foot-item { display: inline-flex; align-items: center; gap: 6px; }
-      .crypto-foot-sep { opacity: .4; }
-
-      /* Empty filter result */
-      .crypto-empty {
-        padding: 50px 20px;
-        text-align: center;
-        color: rgba(255,255,255,.5);
-        font-size: 13px;
-      }
-
-      /* Fallback for color-mix */
-      @supports not (color: color-mix(in srgb, red, blue)) {
-        .crypto-logo-sm, .crypto-hero-logo {
-          background: linear-gradient(135deg, #F4D03F, #b08d23);
-        }
-      }
-    </style>
-  </section>
-
-  <!-- =========================================================== -->
-  <!--                   CAIRO BUSINESS INDEX                       -->
-  <!-- =========================================================== -->
-  <section id="cbi-index" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-800 to-navy-900">
-    <div class="aurora opacity-40" aria-hidden="true"><div class="a3"></div></div>
-    <!-- Animated grid bg -->
-    <div class="absolute inset-0 pointer-events-none opacity-[0.04]" style="background-image:linear-gradient(rgba(212,175,55,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(212,175,55,.4) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(ellipse at center, black 10%, transparent 70%);"></div>
-    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
-      <!-- Header -->
-      <div class="text-center mb-12 reveal">
-        <div class="lux-eyebrow justify-center mb-5"><i data-lucide="zap" class="w-3.5 h-3.5"></i><span data-i18n="cbi.eyebrow">EXCLUSIVE PROPRIETARY DATA</span></div>
-        <h2 class="lux-title text-white" data-i18n="cbi.title">مؤشرات كايرو بيزنس</h2>
-        <div class="lux-divider mt-6 mx-auto max-w-md"><span class="h"></span><span class="d"></span><span class="h"></span></div>
-        <p class="mt-6 text-white/60 max-w-2xl mx-auto text-base" data-i18n="cbi.subtitle">بيانات حصرية لا تجدها في أي مكان آخر — مؤشرات ملكية لتتبع السوق والقطاعات والعقارات</p>
-      </div>
-
-      <!-- Flagship Composite Index Hero -->
-      <div id="cbi-hero" class="mb-8"></div>
-
-      <!-- Category Filter Tabs -->
-      <div class="flex justify-center gap-2 flex-wrap mb-8" id="cbi-tabs"></div>
-
-      <!-- Index Cards Grid -->
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-10" id="cbi-cards"></div>
-
-      <!-- Methodology Banner -->
-      <div class="glass-light border border-white/10 rounded-2xl p-6 lg:p-8 flex flex-col lg:flex-row items-start lg:items-center gap-6">
-        <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gold-500/20 flex items-center justify-center">
-          <i data-lucide="shield-check" class="w-7 h-7 text-gold-400"></i>
-        </div>
-        <div class="flex-1">
-          <h3 class="text-white font-bold text-lg mb-1" data-i18n="cbi.methTitle">منهجية شفافة وموثوقة</h3>
-          <p class="text-white/60 text-sm leading-relaxed" data-i18n="cbi.methDesc">جميع مؤشرات CBI مبنية على بيانات حقيقية من بورصات، وكالات عقارية، واستبيانات ميدانية. يتم مراجعتها من فريق محللين مستقل وتُحدّث بشكل دوري. اضغط على أي مؤشر لمعرفة المنهجية بالتفصيل.</p>
-        </div>
-        <div class="flex gap-4 text-center flex-shrink-0">
-          <div><div class="text-2xl font-black text-gold-400">8</div><div class="text-[10px] text-white/50 uppercase tracking-wider" data-i18n="cbi.statIdx">Indices</div></div>
-          <div class="w-px bg-white/10"></div>
-          <div><div class="text-2xl font-black text-gold-400">7</div><div class="text-[10px] text-white/50 uppercase tracking-wider" data-i18n="cbi.statCap">Capitals</div></div>
-          <div class="w-px bg-white/10"></div>
-          <div><div class="text-2xl font-black text-emerald-400">Live</div><div class="text-[10px] text-white/50 uppercase tracking-wider" data-i18n="cbi.statUpd">Updated</div></div>
-        </div>
-      </div>
-
-      <!-- Citation -->
-      <div class="text-center pt-8 mt-8 border-t border-white/10">
-        <p class="text-xs text-white/50" data-i18n="cbi.citation">Cited by: Bloomberg, Reuters, Al-Ahram, Zawya, Arab News, Argaam</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- =========================================================== -->
-  <!--                    ECONOMIC HEATMAP                          -->
-
-  <!-- =========================================================== -->
-  <section id="top10" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-800 to-navy-900">
-    <div class="absolute inset-0 pointer-events-none opacity-50" style="background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,0.30), transparent 65%);"></div>
-    <div class="aurora opacity-30" aria-hidden="true"><div class="a3"></div></div>
-
-    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
-      <div class="text-center mb-14 reveal">
-        <div class="lux-eyebrow justify-center mb-5"><i data-lucide="crown" class="w-3.5 h-3.5"></i><span data-i18n="top10.eyebrow">POWER LIST · MENA EDITION 2026</span></div>
-        <h2 class="lux-title text-white" data-i18n="top10.title">أقوى 10 شركات في الشرق الأوسط</h2>
-        <div class="lux-divider mt-6 mx-auto max-w-md"><span class="h"></span><span class="d"></span><span class="h"></span></div>
-        <p class="mt-6 text-white/70 max-w-3xl mx-auto text-lg leading-relaxed" data-i18n="top10.subtitle2">من النفط إلى الذكاء الاصطناعي.. 10 شركات تهيمن على كل القطاعات وتشكّل ملامح الاقتصاد الجديد للشرق الأوسط</p>
-        <div class="flex items-center justify-center gap-3 mt-6 text-xs text-white/50 flex-wrap">
-          <span class="flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-mint-400"></i><span data-i18n="top10.meta.audit">تقييم مستقل</span></span>
-          <span class="opacity-40">·</span>
-          <span class="flex items-center gap-1.5"><i data-lucide="trending-up" class="w-3.5 h-3.5 text-gold-300"></i><span data-i18n="top10.meta.data">بيانات Q1 2026</span></span>
-          <span class="opacity-40">·</span>
-          <span class="flex items-center gap-1.5"><i data-lucide="globe-2" class="w-3.5 h-3.5 text-violet-400"></i><span data-i18n="top10.meta.scope">10 قطاعات · 5 دول</span></span>
-        </div>
-      </div>
-
-      <!-- Sector Filter Pills (data-driven) -->
-      <div id="top10-filter-pills" class="flex justify-center gap-2 flex-wrap mb-10 reveal"></div>
-
-      <!-- Trophy gallery (top 3) + Ranked list (4–10) — data-driven -->
-      <div id="top-companies-grid">
-        <div id="top10-trophies" class="trophy-row"></div>
-        <div id="top10-list" class="trophy-list"></div>
-      </div>
-
-      <!-- Hidden legacy containers (for old JS hooks - renamed to avoid id conflicts) -->
-      <div class="hidden" aria-hidden="true">
-        <div id="top10-tabs-legacy"></div>
-        <div id="top10-podium-legacy"></div>
-        <ol id="top10-list-legacy"></ol>
-      </div>
-    </div>
-
-    <!-- Sector card styling (scoped) -->
-    <style>
-      .sector-card {
-        position: relative; border-radius: 24px; overflow: hidden;
-        background:
-          linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.01) 60%),
-          rgba(15,21,53,.55);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border: 1px solid rgba(148,163,217,.10);
-        transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s, border-color .4s;
-        will-change: transform;
-      }
-      .sector-card::before {
-        content:''; position:absolute; inset:-1px; border-radius:24px; padding:1px;
-        background: linear-gradient(160deg, var(--sc, #c9a227), transparent 50%, var(--sc2, #c9a227));
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor; mask-composite: exclude;
-        opacity: 0; transition: opacity .35s; pointer-events: none;
-      }
-      .sector-card:hover { transform: translateY(-6px); border-color: transparent;
-        box-shadow: 0 30px 60px -20px var(--sc, #c9a227), 0 1px 0 rgba(255,255,255,.1) inset; }
-      .sector-card:hover::before { opacity: .6; }
-
-      .sector-card .sector-bar {
-        height: 4px; background: linear-gradient(90deg, var(--sc, #c9a227), var(--sc2, #c9a227), var(--sc, #c9a227));
-        background-size: 200% 100%;
-        animation: sectorShine 3s linear infinite;
-      }
-      @keyframes sectorShine { 0% { background-position: 0 0; } 100% { background-position: 200% 0; } }
-
-      .sector-card-inner { padding: 22px 20px 24px; position: relative; z-index: 1; }
-
-      .rank-badge {
-        font-family: 'Playfair Display', serif; font-weight: 900;
-        font-size: 56px; line-height: .8;
-        background: linear-gradient(135deg, var(--sc, #D4AF37), var(--sc2, #b08d23));
-        -webkit-background-clip: text; background-clip: text; color: transparent;
-        filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--sc, #c9a227) 35%, transparent));
-      }
-      .sector-flag { font-size: 28px; filter: drop-shadow(0 2px 8px rgba(0,0,0,.5)); transition: transform .3s; }
-      .sector-card:hover .sector-flag { transform: scale(1.15) rotate(-6deg); }
-
-      .logo-circle {
-        width: 60px; height: 60px; border-radius: 18px;
-        background: linear-gradient(135deg, var(--sc, #D4AF37) 0%, var(--sc2, #b08d23) 100%);
-        display: grid; place-items: center;
-        font-weight: 900; color: #0A0E27; font-size: 14px;
-        margin-bottom: 16px;
-        box-shadow: 0 10px 30px -10px var(--sc, #D4AF37), 0 1px 0 rgba(255,255,255,.3) inset;
-        transition: transform .35s;
-        font-family: 'Cairo', 'Inter', sans-serif;
-      }
-      .sector-card:hover .logo-circle { transform: rotate(-6deg) scale(1.05); }
-
-      .company-name { font-weight: 900; color: #fff; font-size: 18px; margin-bottom: 4px; line-height: 1.2; }
-      .company-meta { font-size: 11px; color: rgba(255,255,255,.55); margin-bottom: 12px; letter-spacing: .02em; }
-
-      .sector-pill {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 5px 12px; border-radius: 999px;
-        background: color-mix(in srgb, var(--sc, #c9a227) 15%, transparent);
-        color: var(--sc, #c9a227);
-        border: 1px solid color-mix(in srgb, var(--sc, #c9a227) 35%, transparent);
-        font-size: 11px; font-weight: 700;
-        margin-bottom: 16px;
-      }
-
-      .market-cap {
-        display: flex; flex-direction: column; gap: 2px;
-        padding: 12px 0; margin: 4px 0;
-        border-top: 1px solid rgba(255,255,255,.06);
-        border-bottom: 1px solid rgba(255,255,255,.06);
-      }
-      .market-cap .kpi-val {
-        font-family: 'JetBrains Mono', monospace; font-weight: 800;
-        font-size: 26px; line-height: 1;
-        background: linear-gradient(135deg, var(--sc, #D4AF37), color-mix(in srgb, var(--sc, #c9a227) 50%, #fff));
-        -webkit-background-clip: text; background-clip: text; color: transparent;
-      }
-      .market-cap .kpi-lab { color: rgba(255,255,255,.45); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
-
-      .company-tagline {
-        font-size: 12px; color: rgba(255,255,255,.65);
-        line-height: 1.55; margin: 14px 0 14px;
-      }
-
-      .trend-row { display: flex; align-items: center; gap: 8px; }
-
-      /* Fallback for browsers without color-mix */
-      @supports not (color: color-mix(in srgb, red, blue)) {
-        .sector-pill { background: rgba(212,175,55,.15); border-color: rgba(212,175,55,.35); }
-      }
-
-      /* ============================================== */
-      /*       TROPHY GALLERY — AWARDS NIGHT           */
-      /* ============================================== */
-
-      /* Row of 3 trophy cards: silver | gold (raised) | bronze */
-      .trophy-row {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 18px;
-        align-items: end;
-        margin-bottom: 36px;
-      }
-      @media (max-width: 768px) {
-        .trophy-row { grid-template-columns: 1fr; gap: 14px; }
-      }
-
-      .trophy-card {
-        position: relative;
-        background:
-          linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01));
-        border: 1px solid rgba(255,255,255,.10);
-        border-radius: 22px;
-        padding: 28px 22px 26px;
-        text-align: center;
-        backdrop-filter: blur(16px) saturate(150%);
-        -webkit-backdrop-filter: blur(16px) saturate(150%);
-        transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s, border-color .4s;
-        will-change: transform;
-        overflow: hidden;
-      }
-      .trophy-card::before {
-        content:'';
-        position: absolute; top: 0; left: 0; right: 0;
-        height: 3px;
-        opacity: .8;
-      }
-      .trophy-card:hover {
-        transform: translateY(-6px);
-      }
-
-      /* GOLD — center, raised, glowing */
-      .trophy-gold {
-        background:
-          linear-gradient(180deg, rgba(244,208,63,.18), rgba(244,208,63,.03) 60%, rgba(255,255,255,.01));
-        border-color: rgba(244,208,63,.40);
-        transform: translateY(-14px);
-        box-shadow:
-          0 30px 60px -20px rgba(244,208,63,.35),
-          0 1px 0 rgba(255,255,255,.08) inset;
-      }
-      .trophy-gold::before {
-        background: linear-gradient(90deg, transparent, #f4d03f, transparent);
-      }
-      .trophy-gold:hover {
-        transform: translateY(-22px);
-        box-shadow: 0 40px 80px -20px rgba(244,208,63,.55), 0 1px 0 rgba(255,255,255,.12) inset;
-        border-color: rgba(244,208,63,.65);
-      }
-
-      /* SILVER */
-      .trophy-silver {
-        background:
-          linear-gradient(180deg, rgba(203,213,225,.10), rgba(203,213,225,.02) 60%, rgba(255,255,255,.01));
-        border-color: rgba(203,213,225,.28);
-      }
-      .trophy-silver::before { background: linear-gradient(90deg, transparent, #cbd5e1, transparent); }
-      .trophy-silver:hover { box-shadow: 0 24px 48px -20px rgba(203,213,225,.25); border-color: rgba(203,213,225,.45); }
-
-      /* BRONZE */
-      .trophy-bronze {
-        background:
-          linear-gradient(180deg, rgba(217,119,6,.10), rgba(217,119,6,.02) 60%, rgba(255,255,255,.01));
-        border-color: rgba(217,119,6,.28);
-      }
-      .trophy-bronze::before { background: linear-gradient(90deg, transparent, #d97706, transparent); }
-      .trophy-bronze:hover { box-shadow: 0 24px 48px -20px rgba(217,119,6,.30); border-color: rgba(217,119,6,.45); }
-
-      /* Crown icon (gold only) */
-      .trophy-crown {
-        position: absolute;
-        top: -14px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 36px; height: 36px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #fde047, #ca8a04);
-        color: #0A0E27;
-        display: grid; place-items: center;
-        box-shadow: 0 8px 24px -6px rgba(244,208,63,.6);
-        z-index: 2;
-      }
-
-      /* Trophy SVG sizing */
-      .trophy-svg {
-        width: 56px; height: 70px;
-        display: block; margin: 0 auto 6px;
-      }
-      .trophy-gold .trophy-svg {
-        width: 68px; height: 84px;
-        filter: drop-shadow(0 8px 16px rgba(244,208,63,.5));
-      }
-      .trophy-silver .trophy-svg { filter: drop-shadow(0 6px 12px rgba(203,213,225,.3)); }
-      .trophy-bronze .trophy-svg { filter: drop-shadow(0 6px 12px rgba(217,119,6,.3)); }
-
-      .trophy-tier {
-        font-size: 11px; letter-spacing: .26em; text-transform: uppercase;
-        font-weight: 800; margin-top: 4px;
-      }
-      .trophy-gold   .trophy-tier { color: #f4d03f; }
-      .trophy-silver .trophy-tier { color: rgba(203,213,225,.95); }
-      .trophy-bronze .trophy-tier { color: rgba(217,119,6,.95); }
-
-      .trophy-rank {
-        font-family: 'Playfair Display', serif;
-        font-size: 22px; font-weight: 900;
-        line-height: 1; margin-top: 4px;
-        color: rgba(255,255,255,.85);
-        letter-spacing: -0.02em;
-      }
-      .trophy-gold .trophy-rank   { color: #f4d03f; }
-      .trophy-silver .trophy-rank { color: #e2e8f0; }
-      .trophy-bronze .trophy-rank { color: #fbbf24; }
-
-      .trophy-name {
-        font-family: 'Cairo', sans-serif;
-        font-weight: 900;
-        font-size: 17px;
-        color: #fff;
-        line-height: 1.2;
-        margin-top: 10px;
-      }
-      [lang="en"] .trophy-name { font-family: 'Inter', sans-serif; letter-spacing: -0.015em; }
-      .trophy-gold .trophy-name { font-size: 19px; }
-
-      .trophy-sector {
-        font-size: 11px;
-        color: rgba(255,255,255,.6);
-        margin-top: 4px;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-      }
-      .trophy-flag { font-size: 16px; line-height: 1; }
-
-      .trophy-value {
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 800;
-        font-size: 22px;
-        margin-top: 14px;
-        line-height: 1;
-      }
-      .trophy-gold   .trophy-value { color: #f4d03f; font-size: 28px; }
-      .trophy-silver .trophy-value { color: rgba(203,213,225,.95); }
-      .trophy-bronze .trophy-value { color: rgba(217,119,6,.95); }
-
-      .trophy-trend {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px; font-weight: 700;
-        color: #34d399;
-        margin-top: 6px;
-        padding: 4px 12px;
-        border-radius: 999px;
-        background: rgba(52,211,153,.10);
-        border: 1px solid rgba(52,211,153,.25);
-        display: inline-block;
-      }
-
-      /* ============================================== */
-      /*               RANKED LIST (4–10)              */
-      /* ============================================== */
-      .trophy-list {
-        background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-        border: 1px solid rgba(255,255,255,.08);
-        border-radius: 22px;
-        padding: 22px 22px 16px;
-        backdrop-filter: blur(12px) saturate(140%);
-        -webkit-backdrop-filter: blur(12px) saturate(140%);
-      }
-      .trophy-list-head {
-        display: flex; justify-content: space-between; align-items: end;
-        margin-bottom: 14px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(244,208,63,.18);
-      }
-      .trophy-list-eyebrow {
-        font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
-        color: #f4d03f; font-weight: 800;
-      }
-      .trophy-list-meta {
-        font-size: 11px; color: rgba(255,255,255,.55);
-        padding: 4px 10px; border-radius: 999px;
-        background: rgba(255,255,255,.05);
-        border: 1px solid rgba(255,255,255,.08);
-      }
-
-      .trophy-list-rows { display: flex; flex-direction: column; }
-
-      .trophy-list-row {
-        display: grid;
-        grid-template-columns: 50px 42px 1fr 110px 80px;
-        gap: 14px;
-        align-items: center;
-        padding: 12px 8px;
-        border-bottom: 1px dashed rgba(255,255,255,.07);
-        transition: all .25s ease;
-        position: relative;
-        cursor: pointer;
-      }
-      .trophy-list-row:last-child { border-bottom: 0; }
-      .trophy-list-row:hover {
-        background: rgba(244,208,63,.04);
-        padding-inline-start: 16px;
-        padding-inline-end: 16px;
-        border-radius: 10px;
-      }
-      .trophy-list-row::after {
-        content: '';
-        position: absolute;
-        top: 50%; transform: translateY(-50%);
-        inset-inline-start: 0;
-        width: 2px; height: 0;
-        background: var(--sc, #f4d03f);
-        transition: height .3s ease;
-      }
-      .trophy-list-row:hover::after { height: 70%; }
-
-      .trl-rank {
-        font-family: 'Playfair Display', serif;
-        font-weight: 900;
-        font-size: 28px;
-        color: rgba(244,208,63,.45);
-        line-height: 1;
-        letter-spacing: -0.03em;
-      }
-      .trophy-list-row:hover .trl-rank { color: rgba(244,208,63,.85); }
-
-      .trl-logo {
-        width: 36px; height: 36px;
-        border-radius: 10px;
-        background: linear-gradient(135deg, var(--sc, #f4d03f), color-mix(in srgb, var(--sc, #f4d03f) 50%, #0A0E27));
-        color: #0A0E27;
-        font-weight: 900;
-        font-size: 12px;
-        display: grid; place-items: center;
-        flex-shrink: 0;
-        font-family: 'Cairo', 'Inter', sans-serif;
-      }
-
-      .trl-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-      .trl-name {
-        font-weight: 800;
-        font-size: 14px;
-        color: #fff;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-      .trl-meta {
-        font-size: 11px;
-        color: rgba(255,255,255,.55);
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-
-      .trl-value {
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 800;
-        font-size: 14px;
-        color: var(--sc, #fff);
-        text-align: end;
-      }
-      .trl-trend {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px; font-weight: 700;
-        color: #34d399;
-        padding: 3px 10px;
-        border-radius: 999px;
-        background: rgba(52,211,153,.10);
-        border: 1px solid rgba(52,211,153,.25);
-        text-align: center;
-      }
-
-      @media (max-width: 640px) {
-        .trophy-list-row {
-          grid-template-columns: 36px 32px 1fr 70px;
-          gap: 10px;
-        }
-        .trl-trend { display: none; }
-        .trl-rank { font-size: 20px; }
-        .trl-name { font-size: 12px; }
-        .trl-meta { font-size: 10px; }
-        .trl-value { font-size: 12px; }
-      }
-
-      /* Fallback for browsers without color-mix */
-      @supports not (color: color-mix(in srgb, red, blue)) {
-        .trl-logo { background: linear-gradient(135deg, #f4d03f, #b08d23); }
-      }
-    </style>
-    <!-- =========================================================== -->
-  <!--                  TOP 10 APPLICATION FORM                     -->
-  <!-- =========================================================== -->
-  <section id="top10-apply" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-900 to-navy-950">
-    <div class="absolute inset-0 pointer-events-none opacity-40" style="background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,0.20), transparent 60%);"></div>
-    <style>
-      .apply-grid { display: grid; grid-template-columns: 1fr 1.8fr; gap: 28px; align-items: start; }
-      @media (max-width: 1024px) { .apply-grid { grid-template-columns: 1fr; } }
-      .apply-side {
-        background: linear-gradient(155deg, rgba(212,175,55,.08), rgba(212,175,55,.01));
-        border: 1px solid rgba(212,175,55,.2); border-radius: 22px; padding: 28px;
-        position: sticky; top: 100px;
-      }
-      .apply-benefit { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
-      .apply-benefit-icon { color: #d4af37; font-size: 18px; line-height: 1.2; flex-shrink: 0; margin-top: 2px; }
-      .apply-form {
-        background: linear-gradient(155deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
-        border: 1px solid rgba(255,255,255,.08); border-radius: 22px; padding: 28px;
-      }
-      .apply-section { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.06); }
-      .apply-section:last-child { border-bottom: 0; }
-      .apply-section-title {
-        font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #d4af37;
-        text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
-      }
-      .apply-section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to left, transparent, rgba(212,175,55,.25)); }
-      .apply-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-      @media (max-width: 640px) { .apply-row { grid-template-columns: 1fr; } }
-      .apply-field { display: flex; flex-direction: column; gap: 6px; }
-      .apply-field.full { grid-column: 1 / -1; }
-      .apply-label { font-size: 12px; color: rgba(255,255,255,.7); font-weight: 500; }
-      .apply-label .req { color: #f87171; margin-inline-start: 4px; }
-      .apply-input, .apply-select, .apply-textarea {
-        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
-        color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 14px;
-        transition: border-color .2s, background .2s; font-family: inherit;
-      }
-      .apply-input:focus, .apply-select:focus, .apply-textarea:focus {
-        outline: none; border-color: rgba(212,175,55,.5); background: rgba(255,255,255,.06);
-      }
-      .apply-textarea { resize: vertical; min-height: 80px; }
-      .apply-consent { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; cursor: pointer; }
-      .apply-consent input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; accent-color: #d4af37; }
-      .apply-consent-text { font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.5; }
-      .apply-submit {
-        background: linear-gradient(135deg, #d4af37, #b8941f); color: #0a0e27;
-        font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 999px;
-        border: none; cursor: pointer; transition: all .2s; margin-top: 18px;
-        display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px -8px rgba(212,175,55,.4);
-      }
-      .apply-submit:hover { background: #fbbf24; transform: translateY(-2px); box-shadow: 0 12px 32px -8px rgba(212,175,55,.6); }
-      .apply-submit:disabled { opacity: .6; cursor: wait; }
-      .apply-status { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 13px; display: none; }
-      .apply-status.success { display: block; background: rgba(34,197,94,.12); color: #86efac; border: 1px solid rgba(34,197,94,.3); }
-      .apply-status.error { display: block; background: rgba(248,113,113,.12); color: #fca5a5; border: 1px solid rgba(248,113,113,.3); }
-    </style>
-    <div class="max-w-[1280px] mx-auto px-4 lg:px-8 relative">
-      <div class="text-center mb-12 reveal">
-        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
-          <i data-lucide="award" class="w-3.5 h-3.5"></i>
-          <span data-i18n="apply.eyebrow">تقديم · APPLY</span>
-        </div>
-        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="apply.title">تأهّل لقائمة Top 10</h2>
-        <p class="mt-4 text-white/60 max-w-2xl mx-auto" data-i18n="apply.subtitle">هل شركتك من الرواد في قطاعها؟ قدّم طلب الانضمام لتصنيف أقوى 10 شركات في الشرق الأوسط — تقييمنا مستقل ومجاني.</p>
-      </div>
-
-      <div class="apply-grid reveal">
-        <!-- Benefits sidebar -->
-        <aside class="apply-side">
-          <div class="text-xs font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-            <span data-i18n="apply.benefits.title">لماذا تتقدّم؟</span>
-          </div>
-          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b1">تصنيف مستقل وموثوق</span></div>
-          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b2">وصول لمستثمرين دوليين</span></div>
-          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b3">تغطية إعلامية حصرية</span></div>
-          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b4">تقرير تحليلي مجاني</span></div>
-        </aside>
-
-        <!-- Form -->
-        <form id="top10-apply-form" class="apply-form" novalidate>
-          <!-- Section 1: Company Information -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="building" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section1">معلومات الشركة</span></div>
-            <div class="apply-row">
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.nameAr">اسم الشركة (عربي)<span class="req">*</span></label><input class="apply-input" name="nameAr" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.nameEn">اسم الشركة (إنجليزي)<span class="req">*</span></label><input class="apply-input" name="nameEn" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.founded">سنة التأسيس<span class="req">*</span></label><input class="apply-input" name="founded" type="number" min="1900" max="2026" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.country">البلد<span class="req">*</span></label><select class="apply-select" name="country" required><option value="">—</option><option>مصر</option><option>السعودية</option><option>الإمارات</option><option>قطر</option><option>الكويت</option><option>البحرين</option><option>عُمان</option><option>الأردن</option><option>المغرب</option><option>تونس</option><option>الجزائر</option><option>أخرى</option></select></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.city">المدينة</label><input class="apply-input" name="city"></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.website">الموقع الإلكتروني</label><input class="apply-input" name="website" type="url" placeholder="https://"></div>
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.logo">لوجو الشركة (PNG/SVG/JPG)</label><input class="apply-input" name="logo" type="file" accept="image/*"></div>
-            </div>
-          </div>
-
-          <!-- Section 2: Sector & Activity -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="layers" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section2">القطاع والنشاط</span></div>
-            <div class="apply-row">
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.sector">القطاع الرئيسي<span class="req">*</span></label><select class="apply-select" name="sector" required id="apply-sector-select"><option value="">—</option></select></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.subsectors">القطاعات الفرعية</label><input class="apply-input" name="subsectors" placeholder="مثال: فينتك، مدفوعات"></div>
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.about">وصف مختصر للشركة<span class="req">*</span></label><textarea class="apply-textarea" name="about" rows="3" maxlength="600" required></textarea></div>
-            </div>
-          </div>
-
-          <!-- Section 3: Financial Numbers -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section3">الأرقام المالية</span></div>
-            <div class="apply-row">
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.revenue">الإيرادات السنوية (آخر سنة)<span class="req">*</span></label><input class="apply-input" name="revenue" placeholder="$1.5B EGP / USD" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.growth">معدل النمو السنوي %</label><input class="apply-input" name="growth" type="number" step="0.1" placeholder="15.5"></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.employees">عدد الموظفين</label><input class="apply-input" name="employees" type="number"></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.markets">عدد الأسواق/الدول</label><input class="apply-input" name="markets" type="number"></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.branches">عدد الفروع</label><input class="apply-input" name="branches" type="number"></div>
-            </div>
-          </div>
-
-          <!-- Section 4: Achievements (Optional) -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="trophy" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section4">الإنجازات (اختياري)</span></div>
-            <div class="apply-row">
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.awards">جوائز ومسابقات</label><textarea class="apply-textarea" name="awards" rows="2"></textarea></div>
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.deals">صفقات كبيرة</label><textarea class="apply-textarea" name="deals" rows="2"></textarea></div>
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.partners">شراكات استراتيجية</label><textarea class="apply-textarea" name="partners" rows="2"></textarea></div>
-            </div>
-          </div>
-
-          <!-- Section 5: Contact -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="user" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section5">بيانات التواصل</span></div>
-            <div class="apply-row">
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.contactName">اسم المسؤول<span class="req">*</span></label><input class="apply-input" name="contactName" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.position">المنصب<span class="req">*</span></label><input class="apply-input" name="position" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.email">إيميل العمل<span class="req">*</span></label><input class="apply-input" name="email" type="email" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.phone">رقم الهاتف<span class="req">*</span></label><input class="apply-input" name="phone" type="tel" required></div>
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.linkedin">LinkedIn (اختياري)</label><input class="apply-input" name="linkedin" type="url" placeholder="https://linkedin.com/in/..."></div>
-            </div>
-          </div>
-
-          <!-- Section 6: Consents -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section6">الموافقات</span></div>
-            <label class="apply-consent"><input type="checkbox" name="consent1" required><span class="apply-consent-text" data-i18n="apply.f.consent1">أؤكد أن جميع البيانات المُقدَّمة صحيحة ودقيقة</span></label>
-            <label class="apply-consent"><input type="checkbox" name="consent2" required><span class="apply-consent-text" data-i18n="apply.f.consent2">أوافق على نشر اسم وبيانات الشركة في قائمة Top 10 في حال الموافقة</span></label>
-            <label class="apply-consent"><input type="checkbox" name="consent3" required><span class="apply-consent-text" data-i18n="apply.f.consent3">أوافق على معالجة البيانات وفقاً لسياسة الخصوصية</span></label>
-          </div>
-
-          <button type="submit" class="apply-submit">
-            <i data-lucide="send" class="w-4 h-4"></i>
-            <span data-i18n="apply.submit">إرسال الطلب</span>
-          </button>
-          <div id="apply-status" class="apply-status"></div>
-        </form>
-      </div>
-    </div>
-  </section>
-
-  </section>
-
-  <!-- =========================================================== -->
-  <!-- =========================================================== -->
-  <!--                   MENA BUSINESSMEN DIRECTORY                 -->
-
-  <!-- =========================================================== -->
   <section id="businessmen" class="lux-section bg-navy-900 relative overflow-hidden">
     <a id="top50" style="position:absolute;top:-80px"></a>
     <div class="absolute inset-0 pointer-events-none opacity-30" style="background: radial-gradient(ellipse 60% 40% at 100% 0%, rgba(212,175,55,0.18), transparent 60%), radial-gradient(ellipse 60% 40% at 0% 100%, rgba(139,92,246,0.12), transparent 60%);"></div>
@@ -5364,6 +4097,657 @@
   <!-- =========================================================== -->
   <!--             POWER PERSONALITIES — MENA TYCOONS              -->
   <!-- =========================================================== -->
+  <section id="morning-briefing" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-950 to-navy-900">
+    <div class="absolute inset-0 pointer-events-none opacity-50 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(212,175,55,0.15),transparent_60%)]"></div>
+    <style>
+      /* Bloomberg-style timeline for morning briefing */
+      .mb-timeline { position: relative; padding-inline-start: 28px; }
+      [dir="rtl"] .mb-timeline { padding-inline-start: 0; padding-inline-end: 28px; }
+      .mb-timeline::before {
+        content: ''; position: absolute; top: 8px; bottom: 8px; width: 2px;
+        background: linear-gradient(to bottom, rgba(212,175,55,.5), rgba(212,175,55,.1));
+        inset-inline-start: 8px;
+      }
+      [dir="rtl"] .mb-timeline::before { inset-inline-start: auto; inset-inline-end: 8px; }
+      .mb-tl-item { position: relative; padding: 10px 14px 14px; margin-bottom: 6px; border-radius: 10px; transition: background .2s; cursor: pointer; }
+      .mb-tl-item:hover { background: rgba(255,255,255,.04); }
+      .mb-tl-dot {
+        position: absolute; width: 14px; height: 14px; border-radius: 50%;
+        top: 14px; inset-inline-start: -27px;
+        box-shadow: 0 0 0 3px rgba(2,6,23,1), 0 0 12px currentColor;
+      }
+      [dir="rtl"] .mb-tl-dot { inset-inline-start: auto; inset-inline-end: -27px; }
+      .mb-tl-dot.bullish { background: #34d399; color: #34d399; }
+      .mb-tl-dot.bearish { background: #f87171; color: #f87171; }
+      .mb-tl-dot.neutral { background: #fbbf24; color: #fbbf24; }
+      .mb-tl-time {
+        font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 1.5px;
+        color: rgba(212,175,55,.85); font-weight: 700; margin-bottom: 4px;
+      }
+      .mb-tl-title { color: #fff; font-size: 15px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; }
+      .mb-tl-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .mb-tl-sector { font-size: 11px; color: rgba(255,255,255,.5); }
+      .mb-tl-pill {
+        font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: .5px;
+      }
+      .mb-tl-pill.bullish { background: rgba(52,211,153,.12); color: #6ee7b7; }
+      .mb-tl-pill.bearish { background: rgba(248,113,113,.12); color: #fca5a5; }
+      .mb-tl-pill.neutral { background: rgba(251,191,36,.12); color: #fcd34d; }
+      .mb-deal-card {
+        background: linear-gradient(155deg, #0f1a3d 0%, #1a2a5e 100%);
+        border: 1px solid rgba(212,175,55,.25); border-radius: 16px; padding: 22px;
+        position: sticky; top: 100px;
+      }
+      .mb-deal-tag {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-family: 'Courier New', monospace; font-size: 10px; font-weight: 700;
+        letter-spacing: 2px; color: #fbbf24;
+        background: rgba(251,191,36,.1); padding: 4px 10px; border-radius: 4px;
+        border: 1px solid rgba(251,191,36,.3); margin-bottom: 14px;
+      }
+      .mb-deal-tag::before { content:''; width:6px; height:6px; border-radius:50%; background:#fbbf24; animation: pulse-dot 1.5s infinite; }
+      @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+      .mb-deal-value {
+        font-family: 'Courier New', monospace; font-size: 32px; font-weight: 700; color: #fff;
+        letter-spacing: -1px; line-height: 1; margin: 8px 0;
+      }
+      .mb-deal-score { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
+      .mb-deal-score-bar { flex: 1; height: 4px; background: rgba(255,255,255,.1); border-radius: 2px; overflow: hidden; }
+      .mb-deal-score-fill { height: 100%; background: linear-gradient(90deg, #fbbf24, #d4af37); border-radius: 2px; }
+      .mb-deal-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: #fbbf24; font-weight: 600; font-size: 13px;
+        padding: 8px 14px; border: 1px solid rgba(251,191,36,.4); border-radius: 999px;
+        margin-top: 14px; transition: all .2s;
+      }
+      .mb-deal-link:hover { background: rgba(251,191,36,.1); border-color: #fbbf24; }
+    </style>
+    <div class="max-w-[1280px] mx-auto px-4 lg:px-8 relative">
+      <div class="text-center mb-12 reveal">
+        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
+          <i data-lucide="sunrise" class="w-3.5 h-3.5"></i>
+          <span data-i18n="briefing.eyebrow">الموجز اليومي للمستثمر</span>
+        </div>
+        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="briefing.title">ما تحتاج لمعرفته اليوم</h2>
+        <p class="mt-3 text-white/60 max-w-2xl mx-auto" data-i18n="briefing.subtitle">5 أخبار حصرية + صفقة اليوم — كل صباح قبل الساعة 7 ص</p>
+        <div class="mt-4 inline-flex items-center gap-2 text-[11px] text-white/40 font-mono">
+          <span class="live-dot"></span>
+          <span id="briefing-last-update" data-i18n="briefing.lastUpdate">آخر تحديث 6:45 ص</span>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-[1.6fr_1fr] gap-8 reveal">
+        <!-- Timeline -->
+        <div>
+          <div class="text-xs font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
+            <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+            <span data-i18n="briefing.top5">أهم 5 أحداث اليوم</span>
+          </div>
+          <div id="briefing-items" class="mb-timeline"></div>
+        </div>
+
+        <!-- Deal of the Day -->
+        <div>
+          <div class="text-xs font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
+            <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+            <span data-i18n="briefing.dealOfDay">صفقة اليوم</span>
+          </div>
+          <div class="mb-deal-card">
+            <span class="mb-deal-tag" data-i18n="briefing.exclusive">EXCLUSIVE · حصري</span>
+            <div class="text-[11px] text-white/50 font-mono uppercase tracking-widest mb-1" data-i18n="briefing.dealValue">قيمة الصفقة</div>
+            <div class="mb-deal-value" id="briefing-deal-value">—</div>
+            <h3 id="briefing-deal-title" class="text-base font-bold text-white mb-1">—</h3>
+            <p id="briefing-deal-sector" class="text-xs text-white/50 mb-3">—</p>
+            <div class="mb-deal-score">
+              <span class="text-[10px] font-mono text-white/60 tracking-widest" data-i18n="briefing.score">SCORE</span>
+              <div class="mb-deal-score-bar"><div class="mb-deal-score-fill" id="briefing-deal-score-fill" style="width:0%"></div></div>
+              <span class="text-sm font-mono font-bold text-gold-400" id="briefing-deal-score">—</span>
+            </div>
+            <a href="#deal-room" class="mb-deal-link">
+              <span data-i18n="briefing.viewAll">شاهد جميع الصفقات</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 flip-x"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================== -->
+  <!--                  LIVE INVESTOR DASHBOARD                      -->
+  <!-- =========================================================== -->
+  <section id="live-dashboard" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-900 to-navy-950">
+    <div class="absolute inset-0 pointer-events-none opacity-50 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(212,175,55,0.18),transparent_60%)]"></div>
+    <style>
+      .country-strip { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; scrollbar-width: thin; }
+      .country-strip::-webkit-scrollbar { height: 4px; }
+      .country-strip::-webkit-scrollbar-thumb { background: rgba(212,175,55,.3); border-radius: 2px; }
+      .country-pill {
+        flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px;
+        padding: 8px 14px; border-radius: 999px;
+        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+        color: rgba(255,255,255,.7); font-size: 13px; cursor: pointer; transition: all .2s;
+        white-space: nowrap;
+      }
+      .country-pill:hover { background: rgba(255,255,255,.08); color: #fff; }
+      .country-pill.is-active { background: linear-gradient(135deg, #d4af37, #b8941f); color: #1a1a2e; border-color: #d4af37; font-weight: 600; }
+      .country-pill-flag { font-size: 16px; }
+      .country-pill-score {
+        font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700;
+        background: rgba(0,0,0,.2); padding: 2px 6px; border-radius: 4px;
+      }
+      .country-pill.is-active .country-pill-score { background: rgba(0,0,0,.15); color: #1a1a2e; }
+
+      .pulse-card, .vitals-card {
+        background: linear-gradient(155deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+        border: 1px solid rgba(212,175,55,.15);
+        border-radius: 20px; padding: 24px;
+      }
+      .pulse-gauge-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+      .pulse-gauge-svg { width: 200px; height: 200px; transform: rotate(-90deg); }
+      .pulse-gauge-track { fill: none; stroke: rgba(255,255,255,.06); stroke-width: 12; }
+      #pulse-gauge-arc { fill: none; stroke: #d4af37; stroke-width: 12; stroke-linecap: round; transition: stroke-dasharray .8s ease; filter: drop-shadow(0 0 8px rgba(212,175,55,.5)); }
+      .pulse-gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .pulse-gauge-val { font-size: 56px; font-weight: 900; color: #fff; line-height: 1; font-family: 'Courier New', monospace; }
+      .pulse-gauge-out { font-size: 11px; color: rgba(255,255,255,.4); letter-spacing: 2px; margin-top: 4px; }
+
+      .vital-row { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+      .vital-row:last-child { border-bottom: none; }
+      .vital-row-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+      .vital-name { font-size: 13px; color: rgba(255,255,255,.7); }
+      .vital-value { font-family: 'Courier New', monospace; font-size: 14px; font-weight: 700; }
+      .vital-bar { height: 4px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden; }
+      .vital-bar-fill { height: 100%; border-radius: 2px; transition: width .8s ease; }
+
+      .brief-grid {
+        display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+      }
+      @media (max-width: 1024px) { .brief-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 600px)  { .brief-grid { grid-template-columns: 1fr; } }
+      .brief-col {
+        background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+        border-radius: 14px; padding: 14px 14px 8px;
+      }
+      .brief-col-head {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 11px; font-weight: 700; letter-spacing: 2px;
+        color: #d4af37; text-transform: uppercase;
+        padding-bottom: 10px; margin-bottom: 6px;
+        border-bottom: 1px solid rgba(212,175,55,.15);
+      }
+      .brief-col-head svg, .brief-col-head i { width: 14px; height: 14px; }
+      .brief-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+      .brief-row:last-child { border-bottom: none; }
+      .brief-row-label { font-size: 12px; color: rgba(255,255,255,.65); }
+      .brief-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+      .brief-row-value { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: #fff; }
+      .brief-row-trend { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; font-family: 'Courier New', monospace; }
+      .brief-row-trend.up   { color: #6ee7b7; background: rgba(52,211,153,.1); }
+      .brief-row-trend.down { color: #fca5a5; background: rgba(248,113,113,.1); }
+      .brief-row-trend.flat { color: #fcd34d; background: rgba(251,191,36,.1); }
+    </style>
+    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
+      <div class="text-center mb-10 reveal">
+        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
+          <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+          <span data-i18n="dashboard.eyebrow">لوحة المستثمر · كل الأرقام في مكان واحد</span>
+        </div>
+        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="dashboard.title">صحة الاقتصاد لحظة بلحظة</h2>
+        <p id="pulse-eyebrow-text" class="mt-3 text-white/60 max-w-2xl mx-auto text-sm tracking-widest"></p>
+      </div>
+
+      <!-- Country selector strip -->
+      <div class="country-strip reveal" id="country-strip-scroll"></div>
+
+      <!-- Pulse gauge + Vitals -->
+      <div class="grid lg:grid-cols-[1fr_1.4fr] gap-6 mb-10 reveal">
+        <div class="pulse-card">
+          <div class="text-[11px] font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
+            <i data-lucide="heart-pulse" class="w-3.5 h-3.5"></i>
+            <span data-i18n="dashboard.pulse.title">مؤشر صحة الاقتصاد</span>
+          </div>
+          <div class="pulse-gauge-wrap">
+            <svg class="pulse-gauge-svg" viewBox="0 0 160 160">
+              <circle class="pulse-gauge-track" cx="80" cy="80" r="68"/>
+              <circle id="pulse-gauge-arc" cx="80" cy="80" r="68" stroke-dasharray="0 427"/>
+            </svg>
+            <div class="pulse-gauge-center">
+              <div id="pulse-gauge-value" class="pulse-gauge-val">—</div>
+              <div id="pulse-gauge-out" class="pulse-gauge-out">/ 100</div>
+            </div>
+          </div>
+          <div class="text-center mt-4">
+            <span id="pulse-status-label" class="inline-block text-sm font-bold tracking-wide px-3 py-1 rounded-full bg-gold-500/10 text-gold-300">—</span>
+          </div>
+        </div>
+
+        <div class="vitals-card">
+          <div class="text-[11px] font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
+            <span data-i18n="dashboard.vitals.title">المؤشرات الحيوية الستة</span>
+          </div>
+          <div id="pulse-vitals-list"></div>
+        </div>
+      </div>
+
+      <!-- 5-column investor brief -->
+      <div class="reveal">
+        <div class="text-[11px] font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+          <span data-i18n="dashboard.brief.title">الموجز الاستثماري — 5 محاور</span>
+        </div>
+        <div class="brief-grid" id="investor-brief-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================== -->
+  <!--                     LIVE MARKETS DASHBOARD                   -->
+  <!-- =========================================================== -->
+  <section id="crypto" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-800 to-navy-900">
+    <div class="absolute inset-0 pointer-events-none opacity-30" style="background:radial-gradient(ellipse 80% 40% at 50% 0%, rgba(244,208,63,.18), transparent 60%), radial-gradient(ellipse 60% 40% at 100% 100%, rgba(139,92,246,.15), transparent 60%);"></div>
+    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
+
+      <!-- Header -->
+      <div class="mb-10 flex items-end justify-between flex-wrap gap-6 reveal">
+        <div>
+          <div class="lux-eyebrow mb-4"><i data-lucide="bitcoin" class="w-3.5 h-3.5"></i><span data-i18n="crypto.eyebrow">CRYPTO · LIVE PRICES</span></div>
+          <h2 class="lux-title text-white" data-i18n="crypto.title">العملات الرقمية</h2>
+          <p class="mt-4 text-white/55 max-w-2xl text-base" data-i18n="crypto.subtitle">أسعار العملات الرقمية الرئيسية لحظة بلحظة — الـ market cap، التغيّر 24h و 7d، ورسوم بيانية مصغّرة.</p>
+        </div>
+        <div class="crypto-meta-wrap">
+          <div class="crypto-meta-pill">
+            <span class="crypto-meta-lbl" data-i18n="crypto.totalCap">Total cap</span>
+            <span class="crypto-meta-val">$3.24T</span>
+            <span class="crypto-meta-delta up">▲ 2.1%</span>
+          </div>
+          <div class="crypto-meta-pill">
+            <span class="crypto-meta-lbl" data-i18n="crypto.btcDom">BTC dom.</span>
+            <span class="crypto-meta-val">52.4%</span>
+          </div>
+          <div class="crypto-meta-pill">
+            <span class="crypto-meta-lbl" data-i18n="crypto.fearGreed">Fear/Greed</span>
+            <span class="crypto-meta-val crypto-fg">72</span>
+            <span class="crypto-meta-delta up" data-i18n="crypto.fgLevel">Greed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Hero crypto cards -->
+      <div class="crypto-hero-row" id="crypto-hero"></div>
+
+      <!-- Filter pills -->
+      <div class="crypto-filters" id="crypto-filters">
+        <button type="button" class="crypto-filter is-active" data-filter="all" data-i18n="crypto.filter.all">All</button>
+        <button type="button" class="crypto-filter" data-filter="gainers" data-i18n="crypto.filter.gainers">Top gainers</button>
+        <button type="button" class="crypto-filter" data-filter="losers" data-i18n="crypto.filter.losers">Top losers</button>
+        <button type="button" class="crypto-filter" data-filter="stable" data-i18n="crypto.filter.stable">Stablecoins</button>
+      </div>
+
+      <!-- Coin table -->
+      <div class="crypto-table-wrap">
+        <div class="crypto-table-head">
+          <div class="crypto-th crypto-th-rank">#</div>
+          <div class="crypto-th crypto-th-name" data-i18n="crypto.col.name">Name</div>
+          <div class="crypto-th crypto-th-price" data-i18n="crypto.col.price">Price</div>
+          <div class="crypto-th crypto-th-24h" data-i18n="crypto.col.24h">24h</div>
+          <div class="crypto-th crypto-th-7d" data-i18n="crypto.col.7d">7d</div>
+          <div class="crypto-th crypto-th-cap" data-i18n="crypto.col.cap">Market cap</div>
+          <div class="crypto-th crypto-th-chart" data-i18n="crypto.col.chart">7d chart</div>
+        </div>
+        <div class="crypto-table-body" id="crypto-table-body"></div>
+      </div>
+
+      <!-- Footer note -->
+      <div class="crypto-foot">
+        <span class="crypto-foot-item"><span class="live-dot"></span><span data-i18n="crypto.footLive">Live · CoinGecko + Binance feed</span></span>
+        <span class="crypto-foot-sep">·</span>
+        <span data-i18n="crypto.footDisclaimer">Prices are indicative. Not financial advice.</span>
+      </div>
+    </div>
+
+    <!-- Scoped styling for crypto section -->
+    <style>
+      /* === Meta pills (right side of header) === */
+      .crypto-meta-wrap {
+        display: flex; gap: 8px; flex-wrap: wrap;
+      }
+      .crypto-meta-pill {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 8px 14px;
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(244,208,63,.18);
+        border-radius: 999px;
+        font-size: 11px; font-weight: 600;
+        color: rgba(255,255,255,.75);
+      }
+      .crypto-meta-lbl {
+        font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+        color: rgba(255,255,255,.5); font-weight: 700;
+      }
+      .crypto-meta-val {
+        font-family: 'JetBrains Mono', monospace; font-weight: 800;
+        color: #F4D03F;
+      }
+      .crypto-meta-delta {
+        font-family: 'JetBrains Mono', monospace; font-weight: 700;
+        font-size: 10px;
+      }
+      .crypto-meta-delta.up { color: #34d399; }
+      .crypto-meta-delta.down { color: #f87171; }
+      .crypto-fg { color: #34d399 !important; }
+
+      /* === Hero cards (top 4: BTC, ETH, BNB, SOL) === */
+      .crypto-hero-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      @media (max-width: 900px) { .crypto-hero-row { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 540px) { .crypto-hero-row { grid-template-columns: 1fr; } }
+
+      .crypto-hero {
+        position: relative;
+        background:
+          linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.01) 60%),
+          rgba(15,21,53,.55);
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 18px;
+        padding: 18px;
+        transition: transform .35s cubic-bezier(.2,.8,.2,1), border-color .35s, box-shadow .35s;
+        overflow: hidden;
+      }
+      .crypto-hero::before {
+        content:''; position:absolute; top:0; left:0; right:0; height:2px;
+        background: linear-gradient(90deg, transparent, var(--cc, #F4D03F), transparent);
+      }
+      .crypto-hero:hover {
+        transform: translateY(-4px);
+        border-color: color-mix(in srgb, var(--cc, #F4D03F) 40%, transparent);
+        box-shadow: 0 30px 60px -20px color-mix(in srgb, var(--cc, #F4D03F) 35%, transparent);
+      }
+      .crypto-hero-head {
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 12px;
+      }
+      .crypto-hero-logo {
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--cc, #F4D03F), color-mix(in srgb, var(--cc, #F4D03F) 50%, #0A0E27));
+        color: #fff;
+        font-weight: 900; font-size: 11px;
+        display: grid; place-items: center;
+        flex-shrink: 0;
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 6px 16px -4px var(--cc, rgba(244,208,63,.4));
+      }
+      .crypto-hero-id { flex: 1; min-width: 0; }
+      .crypto-hero-symbol {
+        font-family: 'JetBrains Mono', monospace; font-weight: 800;
+        font-size: 13px; color: #fff;
+        letter-spacing: .04em;
+      }
+      .crypto-hero-name {
+        font-size: 11px; color: rgba(255,255,255,.55);
+        margin-top: 1px;
+      }
+      .crypto-hero-rank {
+        font-size: 9px; font-weight: 700;
+        padding: 3px 7px;
+        border-radius: 5px;
+        background: rgba(244,208,63,.10);
+        color: #F4D03F;
+        font-family: 'JetBrains Mono', monospace;
+      }
+      .crypto-hero-price {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 800;
+        font-size: 24px;
+        color: #fff;
+        letter-spacing: -.01em;
+        line-height: 1;
+      }
+      .crypto-hero-delta {
+        display: inline-flex; align-items: center; gap: 4px;
+        margin-top: 6px;
+        font-family: 'JetBrains Mono', monospace; font-weight: 700;
+        font-size: 12px;
+        padding: 3px 9px;
+        border-radius: 999px;
+      }
+      .crypto-hero-delta.up   { background: rgba(52,211,153,.12);  color: #34d399; border: 1px solid rgba(52,211,153,.25); }
+      .crypto-hero-delta.down { background: rgba(248,113,113,.12); color: #f87171; border: 1px solid rgba(248,113,113,.25); }
+      .crypto-hero-spark {
+        margin-top: 14px;
+        height: 44px;
+      }
+      .crypto-hero-spark svg { width: 100%; height: 100%; display: block; }
+      .crypto-hero-foot {
+        display: flex; justify-content: space-between;
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255,255,255,.06);
+        font-size: 9px;
+        color: rgba(255,255,255,.5);
+      }
+      .crypto-hero-foot-num {
+        font-family: 'JetBrains Mono', monospace; font-weight: 700;
+        color: rgba(255,255,255,.8);
+      }
+
+      /* === Filter pills === */
+      .crypto-filters {
+        display: flex; gap: 8px; flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .crypto-filter {
+        padding: 8px 16px;
+        font-size: 12px; font-weight: 600;
+        color: rgba(255,255,255,.65);
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all .2s ease;
+        font-family: inherit;
+      }
+      .crypto-filter:hover {
+        background: rgba(244,208,63,.10);
+        border-color: rgba(244,208,63,.30);
+        color: #F4D03F;
+      }
+      .crypto-filter.is-active {
+        background: linear-gradient(135deg, rgba(244,208,63,.22), rgba(212,175,55,.10));
+        border-color: rgba(244,208,63,.55);
+        color: #FBE38C;
+        box-shadow: 0 4px 16px -4px rgba(244,208,63,.30);
+      }
+
+      /* === Table === */
+      .crypto-table-wrap {
+        background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 18px;
+        overflow: hidden;
+        backdrop-filter: blur(12px) saturate(140%);
+        -webkit-backdrop-filter: blur(12px) saturate(140%);
+      }
+      .crypto-table-head, .crypto-row {
+        display: grid;
+        grid-template-columns: 40px 1.6fr 1fr 0.8fr 0.8fr 1.1fr 1fr;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px;
+      }
+      .crypto-table-head {
+        background: rgba(244,208,63,.04);
+        border-bottom: 1px solid rgba(244,208,63,.15);
+      }
+      .crypto-th {
+        font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+        color: #F4D03F; font-weight: 800;
+      }
+      .crypto-th-rank { text-align: center; }
+      .crypto-th-price, .crypto-th-24h, .crypto-th-7d, .crypto-th-cap { text-align: end; }
+
+      .crypto-row {
+        border-bottom: 1px dashed rgba(255,255,255,.06);
+        transition: background .2s ease, transform .2s ease;
+        cursor: pointer;
+      }
+      .crypto-row:last-child { border-bottom: 0; }
+      .crypto-row:hover { background: rgba(244,208,63,.04); }
+
+      .crypto-rank {
+        text-align: center;
+        font-family: 'JetBrains Mono', monospace; font-weight: 700;
+        font-size: 12px;
+        color: rgba(255,255,255,.55);
+      }
+      .crypto-row-id {
+        display: flex; align-items: center; gap: 10px;
+        min-width: 0;
+      }
+      .crypto-logo-sm {
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--cc, #F4D03F), color-mix(in srgb, var(--cc, #F4D03F) 50%, #0A0E27));
+        color: #fff; font-weight: 800; font-size: 9px;
+        display: grid; place-items: center;
+        flex-shrink: 0;
+        font-family: 'Inter', sans-serif;
+      }
+      .crypto-row-id-text {
+        display: flex; flex-direction: column; min-width: 0;
+      }
+      .crypto-row-name {
+        font-weight: 700; font-size: 13px;
+        color: #fff;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .crypto-row-symbol {
+        font-family: 'JetBrains Mono', monospace; font-weight: 600;
+        font-size: 10px;
+        color: rgba(255,255,255,.5);
+        letter-spacing: .04em;
+      }
+
+      .crypto-num {
+        font-family: 'JetBrains Mono', monospace; font-weight: 700;
+        font-size: 13px;
+        color: #fff;
+        text-align: end;
+      }
+      .crypto-delta {
+        font-family: 'JetBrains Mono', monospace; font-weight: 700;
+        font-size: 11px;
+        text-align: end;
+      }
+      .crypto-delta.up   { color: #34d399; }
+      .crypto-delta.down { color: #f87171; }
+      .crypto-delta.flat { color: rgba(255,255,255,.45); }
+
+      .crypto-row-spark {
+        height: 36px;
+      }
+      .crypto-row-spark svg { width: 100%; height: 100%; display: block; }
+
+      @media (max-width: 900px) {
+        .crypto-table-head, .crypto-row {
+          grid-template-columns: 30px 1.4fr 1fr 0.8fr 1fr;
+          padding: 10px 14px;
+        }
+        .crypto-th-7d, .crypto-th-chart,
+        .crypto-row > :nth-child(5), .crypto-row > :nth-child(7) { display: none; }
+      }
+      @media (max-width: 540px) {
+        .crypto-table-head, .crypto-row {
+          grid-template-columns: 26px 1.3fr 1fr 0.8fr;
+        }
+        .crypto-th-cap, .crypto-row > :nth-child(6) { display: none; }
+      }
+
+      .crypto-foot {
+        display: flex; align-items: center; gap: 10px;
+        margin-top: 14px;
+        font-size: 11px; color: rgba(255,255,255,.45);
+        flex-wrap: wrap;
+      }
+      .crypto-foot-item { display: inline-flex; align-items: center; gap: 6px; }
+      .crypto-foot-sep { opacity: .4; }
+
+      /* Empty filter result */
+      .crypto-empty {
+        padding: 50px 20px;
+        text-align: center;
+        color: rgba(255,255,255,.5);
+        font-size: 13px;
+      }
+
+      /* Fallback for color-mix */
+      @supports not (color: color-mix(in srgb, red, blue)) {
+        .crypto-logo-sm, .crypto-hero-logo {
+          background: linear-gradient(135deg, #F4D03F, #b08d23);
+        }
+      }
+    </style>
+  </section>
+
+  <!-- =========================================================== -->
+  <!--                   CAIRO BUSINESS INDEX                       -->
+  <!-- =========================================================== -->
+  <section id="cbi-index" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-800 to-navy-900">
+    <div class="aurora opacity-40" aria-hidden="true"><div class="a3"></div></div>
+    <!-- Animated grid bg -->
+    <div class="absolute inset-0 pointer-events-none opacity-[0.04]" style="background-image:linear-gradient(rgba(212,175,55,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(212,175,55,.4) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(ellipse at center, black 10%, transparent 70%);"></div>
+    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
+      <!-- Header -->
+      <div class="text-center mb-12 reveal">
+        <div class="lux-eyebrow justify-center mb-5"><i data-lucide="zap" class="w-3.5 h-3.5"></i><span data-i18n="cbi.eyebrow">EXCLUSIVE PROPRIETARY DATA</span></div>
+        <h2 class="lux-title text-white" data-i18n="cbi.title">مؤشرات كايرو بيزنس</h2>
+        <div class="lux-divider mt-6 mx-auto max-w-md"><span class="h"></span><span class="d"></span><span class="h"></span></div>
+        <p class="mt-6 text-white/60 max-w-2xl mx-auto text-base" data-i18n="cbi.subtitle">بيانات حصرية لا تجدها في أي مكان آخر — مؤشرات ملكية لتتبع السوق والقطاعات والعقارات</p>
+      </div>
+
+      <!-- Flagship Composite Index Hero -->
+      <div id="cbi-hero" class="mb-8"></div>
+
+      <!-- Category Filter Tabs -->
+      <div class="flex justify-center gap-2 flex-wrap mb-8" id="cbi-tabs"></div>
+
+      <!-- Index Cards Grid -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-10" id="cbi-cards"></div>
+
+      <!-- Methodology Banner -->
+      <div class="glass-light border border-white/10 rounded-2xl p-6 lg:p-8 flex flex-col lg:flex-row items-start lg:items-center gap-6">
+        <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gold-500/20 flex items-center justify-center">
+          <i data-lucide="shield-check" class="w-7 h-7 text-gold-400"></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-white font-bold text-lg mb-1" data-i18n="cbi.methTitle">منهجية شفافة وموثوقة</h3>
+          <p class="text-white/60 text-sm leading-relaxed" data-i18n="cbi.methDesc">جميع مؤشرات CBI مبنية على بيانات حقيقية من بورصات، وكالات عقارية، واستبيانات ميدانية. يتم مراجعتها من فريق محللين مستقل وتُحدّث بشكل دوري. اضغط على أي مؤشر لمعرفة المنهجية بالتفصيل.</p>
+        </div>
+        <div class="flex gap-4 text-center flex-shrink-0">
+          <div><div class="text-2xl font-black text-gold-400">8</div><div class="text-[10px] text-white/50 uppercase tracking-wider" data-i18n="cbi.statIdx">Indices</div></div>
+          <div class="w-px bg-white/10"></div>
+          <div><div class="text-2xl font-black text-gold-400">7</div><div class="text-[10px] text-white/50 uppercase tracking-wider" data-i18n="cbi.statCap">Capitals</div></div>
+          <div class="w-px bg-white/10"></div>
+          <div><div class="text-2xl font-black text-emerald-400">Live</div><div class="text-[10px] text-white/50 uppercase tracking-wider" data-i18n="cbi.statUpd">Updated</div></div>
+        </div>
+      </div>
+
+      <!-- Citation -->
+      <div class="text-center pt-8 mt-8 border-t border-white/10">
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================== -->
+  <!--                    ECONOMIC HEATMAP                          -->
+
+  <!-- =========================================================== -->
   <section id="power-people" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-900 via-navy-950 to-navy-900">
     <div class="aurora opacity-30" aria-hidden="true"><div class="a3"></div></div>
     <!-- Diagonal grid bg -->
@@ -6056,108 +5440,6 @@
   <!-- =========================================================== -->
   <!--                 TOP 10 — MENA POWER RANKINGS                 -->
 
-  <!-- =========================================================== -->
-  <section id="heatmap" class="py-20 lg:py-28 relative overflow-hidden bg-gradient-to-b from-navy-800 to-navy-900">
-    <div class="absolute inset-0 pointer-events-none opacity-30 bg-[radial-gradient(ellipse_at_80%_20%,rgba(16,185,129,0.15),transparent_55%)]"></div>
-    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
-      <div class="mb-10">
-        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/40 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
-          <i data-lucide="globe" class="w-3.5 h-3.5"></i>
-          <span data-i18n="heatmap.eyebrow">الأطلس الاقتصادي</span>
-        </div>
-        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="heatmap.title">عواصم الشرق الأوسط — مؤشرات اقتصادية حية</h2>
-        <p class="mt-3 text-white/60 max-w-2xl" data-i18n="heatmap.subtitle">اكتشف مؤشرات كل عاصمة — الناتج المحلي، النمو، التضخم، أسعار العقارات، والقطاعات الرائدة.</p>
-      </div>
-      <!-- Metric tabs -->
-      <div class="flex gap-2 mb-8" id="heatmap-tabs">
-        <button class="hm-tab px-4 h-9 rounded-full text-xs font-semibold bg-gradient-to-r from-gold-400 to-gold-600 text-navy-900" data-metric="gdp" data-i18n="heatmap.gdp">الناتج المحلي</button>
-        <button class="hm-tab px-4 h-9 rounded-full text-xs font-semibold glass-light border border-white/10 text-white/70" data-metric="growth" data-i18n="heatmap.growth">النمو</button>
-        <button class="hm-tab px-4 h-9 rounded-full text-xs font-semibold glass-light border border-white/10 text-white/70" data-metric="inflation" data-i18n="heatmap.inflation">التضخم</button>
-        <button class="hm-tab px-4 h-9 rounded-full text-xs font-semibold glass-light border border-white/10 text-white/70" data-metric="unemployment" data-i18n="heatmap.unemployment">البطالة</button>
-      </div>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" id="heatmap-cards"></div>
-      <div class="mt-6 text-xs text-white/40" data-i18n="heatmap.source">المصدر: صندوق النقد الدولي، البنك الدولي — 2025</div>
-    </div>
-    <!-- Heatmap Governorate Modal -->
-    <div id="hm-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);">
-      <div id="hm-modal-content" class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-gradient-to-b from-navy-800 to-navy-950 border border-white/10 shadow-2xl"></div>
-    </div>
-  </section>
-
-  <!-- =========================================================== -->
-
-  <!--                    COMPANY DIRECTORY                         -->
-  <!-- =========================================================== -->
-  <section id="directory" class="py-20 lg:py-28 relative overflow-hidden bg-gradient-to-b from-navy-950 to-navy-900">
-    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
-      <div class="flex items-end justify-between gap-6 mb-8 flex-wrap">
-        <div>
-          <div class="inline-flex items-center gap-2 glass-light border border-gold-500/40 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
-            <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
-            <span data-i18n="directory.eyebrow">دليل الشركات الذكي</span>
-          </div>
-          <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="directory.title">اعثر على أي شركة في الشرق الأوسط</h2>
-          <p class="mt-3 text-white/60 max-w-2xl" data-i18n="directory.subtitle">قاعدة بيانات شاملة بآلاف الشركات — ابحث بالقطاع، الدولة، الحجم، سنة التأسيس.</p>
-        </div>
-      </div>
-
-      <!-- Search bar + filters -->
-      <div class="flex flex-col sm:flex-row gap-3 mb-6">
-        <div class="flex-1 h-12 px-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
-          <i data-lucide="search" class="w-4 h-4 text-white/40"></i>
-          <input id="dir-search" type="text" class="flex-1 bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none" placeholder="ابحث عن شركة…" data-i18n-placeholder="directory.search" />
-        </div>
-        <select id="dir-country" class="h-12 px-4 rounded-xl bg-white/5 border border-white/10 text-sm text-white/70 focus:outline-none focus:border-gold-400 appearance-none cursor-pointer" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22rgba(255,255,255,0.4)%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>');background-repeat:no-repeat;background-position:left 12px center;padding-left:32px;">
-          <option value="all">كل المناطق</option>
-          <option value="cairo">القاهرة</option>
-          <option value="giza">الجيزة</option>
-          <option value="alex">الإسكندرية</option>
-          <option value="newcapital">العاصمة الإدارية</option>
-          <option value="coast">الساحل الشمالي</option>
-        </select>
-      </div>
-
-      <!-- Sector filter tabs -->
-      <div class="flex flex-wrap gap-2 mb-8" id="dir-sector-tabs">
-        <button class="dir-sector-tab active px-4 py-2 rounded-full text-xs font-bold border transition" data-sector="all">الكل</button>
-        <button class="dir-sector-tab px-4 py-2 rounded-full text-xs font-bold border transition" data-sector="banking">🏦 بنوك</button>
-        <button class="dir-sector-tab px-4 py-2 rounded-full text-xs font-bold border transition" data-sector="realestate">🏗️ عقارات</button>
-        <button class="dir-sector-tab px-4 py-2 rounded-full text-xs font-bold border transition" data-sector="energy">⚡ طاقة</button>
-        <button class="dir-sector-tab px-4 py-2 rounded-full text-xs font-bold border transition" data-sector="telecom">📡 اتصالات</button>
-        <button class="dir-sector-tab px-4 py-2 rounded-full text-xs font-bold border transition" data-sector="fmcg">🛒 أغذية</button>
-        <button class="dir-sector-tab px-4 py-2 rounded-full text-xs font-bold border transition" data-sector="logistics">🚚 لوجستيات</button>
-        <button class="dir-sector-tab px-4 py-2 rounded-full text-xs font-bold border transition" data-sector="tech">💻 تكنولوجيا</button>
-      </div>
-
-      <!-- Results count -->
-      <div class="flex items-center justify-between mb-5">
-        <div class="text-sm text-white/50"><span id="dir-count" class="text-gold-400 font-bold num">12</span> <span data-i18n="directory.results">نتيجة</span></div>
-      </div>
-
-      <!-- Cards grid -->
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" id="directory-cards"></div>
-
-      <!-- No results -->
-      <div id="dir-no-results" class="hidden text-center py-16">
-        <i data-lucide="search-x" class="w-12 h-12 text-white/20 mx-auto mb-3"></i>
-        <p class="text-white/40 text-sm" data-i18n="directory.noResults">لا توجد نتائج</p>
-      </div>
-    </div>
-
-    <!-- Company Detail Modal -->
-    <div id="dir-modal" class="fixed inset-0 z-[999] hidden items-center justify-center p-4" style="background:rgba(3,8,20,0.85);backdrop-filter:blur(8px)">
-      <div class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto glass border border-white/10 rounded-3xl" id="dir-modal-content">
-        <button onclick="document.getElementById('dir-modal').classList.add('hidden');document.getElementById('dir-modal').classList.remove('flex')" class="absolute top-4 end-4 w-9 h-9 rounded-full bg-white/10 grid place-items-center text-white/60 hover:text-white hover:bg-white/20 transition z-10">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-        <div id="dir-modal-body"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- =========================================================== -->
-
-  <!--                    COMPANY COMPARE                           -->
   <!-- =========================================================== -->
   <section id="compare" class="py-20 lg:py-28 relative overflow-hidden bg-gradient-to-b from-navy-900 to-navy-950">
     <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
@@ -7356,45 +6638,6 @@
   <!-- =========================================================== -->
   <!--                    WATCHLIST & ALERTS                        -->
   <!-- =========================================================== -->
-  <section id="watchlist" class="py-20 lg:py-28 bg-gradient-to-b from-navy-950 to-navy-900 relative">
-    <div class="max-w-[1400px] mx-auto px-4 lg:px-8">
-      <div class="flex items-end justify-between gap-6 mb-10 flex-wrap">
-        <div>
-          <div class="text-xs font-bold tracking-widest text-gold-400 mb-2" data-i18n="watchlist.eyebrow">YOUR WATCHLIST</div>
-          <h2 class="font-display text-4xl lg:text-5xl font-black text-white" data-i18n="watchlist.title">لا تفوّت أي تحرك يهمك</h2>
-          <p class="mt-3 text-white/60 max-w-xl" data-i18n="watchlist.subtitle">تابع الشركات والقطاعات والمناطق العقارية التي تهمك</p>
-        </div>
-        <div class="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full text-xs text-red-400 font-semibold" id="watchlist-alert-count">
-          <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
-          <span><span id="watchlist-alert-num">3</span> alerts</span>
-        </div>
-      </div>
-
-      <!-- Add to Watchlist -->
-      <div class="mb-8 flex gap-3">
-        <div class="flex-1 h-11 px-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
-          <i data-lucide="search" class="w-4 h-4 text-white/40"></i>
-          <input type="text" id="watchlist-search" class="flex-1 bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none" placeholder="Add company, sector, or area…" />
-        </div>
-        <button class="px-4 h-11 bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-400 rounded-xl text-sm font-semibold transition" data-i18n="watchlist.add">Add</button>
-      </div>
-
-      <!-- Tabs -->
-      <div class="flex gap-2 mb-6 border-b border-white/10 pb-4" id="watchlist-tabs">
-        <button class="watchlist-tab px-4 py-2 text-sm font-semibold border-b-2 border-gold-400 text-gold-400 transition" data-tab="companies" data-i18n="watchlist.tab1">Companies</button>
-        <button class="watchlist-tab px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-white/50 hover:text-white transition" data-tab="realestate" data-i18n="watchlist.tab2">Real Estate</button>
-        <button class="watchlist-tab px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-white/50 hover:text-white transition" data-tab="sectors" data-i18n="watchlist.tab3">Sectors</button>
-      </div>
-
-      <!-- Items -->
-      <div class="space-y-2" id="watchlist-items"></div>
-    </div>
-  </section>
-
-  <!-- =========================================================== -->
-  <!--                    AI INSIGHTS DASHBOARD                     -->
-  <!-- =========================================================== -->
-
   <section id="insights" class="py-20 lg:py-28 bg-navy-900 relative overflow-hidden">
     <div class="absolute inset-0 opacity-50 pointer-events-none" style="background:
       radial-gradient(ellipse at 20% 30%, rgba(201,162,39,0.15), transparent 45%),
@@ -9210,6 +8453,596 @@
   <!-- =========================================================== -->
   <!--                           FOOTER                             -->
   <!-- =========================================================== -->
+  <section id="top10" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-800 to-navy-900">
+    <div class="absolute inset-0 pointer-events-none opacity-50" style="background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,0.30), transparent 65%);"></div>
+    <div class="aurora opacity-30" aria-hidden="true"><div class="a3"></div></div>
+
+    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
+      <div class="text-center mb-14 reveal">
+        <div class="lux-eyebrow justify-center mb-5"><i data-lucide="crown" class="w-3.5 h-3.5"></i><span data-i18n="top10.eyebrow">POWER LIST · MENA EDITION 2026</span></div>
+        <h2 class="lux-title text-white" data-i18n="top10.title">أقوى 10 شركات في الشرق الأوسط</h2>
+        <div class="lux-divider mt-6 mx-auto max-w-md"><span class="h"></span><span class="d"></span><span class="h"></span></div>
+        <p class="mt-6 text-white/70 max-w-3xl mx-auto text-lg leading-relaxed" data-i18n="top10.subtitle2">من النفط إلى الذكاء الاصطناعي.. 10 شركات تهيمن على كل القطاعات وتشكّل ملامح الاقتصاد الجديد للشرق الأوسط</p>
+        <div class="flex items-center justify-center gap-3 mt-6 text-xs text-white/50 flex-wrap">
+          <span class="flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-mint-400"></i><span data-i18n="top10.meta.audit">تقييم مستقل</span></span>
+          <span class="opacity-40">·</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="trending-up" class="w-3.5 h-3.5 text-gold-300"></i><span data-i18n="top10.meta.data">بيانات Q1 2026</span></span>
+          <span class="opacity-40">·</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="globe-2" class="w-3.5 h-3.5 text-violet-400"></i><span data-i18n="top10.meta.scope">10 قطاعات · 5 دول</span></span>
+        </div>
+      </div>
+
+      <!-- Sector Filter Pills (data-driven) -->
+      <div id="top10-filter-pills" class="flex justify-center gap-2 flex-wrap mb-10 reveal"></div>
+
+      <!-- Trophy gallery (top 3) + Ranked list (4–10) — data-driven -->
+      <div id="top-companies-grid">
+        <div id="top10-trophies" class="trophy-row"></div>
+        <div id="top10-list" class="trophy-list"></div>
+      </div>
+
+      <!-- Hidden legacy containers (for old JS hooks - renamed to avoid id conflicts) -->
+      <div class="hidden" aria-hidden="true">
+        <div id="top10-tabs-legacy"></div>
+        <div id="top10-podium-legacy"></div>
+        <ol id="top10-list-legacy"></ol>
+      </div>
+    </div>
+
+    <!-- Sector card styling (scoped) -->
+    <style>
+      .sector-card {
+        position: relative; border-radius: 24px; overflow: hidden;
+        background:
+          linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.01) 60%),
+          rgba(15,21,53,.55);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(148,163,217,.10);
+        transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s, border-color .4s;
+        will-change: transform;
+      }
+      .sector-card::before {
+        content:''; position:absolute; inset:-1px; border-radius:24px; padding:1px;
+        background: linear-gradient(160deg, var(--sc, #c9a227), transparent 50%, var(--sc2, #c9a227));
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor; mask-composite: exclude;
+        opacity: 0; transition: opacity .35s; pointer-events: none;
+      }
+      .sector-card:hover { transform: translateY(-6px); border-color: transparent;
+        box-shadow: 0 30px 60px -20px var(--sc, #c9a227), 0 1px 0 rgba(255,255,255,.1) inset; }
+      .sector-card:hover::before { opacity: .6; }
+
+      .sector-card .sector-bar {
+        height: 4px; background: linear-gradient(90deg, var(--sc, #c9a227), var(--sc2, #c9a227), var(--sc, #c9a227));
+        background-size: 200% 100%;
+        animation: sectorShine 3s linear infinite;
+      }
+      @keyframes sectorShine { 0% { background-position: 0 0; } 100% { background-position: 200% 0; } }
+
+      .sector-card-inner { padding: 22px 20px 24px; position: relative; z-index: 1; }
+
+      .rank-badge {
+        font-family: 'Playfair Display', serif; font-weight: 900;
+        font-size: 56px; line-height: .8;
+        background: linear-gradient(135deg, var(--sc, #D4AF37), var(--sc2, #b08d23));
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--sc, #c9a227) 35%, transparent));
+      }
+      .sector-flag { font-size: 28px; filter: drop-shadow(0 2px 8px rgba(0,0,0,.5)); transition: transform .3s; }
+      .sector-card:hover .sector-flag { transform: scale(1.15) rotate(-6deg); }
+
+      .logo-circle {
+        width: 60px; height: 60px; border-radius: 18px;
+        background: linear-gradient(135deg, var(--sc, #D4AF37) 0%, var(--sc2, #b08d23) 100%);
+        display: grid; place-items: center;
+        font-weight: 900; color: #0A0E27; font-size: 14px;
+        margin-bottom: 16px;
+        box-shadow: 0 10px 30px -10px var(--sc, #D4AF37), 0 1px 0 rgba(255,255,255,.3) inset;
+        transition: transform .35s;
+        font-family: 'Cairo', 'Inter', sans-serif;
+      }
+      .sector-card:hover .logo-circle { transform: rotate(-6deg) scale(1.05); }
+
+      .company-name { font-weight: 900; color: #fff; font-size: 18px; margin-bottom: 4px; line-height: 1.2; }
+      .company-meta { font-size: 11px; color: rgba(255,255,255,.55); margin-bottom: 12px; letter-spacing: .02em; }
+
+      .sector-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 12px; border-radius: 999px;
+        background: color-mix(in srgb, var(--sc, #c9a227) 15%, transparent);
+        color: var(--sc, #c9a227);
+        border: 1px solid color-mix(in srgb, var(--sc, #c9a227) 35%, transparent);
+        font-size: 11px; font-weight: 700;
+        margin-bottom: 16px;
+      }
+
+      .market-cap {
+        display: flex; flex-direction: column; gap: 2px;
+        padding: 12px 0; margin: 4px 0;
+        border-top: 1px solid rgba(255,255,255,.06);
+        border-bottom: 1px solid rgba(255,255,255,.06);
+      }
+      .market-cap .kpi-val {
+        font-family: 'JetBrains Mono', monospace; font-weight: 800;
+        font-size: 26px; line-height: 1;
+        background: linear-gradient(135deg, var(--sc, #D4AF37), color-mix(in srgb, var(--sc, #c9a227) 50%, #fff));
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+      .market-cap .kpi-lab { color: rgba(255,255,255,.45); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
+
+      .company-tagline {
+        font-size: 12px; color: rgba(255,255,255,.65);
+        line-height: 1.55; margin: 14px 0 14px;
+      }
+
+      .trend-row { display: flex; align-items: center; gap: 8px; }
+
+      /* Fallback for browsers without color-mix */
+      @supports not (color: color-mix(in srgb, red, blue)) {
+        .sector-pill { background: rgba(212,175,55,.15); border-color: rgba(212,175,55,.35); }
+      }
+
+      /* ============================================== */
+      /*       TROPHY GALLERY — AWARDS NIGHT           */
+      /* ============================================== */
+
+      /* Row of 3 trophy cards: silver | gold (raised) | bronze */
+      .trophy-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        align-items: end;
+        margin-bottom: 36px;
+      }
+      @media (max-width: 768px) {
+        .trophy-row { grid-template-columns: 1fr; gap: 14px; }
+      }
+
+      .trophy-card {
+        position: relative;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01));
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 22px;
+        padding: 28px 22px 26px;
+        text-align: center;
+        backdrop-filter: blur(16px) saturate(150%);
+        -webkit-backdrop-filter: blur(16px) saturate(150%);
+        transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s, border-color .4s;
+        will-change: transform;
+        overflow: hidden;
+      }
+      .trophy-card::before {
+        content:'';
+        position: absolute; top: 0; left: 0; right: 0;
+        height: 3px;
+        opacity: .8;
+      }
+      .trophy-card:hover {
+        transform: translateY(-6px);
+      }
+
+      /* GOLD — center, raised, glowing */
+      .trophy-gold {
+        background:
+          linear-gradient(180deg, rgba(244,208,63,.18), rgba(244,208,63,.03) 60%, rgba(255,255,255,.01));
+        border-color: rgba(244,208,63,.40);
+        transform: translateY(-14px);
+        box-shadow:
+          0 30px 60px -20px rgba(244,208,63,.35),
+          0 1px 0 rgba(255,255,255,.08) inset;
+      }
+      .trophy-gold::before {
+        background: linear-gradient(90deg, transparent, #f4d03f, transparent);
+      }
+      .trophy-gold:hover {
+        transform: translateY(-22px);
+        box-shadow: 0 40px 80px -20px rgba(244,208,63,.55), 0 1px 0 rgba(255,255,255,.12) inset;
+        border-color: rgba(244,208,63,.65);
+      }
+
+      /* SILVER */
+      .trophy-silver {
+        background:
+          linear-gradient(180deg, rgba(203,213,225,.10), rgba(203,213,225,.02) 60%, rgba(255,255,255,.01));
+        border-color: rgba(203,213,225,.28);
+      }
+      .trophy-silver::before { background: linear-gradient(90deg, transparent, #cbd5e1, transparent); }
+      .trophy-silver:hover { box-shadow: 0 24px 48px -20px rgba(203,213,225,.25); border-color: rgba(203,213,225,.45); }
+
+      /* BRONZE */
+      .trophy-bronze {
+        background:
+          linear-gradient(180deg, rgba(217,119,6,.10), rgba(217,119,6,.02) 60%, rgba(255,255,255,.01));
+        border-color: rgba(217,119,6,.28);
+      }
+      .trophy-bronze::before { background: linear-gradient(90deg, transparent, #d97706, transparent); }
+      .trophy-bronze:hover { box-shadow: 0 24px 48px -20px rgba(217,119,6,.30); border-color: rgba(217,119,6,.45); }
+
+      /* Crown icon (gold only) */
+      .trophy-crown {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #fde047, #ca8a04);
+        color: #0A0E27;
+        display: grid; place-items: center;
+        box-shadow: 0 8px 24px -6px rgba(244,208,63,.6);
+        z-index: 2;
+      }
+
+      /* Trophy SVG sizing */
+      .trophy-svg {
+        width: 56px; height: 70px;
+        display: block; margin: 0 auto 6px;
+      }
+      .trophy-gold .trophy-svg {
+        width: 68px; height: 84px;
+        filter: drop-shadow(0 8px 16px rgba(244,208,63,.5));
+      }
+      .trophy-silver .trophy-svg { filter: drop-shadow(0 6px 12px rgba(203,213,225,.3)); }
+      .trophy-bronze .trophy-svg { filter: drop-shadow(0 6px 12px rgba(217,119,6,.3)); }
+
+      .trophy-tier {
+        font-size: 11px; letter-spacing: .26em; text-transform: uppercase;
+        font-weight: 800; margin-top: 4px;
+      }
+      .trophy-gold   .trophy-tier { color: #f4d03f; }
+      .trophy-silver .trophy-tier { color: rgba(203,213,225,.95); }
+      .trophy-bronze .trophy-tier { color: rgba(217,119,6,.95); }
+
+      .trophy-rank {
+        font-family: 'Playfair Display', serif;
+        font-size: 22px; font-weight: 900;
+        line-height: 1; margin-top: 4px;
+        color: rgba(255,255,255,.85);
+        letter-spacing: -0.02em;
+      }
+      .trophy-gold .trophy-rank   { color: #f4d03f; }
+      .trophy-silver .trophy-rank { color: #e2e8f0; }
+      .trophy-bronze .trophy-rank { color: #fbbf24; }
+
+      .trophy-name {
+        font-family: 'Cairo', sans-serif;
+        font-weight: 900;
+        font-size: 17px;
+        color: #fff;
+        line-height: 1.2;
+        margin-top: 10px;
+      }
+      [lang="en"] .trophy-name { font-family: 'Inter', sans-serif; letter-spacing: -0.015em; }
+      .trophy-gold .trophy-name { font-size: 19px; }
+
+      .trophy-sector {
+        font-size: 11px;
+        color: rgba(255,255,255,.6);
+        margin-top: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .trophy-flag { font-size: 16px; line-height: 1; }
+
+      .trophy-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 800;
+        font-size: 22px;
+        margin-top: 14px;
+        line-height: 1;
+      }
+      .trophy-gold   .trophy-value { color: #f4d03f; font-size: 28px; }
+      .trophy-silver .trophy-value { color: rgba(203,213,225,.95); }
+      .trophy-bronze .trophy-value { color: rgba(217,119,6,.95); }
+
+      .trophy-trend {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; font-weight: 700;
+        color: #34d399;
+        margin-top: 6px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: rgba(52,211,153,.10);
+        border: 1px solid rgba(52,211,153,.25);
+        display: inline-block;
+      }
+
+      /* ============================================== */
+      /*               RANKED LIST (4–10)              */
+      /* ============================================== */
+      .trophy-list {
+        background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 22px;
+        padding: 22px 22px 16px;
+        backdrop-filter: blur(12px) saturate(140%);
+        -webkit-backdrop-filter: blur(12px) saturate(140%);
+      }
+      .trophy-list-head {
+        display: flex; justify-content: space-between; align-items: end;
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(244,208,63,.18);
+      }
+      .trophy-list-eyebrow {
+        font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+        color: #f4d03f; font-weight: 800;
+      }
+      .trophy-list-meta {
+        font-size: 11px; color: rgba(255,255,255,.55);
+        padding: 4px 10px; border-radius: 999px;
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.08);
+      }
+
+      .trophy-list-rows { display: flex; flex-direction: column; }
+
+      .trophy-list-row {
+        display: grid;
+        grid-template-columns: 50px 42px 1fr 110px 80px;
+        gap: 14px;
+        align-items: center;
+        padding: 12px 8px;
+        border-bottom: 1px dashed rgba(255,255,255,.07);
+        transition: all .25s ease;
+        position: relative;
+        cursor: pointer;
+      }
+      .trophy-list-row:last-child { border-bottom: 0; }
+      .trophy-list-row:hover {
+        background: rgba(244,208,63,.04);
+        padding-inline-start: 16px;
+        padding-inline-end: 16px;
+        border-radius: 10px;
+      }
+      .trophy-list-row::after {
+        content: '';
+        position: absolute;
+        top: 50%; transform: translateY(-50%);
+        inset-inline-start: 0;
+        width: 2px; height: 0;
+        background: var(--sc, #f4d03f);
+        transition: height .3s ease;
+      }
+      .trophy-list-row:hover::after { height: 70%; }
+
+      .trl-rank {
+        font-family: 'Playfair Display', serif;
+        font-weight: 900;
+        font-size: 28px;
+        color: rgba(244,208,63,.45);
+        line-height: 1;
+        letter-spacing: -0.03em;
+      }
+      .trophy-list-row:hover .trl-rank { color: rgba(244,208,63,.85); }
+
+      .trl-logo {
+        width: 36px; height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--sc, #f4d03f), color-mix(in srgb, var(--sc, #f4d03f) 50%, #0A0E27));
+        color: #0A0E27;
+        font-weight: 900;
+        font-size: 12px;
+        display: grid; place-items: center;
+        flex-shrink: 0;
+        font-family: 'Cairo', 'Inter', sans-serif;
+      }
+
+      .trl-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .trl-name {
+        font-weight: 800;
+        font-size: 14px;
+        color: #fff;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .trl-meta {
+        font-size: 11px;
+        color: rgba(255,255,255,.55);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+
+      .trl-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 800;
+        font-size: 14px;
+        color: var(--sc, #fff);
+        text-align: end;
+      }
+      .trl-trend {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; font-weight: 700;
+        color: #34d399;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: rgba(52,211,153,.10);
+        border: 1px solid rgba(52,211,153,.25);
+        text-align: center;
+      }
+
+      @media (max-width: 640px) {
+        .trophy-list-row {
+          grid-template-columns: 36px 32px 1fr 70px;
+          gap: 10px;
+        }
+        .trl-trend { display: none; }
+        .trl-rank { font-size: 20px; }
+        .trl-name { font-size: 12px; }
+        .trl-meta { font-size: 10px; }
+        .trl-value { font-size: 12px; }
+      }
+
+      /* Fallback for browsers without color-mix */
+      @supports not (color: color-mix(in srgb, red, blue)) {
+        .trl-logo { background: linear-gradient(135deg, #f4d03f, #b08d23); }
+      }
+    </style>
+    <!-- =========================================================== -->
+  <!--                  TOP 10 APPLICATION FORM                     -->
+  <!-- =========================================================== -->
+  <section id="top10-apply" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-900 to-navy-950">
+    <div class="absolute inset-0 pointer-events-none opacity-40" style="background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,0.20), transparent 60%);"></div>
+    <style>
+      .apply-grid { display: grid; grid-template-columns: 1fr 1.8fr; gap: 28px; align-items: start; }
+      @media (max-width: 1024px) { .apply-grid { grid-template-columns: 1fr; } }
+      .apply-side {
+        background: linear-gradient(155deg, rgba(212,175,55,.08), rgba(212,175,55,.01));
+        border: 1px solid rgba(212,175,55,.2); border-radius: 22px; padding: 28px;
+        position: sticky; top: 100px;
+      }
+      .apply-benefit { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
+      .apply-benefit-icon { color: #d4af37; font-size: 18px; line-height: 1.2; flex-shrink: 0; margin-top: 2px; }
+      .apply-form {
+        background: linear-gradient(155deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+        border: 1px solid rgba(255,255,255,.08); border-radius: 22px; padding: 28px;
+      }
+      .apply-section { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.06); }
+      .apply-section:last-child { border-bottom: 0; }
+      .apply-section-title {
+        font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #d4af37;
+        text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+      }
+      .apply-section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to left, transparent, rgba(212,175,55,.25)); }
+      .apply-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+      @media (max-width: 640px) { .apply-row { grid-template-columns: 1fr; } }
+      .apply-field { display: flex; flex-direction: column; gap: 6px; }
+      .apply-field.full { grid-column: 1 / -1; }
+      .apply-label { font-size: 12px; color: rgba(255,255,255,.7); font-weight: 500; }
+      .apply-label .req { color: #f87171; margin-inline-start: 4px; }
+      .apply-input, .apply-select, .apply-textarea {
+        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+        color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 14px;
+        transition: border-color .2s, background .2s; font-family: inherit;
+      }
+      .apply-input:focus, .apply-select:focus, .apply-textarea:focus {
+        outline: none; border-color: rgba(212,175,55,.5); background: rgba(255,255,255,.06);
+      }
+      .apply-textarea { resize: vertical; min-height: 80px; }
+      .apply-consent { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; cursor: pointer; }
+      .apply-consent input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; accent-color: #d4af37; }
+      .apply-consent-text { font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.5; }
+      .apply-submit {
+        background: linear-gradient(135deg, #d4af37, #b8941f); color: #0a0e27;
+        font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 999px;
+        border: none; cursor: pointer; transition: all .2s; margin-top: 18px;
+        display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px -8px rgba(212,175,55,.4);
+      }
+      .apply-submit:hover { background: #fbbf24; transform: translateY(-2px); box-shadow: 0 12px 32px -8px rgba(212,175,55,.6); }
+      .apply-submit:disabled { opacity: .6; cursor: wait; }
+      .apply-status { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 13px; display: none; }
+      .apply-status.success { display: block; background: rgba(34,197,94,.12); color: #86efac; border: 1px solid rgba(34,197,94,.3); }
+      .apply-status.error { display: block; background: rgba(248,113,113,.12); color: #fca5a5; border: 1px solid rgba(248,113,113,.3); }
+    </style>
+    <div class="max-w-[1280px] mx-auto px-4 lg:px-8 relative">
+      <div class="text-center mb-12 reveal">
+        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
+          <i data-lucide="award" class="w-3.5 h-3.5"></i>
+          <span data-i18n="apply.eyebrow">تقديم · APPLY</span>
+        </div>
+        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="apply.title">تأهّل لقائمة Top 10</h2>
+        <p class="mt-4 text-white/60 max-w-2xl mx-auto" data-i18n="apply.subtitle">هل شركتك من الرواد في قطاعها؟ قدّم طلب الانضمام لتصنيف أقوى 10 شركات في الشرق الأوسط — تقييمنا مستقل ومجاني.</p>
+      </div>
+
+      <div class="apply-grid reveal">
+        <!-- Benefits sidebar -->
+        <aside class="apply-side">
+          <div class="text-xs font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span data-i18n="apply.benefits.title">لماذا تتقدّم؟</span>
+          </div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b1">تصنيف مستقل وموثوق</span></div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b2">وصول لمستثمرين دوليين</span></div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b3">تغطية إعلامية حصرية</span></div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b4">تقرير تحليلي مجاني</span></div>
+        </aside>
+
+        <!-- Form -->
+        <form id="top10-apply-form" class="apply-form" novalidate>
+          <!-- Section 1: Company Information -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="building" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section1">معلومات الشركة</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.nameAr">اسم الشركة (عربي)<span class="req">*</span></label><input class="apply-input" name="nameAr" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.nameEn">اسم الشركة (إنجليزي)<span class="req">*</span></label><input class="apply-input" name="nameEn" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.founded">سنة التأسيس<span class="req">*</span></label><input class="apply-input" name="founded" type="number" min="1900" max="2026" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.country">البلد<span class="req">*</span></label><select class="apply-select" name="country" required><option value="">—</option><option>مصر</option><option>السعودية</option><option>الإمارات</option><option>قطر</option><option>الكويت</option><option>البحرين</option><option>عُمان</option><option>الأردن</option><option>المغرب</option><option>تونس</option><option>الجزائر</option><option>أخرى</option></select></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.city">المدينة</label><input class="apply-input" name="city"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.website">الموقع الإلكتروني</label><input class="apply-input" name="website" type="url" placeholder="https://"></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.logo">لوجو الشركة (PNG/SVG/JPG)</label><input class="apply-input" name="logo" type="file" accept="image/*"></div>
+            </div>
+          </div>
+
+          <!-- Section 2: Sector & Activity -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="layers" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section2">القطاع والنشاط</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.sector">القطاع الرئيسي<span class="req">*</span></label><select class="apply-select" name="sector" required id="apply-sector-select"><option value="">—</option></select></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.subsectors">القطاعات الفرعية</label><input class="apply-input" name="subsectors" placeholder="مثال: فينتك، مدفوعات"></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.about">وصف مختصر للشركة<span class="req">*</span></label><textarea class="apply-textarea" name="about" rows="3" maxlength="600" required></textarea></div>
+            </div>
+          </div>
+
+          <!-- Section 3: Financial Numbers -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section3">الأرقام المالية</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.revenue">الإيرادات السنوية (آخر سنة)<span class="req">*</span></label><input class="apply-input" name="revenue" placeholder="$1.5B EGP / USD" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.growth">معدل النمو السنوي %</label><input class="apply-input" name="growth" type="number" step="0.1" placeholder="15.5"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.employees">عدد الموظفين</label><input class="apply-input" name="employees" type="number"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.markets">عدد الأسواق/الدول</label><input class="apply-input" name="markets" type="number"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.branches">عدد الفروع</label><input class="apply-input" name="branches" type="number"></div>
+            </div>
+          </div>
+
+          <!-- Section 4: Achievements (Optional) -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="trophy" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section4">الإنجازات (اختياري)</span></div>
+            <div class="apply-row">
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.awards">جوائز ومسابقات</label><textarea class="apply-textarea" name="awards" rows="2"></textarea></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.deals">صفقات كبيرة</label><textarea class="apply-textarea" name="deals" rows="2"></textarea></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.partners">شراكات استراتيجية</label><textarea class="apply-textarea" name="partners" rows="2"></textarea></div>
+            </div>
+          </div>
+
+          <!-- Section 5: Contact -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="user" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section5">بيانات التواصل</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.contactName">اسم المسؤول<span class="req">*</span></label><input class="apply-input" name="contactName" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.position">المنصب<span class="req">*</span></label><input class="apply-input" name="position" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.email">إيميل العمل<span class="req">*</span></label><input class="apply-input" name="email" type="email" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.phone">رقم الهاتف<span class="req">*</span></label><input class="apply-input" name="phone" type="tel" required></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.linkedin">LinkedIn (اختياري)</label><input class="apply-input" name="linkedin" type="url" placeholder="https://linkedin.com/in/..."></div>
+            </div>
+          </div>
+
+          <!-- Section 6: Consents -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section6">الموافقات</span></div>
+            <label class="apply-consent"><input type="checkbox" name="consent1" required><span class="apply-consent-text" data-i18n="apply.f.consent1">أؤكد أن جميع البيانات المُقدَّمة صحيحة ودقيقة</span></label>
+            <label class="apply-consent"><input type="checkbox" name="consent2" required><span class="apply-consent-text" data-i18n="apply.f.consent2">أوافق على نشر اسم وبيانات الشركة في قائمة Top 10 في حال الموافقة</span></label>
+            <label class="apply-consent"><input type="checkbox" name="consent3" required><span class="apply-consent-text" data-i18n="apply.f.consent3">أوافق على معالجة البيانات وفقاً لسياسة الخصوصية</span></label>
+          </div>
+
+          <button type="submit" class="apply-submit">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span data-i18n="apply.submit">إرسال الطلب</span>
+          </button>
+          <div id="apply-status" class="apply-status"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  </section>
+
+  <!-- =========================================================== -->
+  <!-- =========================================================== -->
+  <!--                   MENA BUSINESSMEN DIRECTORY                 -->
+
+  <!-- =========================================================== -->
   <footer class="bg-navy-900 border-t border-white/10 pt-16 pb-8">
     <div class="max-w-[1400px] mx-auto px-4 lg:px-8">
       <div class="grid lg:grid-cols-5 gap-10 mb-10">
@@ -9504,7 +9337,7 @@
         /* Interbank rates */
         'dashboard.f.saibor3m':'سايبور 3 شهور','dashboard.f.eibor3m':'إيبور 3 شهور','dashboard.f.qibor3m':'قيبور 3 شهور','dashboard.f.kibor3m':'كيبور 3 شهور','dashboard.f.bibor3m':'بيبور 3 شهور','dashboard.f.oibor3m':'أويبور 3 شهور','dashboard.f.jodibor3m':'جودبور 3 شهور','dashboard.f.mibor3m':'ميبور 3 شهور','dashboard.f.tmm3m':'TMM 3 شهور','dashboard.f.dibor3m':'ديبور 3 شهور','dashboard.f.iibor3m':'إيبور عراقي 3 شهور',
         'dashboard.f.bond10y':'سندات 10 سنوات',
-        'cbi.eyebrow':'بيانات حصرية','cbi.title':'مؤشرات كايرو بيزنس — بيانات لا تجدها في أي مكان آخر','cbi.subtitle':'مؤشرات ملكية حصرية لتتبع السوق والقطاعات والعقارات','cbi.citation':'يُستشهد بمؤشراتنا في: بلومبرغ، رويترز، الأهرام، زاوية، عرب نيوز، أرقام','cbi.methTitle':'منهجية شفافة وموثوقة','cbi.methDesc':'جميع مؤشرات CBI مبنية على بيانات حقيقية من بورصات، وكالات عقارية، واستبيانات ميدانية. يتم مراجعتها من فريق محللين مستقل وتُحدّث بشكل دوري. اضغط على أي مؤشر لمعرفة المنهجية بالتفصيل.','cbi.statIdx':'مؤشر','cbi.statCap':'عاصمة','cbi.statUpd':'مُحدّث',
+        'cbi.eyebrow':'بيانات حصرية','cbi.title':'مؤشرات كايرو بيزنس — بيانات لا تجدها في أي مكان آخر','cbi.subtitle':'مؤشرات ملكية حصرية لتتبع السوق والقطاعات والعقارات','cbi.citation':'','cbi.methTitle':'منهجية شفافة وموثوقة','cbi.methDesc':'جميع مؤشرات CBI مبنية على بيانات حقيقية من بورصات، وكالات عقارية، واستبيانات ميدانية. يتم مراجعتها من فريق محللين مستقل وتُحدّث بشكل دوري. اضغط على أي مؤشر لمعرفة المنهجية بالتفصيل.','cbi.statIdx':'مؤشر','cbi.statCap':'عاصمة','cbi.statUpd':'مُحدّث',
         'moves.eyebrow':'تحركات القيادات','moves.title':'من يتحرك في قمة الهرم؟','moves.subtitle':'تتبع التعيينات والاستقالات والترقيات في الشركات الكبرى','moves.new':'تعيين جديد','moves.resign':'استقالة','moves.transfer':'انتقال','moves.promote':'ترقية',
         'deals.eyebrow':'فرص استثمارية','deals.title':'فرص لا تنتظر — اقتنصها الآن','deals.land':'أرض','deals.partnership':'شراكة','deals.tender':'مناقصة','deals.funding':'تمويل','deals.acquisition':'استحواذ','deals.inquire':'تواصل',
         'pulse.eyebrow':'نبض الأسبوع','pulse.title':'نبض القطاعات — تحليل أسبوعي مركّز','pulse.realEstate':'العقارات','pulse.banking':'البنوك','pulse.tech':'التكنولوجيا','pulse.industry':'الصناعة','pulse.energy':'الطاقة',
@@ -9897,7 +9730,7 @@
         /* Interbank rates */
         'dashboard.f.saibor3m':'SAIBOR 3M','dashboard.f.eibor3m':'EIBOR 3M','dashboard.f.qibor3m':'QIBOR 3M','dashboard.f.kibor3m':'KIBOR 3M','dashboard.f.bibor3m':'BIBOR 3M','dashboard.f.oibor3m':'OIBOR 3M','dashboard.f.jodibor3m':'JODIBOR 3M','dashboard.f.mibor3m':'MIBOR 3M','dashboard.f.tmm3m':'TMM 3M','dashboard.f.dibor3m':'DIBOR 3M','dashboard.f.iibor3m':'Iraq IBOR 3M',
         'dashboard.f.bond10y':'10Y bond yield',
-        'cbi.eyebrow':'EXCLUSIVE PROPRIETARY DATA','cbi.title':'Cairo Business Indices — Data You Won’t Find Anywhere Else','cbi.subtitle':'Proprietary indices to track markets, sectors, and real estate','cbi.citation':'Cited by: Bloomberg, Reuters, Al-Ahram, Zawya, Arab News, Argaam','cbi.methTitle':'Transparent & Trusted Methodology','cbi.methDesc':'All CBI indices are built on real data from stock exchanges, real estate agencies, and field surveys. Reviewed by an independent analyst team and updated periodically. Click any index for full methodology details.','cbi.statIdx':'Indices','cbi.statCap':'Capitals','cbi.statUpd':'Updated',
+        'cbi.eyebrow':'EXCLUSIVE PROPRIETARY DATA','cbi.title':'Cairo Business Indices — Data You Won’t Find Anywhere Else','cbi.subtitle':'Proprietary indices to track markets, sectors, and real estate','cbi.citation':'','cbi.methTitle':'Transparent & Trusted Methodology','cbi.methDesc':'All CBI indices are built on real data from stock exchanges, real estate agencies, and field surveys. Reviewed by an independent analyst team and updated periodically. Click any index for full methodology details.','cbi.statIdx':'Indices','cbi.statCap':'Capitals','cbi.statUpd':'Updated',
         'moves.eyebrow':'EXECUTIVE MOVES','moves.title':'Who\'s Moving at the Top?','moves.subtitle':'Track appointments, resignations, transfers, and promotions at major firms','moves.new':'New Appointment','moves.resign':'Resignation','moves.transfer':'Transfer','moves.promote':'Promotion',
         'deals.eyebrow':'OPPORTUNITIES','deals.title':'Opportunities Don\'t Wait — Seize Them Now','deals.land':'Land','deals.partnership':'Partnership','deals.tender':'Tender','deals.funding':'Funding Round','deals.acquisition':'Acquisition','deals.inquire':'Inquire',
         'pulse.eyebrow':'WEEKLY PULSE','pulse.title':'Sector Pulse — Focused Weekly Analysis','pulse.realEstate':'Real Estate','pulse.banking':'Banking','pulse.tech':'Technology','pulse.industry':'Industry','pulse.energy':'Energy',
