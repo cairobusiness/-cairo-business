@@ -10251,8 +10251,10 @@
     ];
 
     /* ---------- CBI INDICES (expanded) ---------- */
+    /* CBI_INDICES is populated from /api/cbi on page load (with this hardcoded array as fallback if the API is down).
+     * Updated daily by /api/cron/refresh-cbi via Groq AI + Tavily search. */
     let activeCBIFilter = 'all';
-    const CBI_INDICES = [
+    let CBI_INDICES = [
       { id:1, cat:'market', name_ar:'مؤشر كايرو بيزنس المركّب', name_en:'CBI Composite Index', value:1842, unit:'pts', change:4.2, period:'monthly', updated:'May 5, 2026',
         desc_ar:'المؤشر الرئيسي الذي يجمع أداء السوق والقطاعات والعقارات والشركات الناشئة في مقياس واحد شامل',
         desc_en:'The flagship index combining market, sector, real estate, and startup performance into one comprehensive score',
@@ -10334,6 +10336,30 @@
           {month:'Q3 2025',val:405},{month:'Q4 2025',val:435},{month:'Q1 2026',val:445}
         ]}
     ];
+
+    /* Fetch live CBI indices from API. Falls back to hardcoded array on failure. */
+    async function fetchCBIIndices() {
+      try {
+        const res = await fetch('https://cairo-business-backend.vercel.app/api/cbi', { cache: 'no-store' });
+        if (!res.ok) return;
+        const j = await res.json();
+        if (!j.success || !Array.isArray(j.items) || !j.items.length) return;
+        /* Normalize updated to a readable string */
+        CBI_INDICES = j.items.map(it => ({
+          id: it.id || 0, cat: it.cat, name_ar: it.name_ar, name_en: it.name_en,
+          value: Number(it.value), change: Number(it.change), unit: it.unit, period: it.period,
+          desc_ar: it.desc_ar, desc_en: it.desc_en,
+          methodology_ar: it.methodology_ar, methodology_en: it.methodology_en,
+          sparkline: Array.isArray(it.sparkline) ? it.sparkline : [],
+          history: Array.isArray(it.history) ? it.history : [],
+          ai_rationale: it.ai_rationale || null,
+          updated: it.updated ? new Date(it.updated).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''
+        }));
+        if (typeof renderCBIIndex === 'function') renderCBIIndex();
+      } catch (_) { /* keep fallback array */ }
+    }
+    /* Kick off fetch immediately — renderCBIIndex will be called once data arrives */
+    fetchCBIIndices();
 
     const EXEC_MOVES = [
       { id:1, name_ar:'أحمد الملك', name_en:'Ahmed El-Melek', company:'CIB', position_ar:'مدير عام الخزانة', position_en:'Treasury Head', type:'appointment', date:'Apr 20', desc_ar:'تعيين جديد من بنك مصر', color:'green' },

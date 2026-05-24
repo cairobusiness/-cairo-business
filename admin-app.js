@@ -453,6 +453,8 @@ function renderTabs() {
   ).join('');
   // Briefing for Admin + Editor + Moderator only
   const briefingTab = (isAdmin || isEditor || isModerator) ? mk('__briefing__', '🌅', 'النشرة الصباحية', 'switchToBriefing') : '';
+  // CBI Indices for Admin + Editor
+  const cbiTab = (isAdmin || isEditor) ? mk('__cbi__', '📊', 'مؤشرات CBI', 'switchToCBI') : '';
   // Admin-only tabs
   const adminOnlyTabs = isAdmin ? (
     mk('__users__', '👥', 'المستخدمين', 'switchToUsers') +
@@ -465,7 +467,7 @@ function renderTabs() {
   ) : '';
   // Moderator gets messages
   const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + adminOnlyTabs + modOnlyTabs;
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + adminOnlyTabs + modOnlyTabs;
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -1450,6 +1452,114 @@ async function saveBriefing() {
     if (!r.ok) { alert('فشل: ' + (r.data?.error || 'خطأ')); return; }
     alert('✓ تم حفظ النشرة الصباحية');
   } catch (e) { alert('خطأ: ' + e.message); }
+}
+
+// ═════════════════════════════════════════════════════════════
+// CBI Indices tab — manual edit + AI refresh
+// ═════════════════════════════════════════════════════════════
+async function switchToCBI() {
+  currentEntityKey = '__cbi__';
+  renderTabs();
+  document.getElementById('page-title').textContent = '📊 مؤشرات كايرو بيزنس';
+  document.getElementById('search-input').style.display = 'none';
+  const addBtn = document.querySelector('.actions button.btn-primary');
+  if (addBtn) addBtn.style.display = 'none';
+  document.getElementById('stats-section').innerHTML = '';
+  await loadCBIUI();
+}
+
+async function loadCBIUI() {
+  const container = document.getElementById('list-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const r = await api('/api/admin/cbi');
+  if (!r.ok) {
+    container.innerHTML = '<div class="msg msg-error">فشل التحميل: ' + escapeHtml(r.data?.error || 'unknown') + '<br><br>تأكد أنك شغلت الـ migration الأول: <code>/api/admin/migrate-cbi</code></div>';
+    return;
+  }
+  const items = (r.data && r.data.items) || [];
+
+  let html = '';
+  /* Banner with refresh button */
+  html += '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:18px 20px;margin-bottom:22px;">';
+  html += '  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
+  html += '    <div style="flex:1;min-width:240px;">';
+  html += '      <div style="font-size:16px;font-weight:700;color:#F4D03F;margin-bottom:4px;">🤖 تحديث المؤشرات بالذكاء الاصطناعي</div>';
+  html += '      <div style="font-size:13px;opacity:0.75;line-height:1.6;">يتم تلقائياً كل يوم الساعة 6 صباحاً. اضغط الزر لتشغيله الآن — هيقرأ آخر أخبار MENA من Tavily ويستخدم Groq AI لتحديث قيمة كل مؤشر.</div>';
+  html += '    </div>';
+  html += '    <button class="btn btn-primary" id="cbi-refresh-btn" onclick="refreshCBINow()" style="font-size:14px;padding:12px 22px;">🤖 حدّث الآن</button>';
+  html += '  </div>';
+  html += '  <div id="cbi-refresh-status" style="margin-top:12px;font-size:13px;line-height:1.6;display:none;"></div>';
+  html += '</div>';
+
+  /* Indices table */
+  if (!items.length) {
+    html += '<div class="empty">⚠️ لا توجد مؤشرات. شغّل الـ migration الأول: <a href="https://cairo-business-backend.vercel.app/api/admin/migrate-cbi" target="_blank">/api/admin/migrate-cbi</a></div>';
+  } else {
+    html += '<div style="display:flex;flex-direction:column;gap:12px;">';
+    for (const it of items) {
+      const lastRefresh = it.lastRefreshAt ? new Date(it.lastRefreshAt).toLocaleString('ar-EG') : 'لم يُحدّث بعد';
+      const upClass = (Number(it.change) >= 0) ? 'color:#22c55e' : 'color:#ef4444';
+      html += '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:12px;padding:14px 16px;">';
+      html += '  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">';
+      html += '    <div style="width:34px;height:34px;border-radius:50%;background:#F4D03F;color:#0A0E27;display:grid;place-items:center;font-weight:900;font-size:14px;">' + (it.sortOrder || '?') + '</div>';
+      html += '    <div style="flex:1;min-width:200px;">';
+      html += '      <div style="font-weight:700;font-size:15px;">' + escapeHtml(it.nameAr || it.name) + '</div>';
+      html += '      <div style="font-size:11px;opacity:0.55;direction:ltr;text-align:start;">' + escapeHtml(it.name) + ' · ' + (it.category || '—') + ' · ' + (it.period || 'monthly') + '</div>';
+      html += '    </div>';
+      html += '    <div style="font-size:11px;opacity:0.55;">آخر تحديث AI: ' + escapeHtml(lastRefresh) + '</div>';
+      html += '  </div>';
+      html += '  <div style="display:grid;grid-template-columns:140px 100px 1fr 120px;gap:8px;align-items:end;">';
+      html += '    <div><label style="font-size:11px;opacity:0.6;">القيمة</label><input data-cbi-value="' + escapeAttr(it.name) + '" type="number" step="0.1" value="' + (it.value || 0) + '" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;" /></div>';
+      html += '    <div><label style="font-size:11px;opacity:0.6;">% التغيير</label><input data-cbi-change="' + escapeAttr(it.name) + '" type="number" step="0.1" value="' + (it.change || 0) + '" style="width:100%;padding:8px 10px;' + upClass + ';background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;" /></div>';
+      html += '    <div><label style="font-size:11px;opacity:0.6;">السبب (AI rationale)</label><input data-cbi-rationale="' + escapeAttr(it.name) + '" type="text" value="' + escapeAttr(it.aiRationale || '') + '" placeholder="مثلاً: ارتفاع بسبب أرباح أرامكو" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;" /></div>';
+      html += '    <button class="btn btn-primary" onclick="saveCBIRow(\'' + escapeAttr(it.name) + '\')" style="padding:8px 16px;font-size:13px;">💾 حفظ</button>';
+      html += '  </div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+async function refreshCBINow() {
+  const btn = document.getElementById('cbi-refresh-btn');
+  const status = document.getElementById('cbi-refresh-status');
+  if (!btn || !status) return;
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  const original = btn.textContent;
+  btn.textContent = '⏳ جاري التحديث...';
+  status.style.display = 'block';
+  status.innerHTML = '<span style="color:#F4D03F">⏳ Groq + Tavily شغالين على 7 مؤشرات (قد يستغرق ~30 ثانية)...</span>';
+  try {
+    const res = await fetch('https://cairo-business-backend.vercel.app/api/cron/refresh-cbi', { cache: 'no-store' });
+    const j = await res.json();
+    if (!j.success) {
+      status.innerHTML = '<span style="color:#ef4444">❌ فشل: ' + (j.error || 'unknown') + '</span>';
+      return;
+    }
+    const updated = (j.updates || []).filter(u => u.status === 'updated' || u.status === 'computed').length;
+    const failed = (j.updates || []).filter(u => u.status === 'ai-failed' || u.status === 'db-error').length;
+    status.innerHTML = '<span style="color:#16a34a">✓ تم تحديث ' + updated + ' مؤشر' + (failed ? ' · فشل ' + failed : '') + '</span><br>' +
+      '<span style="opacity:0.7;font-size:12px;">جاري إعادة تحميل الصفحة...</span>';
+    setTimeout(() => { loadCBIUI(); }, 1200);
+  } catch (e) {
+    status.innerHTML = '<span style="color:#ef4444">❌ خطأ في الاتصال: ' + (e.message || e) + '</span>';
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.textContent = original;
+  }
+}
+
+async function saveCBIRow(slug) {
+  const value = parseFloat(document.querySelector('[data-cbi-value="' + slug + '"]')?.value || '0');
+  const change = parseFloat(document.querySelector('[data-cbi-change="' + slug + '"]')?.value || '0');
+  const aiRationale = document.querySelector('[data-cbi-rationale="' + slug + '"]')?.value || '';
+  const r = await api('/api/admin/cbi/' + encodeURIComponent(slug), { method: 'PUT', body: JSON.stringify({ value, change, aiRationale }) });
+  if (r.ok) alert('تم الحفظ ✓');
+  else alert('فشل الحفظ: ' + (r.data?.error || 'unknown'));
 }
 
 const _lp = document.getElementById('login-password');
