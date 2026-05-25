@@ -541,6 +541,8 @@ function renderTabs() {
   const briefingTab = (isAdmin || isEditor || isModerator) ? mk('__briefing__', '🌅', 'النشرة الصباحية', 'switchToBriefing') : '';
   // CBI Indices for Admin + Editor
   const cbiTab = (isAdmin || isEditor) ? mk('__cbi__', '📊', 'مؤشرات CBI', 'switchToCBI') : '';
+  // Section Layout (CMS homepage controller) — Admin only
+  const layoutTab = isAdmin ? mk('__layout__', '🎛️', 'تخطيط الصفحة', 'switchToLayout') : '';
   /* News Drafts tab removed per user request — drafts feature deprecated.
    * The switchToDrafts/loadDraftsUI/generateDraftsNow functions remain in code
    * but are unreachable from the UI. */
@@ -556,7 +558,7 @@ function renderTabs() {
   ) : '';
   // Moderator gets messages
   const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + adminOnlyTabs + modOnlyTabs;
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + layoutTab + adminOnlyTabs + modOnlyTabs;
 }
 
 /* Drafts counter kept for backward compat (no longer displayed) */
@@ -2057,6 +2059,181 @@ async function saveArticle(id, publishAlso) {
   }
   closeArticleEditor();
   await loadDraftsUI();
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Section Layout Controller — drag-drop reorder + visibility toggle
+   for all homepage sections. Admin only.
+   ═════════════════════════════════════════════════════════════ */
+let _layoutData = [];
+let _layoutDragSlug = null;
+
+async function switchToLayout() {
+  currentEntityKey = '__layout__';
+  renderTabs();
+  document.getElementById('page-title').textContent = '🎛️ تخطيط الصفحة الرئيسية';
+  document.getElementById('search-input').style.display = 'none';
+  const addBtn = document.querySelector('.actions button.btn-primary');
+  if (addBtn) addBtn.style.display = 'none';
+  document.getElementById('stats-section').innerHTML = '';
+  await loadLayoutUI();
+}
+
+async function loadLayoutUI() {
+  const container = document.getElementById('list-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const r = await api('/api/admin/section-layout');
+  if (!r.ok) {
+    container.innerHTML =
+      '<div class="msg msg-error">فشل التحميل: ' + escapeHtml(r.data?.error || 'unknown') +
+      '<br><br>شغّل الـ migration أولاً: <a href="https://cairo-business-backend.vercel.app/api/admin/migrate-section-layout" target="_blank">/api/admin/migrate-section-layout</a></div>';
+    return;
+  }
+  _layoutData = r.data.data || [];
+  if (!_layoutData.length) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">🎛️</div><div class="title">لسه ما اتزرعش</div><div class="subtitle">شغّل: <a href="https://cairo-business-backend.vercel.app/api/admin/migrate-section-layout" target="_blank">/api/admin/migrate-section-layout</a></div></div>';
+    return;
+  }
+  renderLayoutList();
+}
+
+function renderLayoutList() {
+  const container = document.getElementById('list-container');
+  let html = '';
+  /* Header banner */
+  html += '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:18px 20px;margin-bottom:18px;">';
+  html += '  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
+  html += '    <div style="flex:1;min-width:240px;">';
+  html += '      <div style="font-size:16px;font-weight:700;color:#F4D03F;margin-bottom:4px;">🎛️ تحكّم كامل في تخطيط الصفحة الرئيسية</div>';
+  html += '      <div style="font-size:13px;opacity:0.75;line-height:1.6;">اسحب الأقسام لإعادة ترتيبها، وفعّل/عطّل ظهور أي قسم في الصفحة. التغييرات تنعكس على الموقع فوراً بعد الحفظ.</div>';
+  html += '    </div>';
+  html += '    <button class="btn btn-primary" id="layout-save-btn" onclick="saveLayoutOrder()" style="font-size:14px;padding:12px 22px;">💾 حفظ الترتيب الجديد</button>';
+  html += '  </div>';
+  html += '  <div id="layout-save-status" style="margin-top:10px;font-size:13px;display:none;"></div>';
+  html += '</div>';
+
+  /* Draggable list */
+  html += '<div id="layout-list" style="display:flex;flex-direction:column;gap:8px;">';
+  for (const s of _layoutData) {
+    const pinned = !!s.isPinned;
+    const visible = !!s.isVisible;
+    const lockedBadge = pinned ? '<span class="pill" style="background:rgba(244,208,63,0.18);color:#F4D03F;font-size:10px;">📌 مثبّت</span>' : '';
+    const hiddenBg = !visible ? 'opacity:0.45;background:rgba(255,255,255,0.02);' : 'background:rgba(255,255,255,0.04);';
+    html += '<div class="layout-row" draggable="' + (!pinned) + '" data-slug="' + escapeAttr(s.slug) + '"';
+    html += '  ondragstart="layoutDragStart(event)"';
+    html += '  ondragover="layoutDragOver(event)"';
+    html += '  ondrop="layoutDrop(event)"';
+    html += '  ondragend="layoutDragEnd(event)"';
+    html += '  style="border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;' + hiddenBg + 'cursor:' + (pinned ? 'not-allowed' : 'grab') + ';transition:all 0.2s;">';
+    /* Drag handle */
+    html += '  <div style="font-size:20px;opacity:0.5;width:24px;text-align:center;">' + (pinned ? '🔒' : '⋮⋮') + '</div>';
+    /* Sort badge */
+    html += '  <div style="width:30px;height:30px;border-radius:50%;background:#F4D03F;color:#0A0E27;display:grid;place-items:center;font-weight:900;font-size:12px;">' + (s.sortOrder || 0) + '</div>';
+    /* Labels */
+    html += '  <div style="flex:1;min-width:0;">';
+    html += '    <div style="font-weight:700;font-size:15px;margin-bottom:2px;">' + escapeHtml(s.labelAr) + '</div>';
+    html += '    <div style="font-size:11px;opacity:0.55;direction:ltr;text-align:start;">#' + escapeHtml(s.slug) + ' · ' + escapeHtml(s.labelEn) + '</div>';
+    html += '  </div>';
+    /* Locked badge */
+    html += '  <div>' + lockedBadge + '</div>';
+    /* Visibility toggle */
+    html += '  <label style="display:flex;align-items:center;gap:8px;cursor:' + (pinned ? 'not-allowed' : 'pointer') + ';font-size:13px;user-select:none;">';
+    html += '    <input type="checkbox" ' + (visible ? 'checked' : '') + ' ' + (pinned ? 'disabled' : '') + ' onchange="toggleSectionVisibility(\'' + escapeAttr(s.slug) + '\', this.checked)" style="width:18px;height:18px;cursor:' + (pinned ? 'not-allowed' : 'pointer') + ';" />';
+    html += '    <span style="color:' + (visible ? '#22c55e' : '#94a3b8') + ';font-weight:600;">' + (visible ? 'مرئي' : 'مخفي') + '</span>';
+    html += '  </label>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  /* Help footer */
+  html += '<div style="margin-top:18px;font-size:12px;opacity:0.6;line-height:1.7;">';
+  html += '  💡 <strong>تلميحات:</strong><br/>';
+  html += '  • اسحب وأفلت أي صف لإعادة ترتيبه (الأقسام المثبّتة 🔒 ثابتة).<br/>';
+  html += '  • تفعيل/إيقاف الـ checkbox يحفظ تلقائياً.<br/>';
+  html += '  • بعد إعادة الترتيب، اضغط «حفظ الترتيب الجديد» لتثبيت الترتيب على الموقع.<br/>';
+  html += '  • التغييرات قد تأخذ حتى دقيقة للظهور على الموقع (cache).';
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+function layoutDragStart(e) {
+  const row = e.currentTarget;
+  if (row.getAttribute('draggable') !== 'true') { e.preventDefault(); return; }
+  _layoutDragSlug = row.dataset.slug;
+  row.style.opacity = '0.4';
+  e.dataTransfer.effectAllowed = 'move';
+}
+function layoutDragOver(e) {
+  e.preventDefault();
+  const row = e.currentTarget;
+  if (row.dataset.slug === _layoutDragSlug) return;
+  row.style.borderColor = '#F4D03F';
+}
+function layoutDragEnd(e) {
+  const rows = document.querySelectorAll('.layout-row');
+  rows.forEach(r => { r.style.opacity = ''; r.style.borderColor = ''; });
+  _layoutDragSlug = null;
+}
+function layoutDrop(e) {
+  e.preventDefault();
+  const targetRow = e.currentTarget;
+  const targetSlug = targetRow.dataset.slug;
+  if (!_layoutDragSlug || targetSlug === _layoutDragSlug) return;
+  /* Reorder _layoutData: move dragged item to target's position */
+  const fromIdx = _layoutData.findIndex(s => s.slug === _layoutDragSlug);
+  const toIdx = _layoutData.findIndex(s => s.slug === targetSlug);
+  if (fromIdx < 0 || toIdx < 0) return;
+  /* Don't allow dropping onto a pinned row if it's at the top/bottom edge */
+  const [moved] = _layoutData.splice(fromIdx, 1);
+  _layoutData.splice(toIdx, 0, moved);
+  /* Renumber sortOrder by index * 10 */
+  _layoutData.forEach((s, i) => { s.sortOrder = i * 10; });
+  renderLayoutList();
+}
+
+async function toggleSectionVisibility(slug, isVisible) {
+  const status = document.getElementById('layout-save-status');
+  if (status) {
+    status.style.display = 'block';
+    status.innerHTML = '<span style="color:#F4D03F">⏳ جاري الحفظ...</span>';
+  }
+  const r = await api('/api/admin/section-layout/' + encodeURIComponent(slug), { method: 'PATCH', body: JSON.stringify({ isVisible }) });
+  if (!r.ok || !r.data?.success) {
+    if (status) status.innerHTML = '<span style="color:#ef4444">❌ ' + escapeHtml(r.data?.error || 'فشل الحفظ') + '</span>';
+    /* Revert local state */
+    const it = _layoutData.find(s => s.slug === slug);
+    if (it) it.isVisible = !isVisible;
+    renderLayoutList();
+    return;
+  }
+  /* Update local state */
+  const it = _layoutData.find(s => s.slug === slug);
+  if (it) it.isVisible = isVisible;
+  if (status) status.innerHTML = '<span style="color:#22c55e">✅ تم تحديث ' + escapeHtml(slug) + ' → ' + (isVisible ? 'مرئي' : 'مخفي') + '</span>';
+  renderLayoutList();
+}
+
+async function saveLayoutOrder() {
+  const btn = document.getElementById('layout-save-btn');
+  const status = document.getElementById('layout-save-status');
+  if (!btn || !status) return;
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  const orig = btn.textContent;
+  btn.textContent = '⏳ جاري الحفظ...';
+  status.style.display = 'block';
+  status.innerHTML = '<span style="color:#F4D03F">⏳ حفظ الترتيب الجديد...</span>';
+  const order = _layoutData.map(s => ({ slug: s.slug, sortOrder: s.sortOrder }));
+  const r = await api('/api/admin/section-layout', { method: 'POST', body: JSON.stringify({ order }) });
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  btn.textContent = orig;
+  if (!r.ok || !r.data?.success) {
+    status.innerHTML = '<span style="color:#ef4444">❌ فشل الحفظ: ' + escapeHtml(r.data?.error || 'unknown') + '</span>';
+    return;
+  }
+  status.innerHTML = '<span style="color:#22c55e">✅ تم حفظ ترتيب ' + (r.data.updated || 0) + ' قسم. التغيير ينعكس على الموقع خلال دقيقة.</span>';
 }
 
 const _lp = document.getElementById('login-password');
