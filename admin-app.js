@@ -792,6 +792,8 @@ function renderTabs() {
   const searchTab = (isAdmin || isEditor) ? mk('__gsearch__', '🔍', 'بحث شامل', 'switchToGlobalSearch') : '';
   // Activity Log — Admin only
   const activityTab = isAdmin ? mk('__activity__', '📋', 'سجل النشاط', 'switchToActivity') : '';
+  // Backup / Export — Admin only
+  const backupTab = isAdmin ? mk('__backup__', '💾', 'نسخة احتياطية', 'switchToBackup') : '';
   /* News Drafts tab removed per user request — drafts feature deprecated.
    * The switchToDrafts/loadDraftsUI/generateDraftsNow functions remain in code
    * but are unreachable from the UI. */
@@ -807,7 +809,7 @@ function renderTabs() {
   ) : '';
   // Moderator gets messages
   const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + siteContentTab + brandTab + submissionsTab + commentsTab + searchTab + layoutTab + activityTab + adminOnlyTabs + modOnlyTabs;
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + siteContentTab + brandTab + submissionsTab + commentsTab + searchTab + layoutTab + activityTab + backupTab + adminOnlyTabs + modOnlyTabs;
 }
 
 /* Drafts counter kept for backward compat (no longer displayed) */
@@ -1536,6 +1538,13 @@ function renderList() {
     container.innerHTML = '<div class="empty-state"><div class="icon">' + ent.list.emoji + '</div><div class="title">لا توجد ' + ent.nameAr + ' بعد</div><div>دوس "+ ' + ent.singularAr + ' جديد" لإضافة أول واحدة.</div></div>';
     return;
   }
+  /* Bulk-select toolbar — shown only when items exist */
+  const bulkBar = '<div id="bulk-toolbar" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:10px;flex-wrap:wrap;">'
+    + '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="bulk-select-all" onchange="bulkToggleAll(this.checked)" /><span>تحديد الكل</span></label>'
+    + '<span id="bulk-count" style="opacity:0.6;">0 محدّد</span>'
+    + '<span style="flex:1"></span>'
+    + '<button class="btn btn-danger btn-sm" id="bulk-delete-btn" onclick="bulkDelete()" style="display:none;">🗑️ حذف المحدّد</button>'
+    + '</div>';
   const html = currentItems.map(item => {
     const title = ent.list.title(item) || '—';
     const excerpt = ent.list.excerpt(item) || '';
@@ -1548,7 +1557,8 @@ function renderList() {
       : '<div class="item-thumb">' + ent.list.emoji + '</div>';
     const linkBtn = (typeof ent.publicLink === 'function') ?
       '<button class="btn btn-ghost btn-sm" onclick="copyEntityLink(\'' + item.id + '\')" title="نسخ رابط مباشر">🔗 رابط</button>' : '';
-    return '<div class="item-row">' + thumb +
+    const checkbox = '<label class="bulk-check" style="display:grid;place-items:center;padding:0 6px 0 0;cursor:pointer;"><input type="checkbox" class="bulk-row-check" data-bulk-id="' + escapeAttr(item.id) + '" onchange="bulkUpdateCount()" /></label>';
+    return '<div class="item-row" style="grid-template-columns:auto auto 1fr auto;">' + checkbox + thumb +
       '<div><div class="item-meta">' + badges + (metaItems.length ? '<span>•</span>' : '') + metaHtml + '</div>' +
       '<div class="item-title">' + escapeHtml(title) + '</div>' +
       (excerpt ? '<div class="item-excerpt">' + escapeHtml(excerpt) + '</div>' : '') +
@@ -1559,7 +1569,45 @@ function renderList() {
       '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'' + item.id + '\')">🗑️ حذف</button>' +
       '</div></div>';
   }).join('');
-  container.innerHTML = '<div class="item-grid">' + html + '</div>';
+  container.innerHTML = bulkBar + '<div class="item-grid">' + html + '</div>';
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Bulk select helpers
+   ═════════════════════════════════════════════════════════════ */
+function bulkToggleAll(checked) {
+  document.querySelectorAll('.bulk-row-check').forEach(el => { el.checked = !!checked; });
+  bulkUpdateCount();
+}
+function bulkUpdateCount() {
+  const checked = document.querySelectorAll('.bulk-row-check:checked');
+  const countEl = document.getElementById('bulk-count');
+  const btn = document.getElementById('bulk-delete-btn');
+  if (countEl) countEl.textContent = checked.length + ' محدّد';
+  if (btn) btn.style.display = checked.length > 0 ? 'inline-flex' : 'none';
+  /* Sync the "select all" checkbox if needed */
+  const all = document.querySelectorAll('.bulk-row-check');
+  const sel = document.getElementById('bulk-select-all');
+  if (sel) sel.checked = all.length > 0 && checked.length === all.length;
+}
+async function bulkDelete() {
+  const checked = Array.from(document.querySelectorAll('.bulk-row-check:checked'));
+  const ids = checked.map(el => el.dataset.bulkId).filter(Boolean);
+  if (!ids.length) return;
+  if (!confirm('متأكد إنك عايز تحذف ' + ids.length + ' عنصر؟ ده فعل لا يمكن التراجع عنه.')) return;
+  const ent = currentEntity();
+  const btn = document.getElementById('bulk-delete-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري الحذف...'; }
+  let success = 0, failed = 0;
+  for (const id of ids) {
+    try {
+      const r = await api(ent.endpoint + '/' + encodeURIComponent(id), { method: 'DELETE' });
+      if (r.ok) success++; else failed++;
+    } catch { failed++; }
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '🗑️ حذف المحدّد'; }
+  alert('تم حذف ' + success + ' عنصر' + (failed ? ' (فشل ' + failed + ')' : ''));
+  await loadList();
 }
 
 
@@ -3090,6 +3138,82 @@ async function switchToActivity() {
 /* ═════════════════════════════════════════════════════════════
    Brand Settings Applier (frontend hook) — runs in admin too, for live preview
    ═════════════════════════════════════════════════════════════ */
+
+/* ═════════════════════════════════════════════════════════════
+   Backup / Export — admin downloads full DB as JSON
+   ═════════════════════════════════════════════════════════════ */
+async function switchToBackup() {
+  setupListView({ key: '__backup__', label: '💾 نسخة احتياطية كاملة' });
+  const c = document.getElementById('list-container');
+  c.innerHTML = '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:24px;max-width:600px;margin:40px auto;text-align:center;">'
+    + '<div style="font-size:18px;font-weight:700;color:#F4D03F;margin-bottom:10px;">💾 تصدير قاعدة البيانات</div>'
+    + '<div style="font-size:13px;opacity:0.75;margin-bottom:20px;line-height:1.7;">حمّل ملف JSON واحد يحتوي على كل محتوى الموقع (الأخبار، الفعاليات، الشركات، المستخدمين... كل حاجة). احتفظ به مكان آمن كنسخة احتياطية.</div>'
+    + '<button class="btn btn-primary" id="backup-btn" onclick="downloadBackup()" style="font-size:14px;padding:12px 32px;">📥 تنزيل نسخة احتياطية الآن</button>'
+    + '<div id="backup-status" style="margin-top:14px;font-size:13px;"></div>'
+    + '</div>';
+}
+async function downloadBackup() {
+  const btn = document.getElementById('backup-btn');
+  const status = document.getElementById('backup-status');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري التحضير...'; }
+  if (status) status.innerHTML = '<span style="color:#F4D03F">جاري تحضير الملف...</span>';
+  try {
+    const token = localStorage.getItem('cb_auth_token');
+    const res = await fetch('https://cairo-business-backend.vercel.app/api/admin/backup', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      throw new Error(j.error || ('HTTP ' + res.status));
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'cairobusiness-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    if (status) status.innerHTML = '<span style="color:#22c55e">✅ تم التنزيل بنجاح (' + Math.round(blob.size/1024) + ' KB)</span>';
+  } catch (e) {
+    if (status) status.innerHTML = '<span style="color:#ef4444">❌ ' + escapeHtml(e?.message || 'فشل') + '</span>';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📥 تنزيل نسخة احتياطية الآن'; }
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════
+   AI Auto-Translate helper — paired field translation
+   Usage: aiTranslateField('titleAr', 'titleEn') copies AR → EN translation.
+   ═════════════════════════════════════════════════════════════ */
+async function aiTranslateField(fromFieldId, toFieldId, fromLang) {
+  const fromEl = document.getElementById('f_' + fromFieldId);
+  const toEl = document.getElementById('f_' + toFieldId);
+  if (!fromEl || !toEl) return;
+  const text = (fromEl.value || '').trim();
+  if (!text) { alert('اكتب النص أولاً'); return; }
+  const targetLang = fromLang === 'ar' ? 'en' : 'ar';
+  const btnId = 'tr_' + fromFieldId + '_to_' + toFieldId;
+  const btn = document.getElementById(btnId);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    const r = await api('/api/admin/ai-translate', {
+      method: 'POST',
+      body: JSON.stringify({ text, from: fromLang, to: targetLang })
+    });
+    if (r.ok && r.data?.success && r.data?.translated) {
+      toEl.value = r.data.translated;
+      toEl.dispatchEvent(new Event('input', { bubbles: true }));
+    } else {
+      alert('فشل: ' + (r.data?.error || 'unknown'));
+    }
+  } catch (e) {
+    alert('خطأ: ' + (e?.message || 'unknown'));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🌐 ترجم'; }
+  }
+}
 
 /* ═════════════════════════════════════════════════════════════
    File upload helper — uploads to /api/admin/upload (Supabase Storage)

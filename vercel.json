@@ -3,6 +3,10 @@
     {
       "source": "/share/news/:id",
       "destination": "https://cairo-business-backend.vercel.app/api/share/news/:id"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://cairo-business-backend.vercel.app/api/sitemap"
     }
   ],
   "headers": [
@@ -10,6 +14,13 @@
       "source": "/share/news/:id",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=300, s-maxage=300" }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        { "key": "Content-Type", "value": "application/xml; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400" }
       ]
     }
   ]
