@@ -449,13 +449,15 @@
       const key = _currentEntityKey();
       const eligible = ['realestate', 'deals', 'startups', 'events'];
       if (!eligible.includes(key)) return;
+      /* Pre-populate from currently edited item (if any) */
+      const existing = (window.__currentItem && (window.__currentItem.imageUrl || ''));
       /* Build the field — same structure used by admin-app.js for url fields */
       const wrap = document.createElement('div');
       wrap.className = 'field field-full';
       wrap.id = 'auto-imageurl-wrap';
       wrap.innerHTML =
         '<label>🖼️ صورة الغلاف (اختياري)</label>'
-        + '<input id="f_imageUrl" type="url" dir="ltr" value="" placeholder="https://..." />'
+        + '<input id="f_imageUrl" type="url" dir="ltr" value="' + (existing || '').replace(/"/g, '&quot;') + '" placeholder="https://..." />'
         + '<div class="upload-widget" style="display:flex;gap:6px;align-items:center;margin-top:6px;font-size:11px;">'
         +   '<input type="file" id="up_imageUrl" accept="image/*" style="display:none" onchange="uploadFileFor(\'imageUrl\', this)" />'
         +   '<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'up_imageUrl\').click()">📤 رفع صورة من جهازك</button>'
@@ -464,6 +466,42 @@
       /* Insert near the top of the form for visibility */
       grid.insertBefore(wrap, grid.firstChild);
     }
+
+    /* ============================================================
+       SET-IMAGEURL HOOK — wraps `api()` so that after a successful
+       POST/PUT to /api/admin/{realestate,deals,startups,events}
+       we follow up with /api/admin/set-imageurl to persist the
+       imageUrl (since those endpoints don't accept it natively yet).
+       ============================================================ */
+    (function wrapApi() {
+      if (typeof window.api !== 'function') {
+        setTimeout(wrapApi, 200);
+        return;
+      }
+      const origApi = window.api;
+      const targets = /\/api\/admin\/(realestate|deals|startups|events)(\/[^?]+)?$/;
+      window.api = async function (path, options) {
+        const result = await origApi(path, options);
+        try {
+          const m = path && path.match(targets);
+          if (!m || !options || !['POST', 'PUT', 'PATCH'].includes((options.method || '').toUpperCase())) return result;
+          if (!result || !result.ok || !result.data) return result;
+          /* Find the imageUrl that was in the body */
+          let body = {};
+          try { body = options.body ? JSON.parse(options.body) : {}; } catch (_) {}
+          if (!body.imageUrl) return result;
+          const entityKey = m[1];
+          const id = (result.data.data && result.data.data.id) || (result.data.id);
+          if (!id) return result;
+          /* Persist imageUrl via the dedicated endpoint */
+          await origApi('/api/admin/set-imageurl', {
+            method: 'POST',
+            body: JSON.stringify({ entity: entityKey, id: id, imageUrl: body.imageUrl })
+          });
+        } catch (e) { console.warn('imageUrl post-save failed:', e); }
+        return result;
+      };
+    })();
   })();
   </script>
 </body>
