@@ -7,7 +7,7 @@
  *   3. Basic offline page (optional)
  */
 
-const VERSION = 'cb-sw-v1';
+const VERSION = 'cb-sw-v3-2026-05-25';
 
 self.addEventListener('install', (event) => {
   /* Activate immediately on first install */
@@ -15,8 +15,43 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  /* Take control of open clients */
-  event.waitUntil(self.clients.claim());
+  /* On activation: delete ALL old caches from previous Workbox-based SW versions
+     so users immediately see fresh HTML/JS from the network. */
+  event.waitUntil(
+    (async () => {
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      } catch (_) {}
+      await self.clients.claim();
+      /* Force open clients to reload so they pick up the fresh HTML */
+      try {
+        const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        for (const c of clients) {
+          if ('navigate' in c) {
+            try { c.navigate(c.url); } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    })()
+  );
+});
+
+/* Bypass cache for navigations & API calls — always go to network.
+   This guarantees fresh HTML and JSON whenever the user opens the site. */
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  let url;
+  try { url = new URL(req.url); } catch (_) { return; }
+  /* Only intercept requests to our own origin and to the backend API */
+  const isApi = url.hostname.includes('cairo-business-backend.vercel.app');
+  const isOurSite = url.hostname === 'cairobusiness.net' || url.hostname.endsWith('.cairobusiness.net');
+  if (!isApi && !isOurSite) return; /* let other origins be handled normally */
+  /* For our HTML/JS/CSS and API calls — always fetch from network, never cache */
+  event.respondWith(
+    fetch(req, { cache: 'no-store' }).catch(() => fetch(req))
+  );
 });
 
 /* Receive push from server and show notification */
