@@ -418,7 +418,7 @@
       saveBtn.parentNode.insertBefore(btn, saveBtn);
     }
     /* Watch for modal open to inject the button */
-    const _modalObserver = new MutationObserver(() => { _injectPreviewBtn(); });
+    const _modalObserver = new MutationObserver(() => { _injectPreviewBtn(); _injectImageUrlField(); });
     try {
       const modal = document.getElementById('item-modal');
       if (modal) _modalObserver.observe(modal, { attributes: true, childList: true, subtree: true });
@@ -426,6 +426,44 @@
     /* Initial pass in case modal is already in DOM */
     document.addEventListener('DOMContentLoaded', _injectPreviewBtn);
     setTimeout(_injectPreviewBtn, 600);
+
+    /* ============================================================
+       AUTO-INJECT IMAGE UPLOAD field for entities whose form doesn't
+       already have one. Targets: realestate, deals, startups, events.
+       These DB tables now have imageUrl column (added by migrate-imageurl).
+       ============================================================ */
+    function _currentEntityKey() {
+      const t = document.querySelector('.tab.active');
+      const onclick = t && t.getAttribute('onclick');
+      const m = onclick && onclick.match(/'([^']+)'/);
+      return m ? m[1] : '';
+    }
+    function _injectImageUrlField() {
+      const modal = document.getElementById('item-modal');
+      if (!modal || !modal.classList.contains('open')) return;
+      /* Skip if there's already an imageUrl field (or any URL field already wired with upload) */
+      if (document.getElementById('f_imageUrl')) return;
+      const grid = document.getElementById('form-fields');
+      if (!grid) return;
+      /* Only inject for the 4 entities that don't have built-in image field */
+      const key = _currentEntityKey();
+      const eligible = ['realestate', 'deals', 'startups', 'events'];
+      if (!eligible.includes(key)) return;
+      /* Build the field — same structure used by admin-app.js for url fields */
+      const wrap = document.createElement('div');
+      wrap.className = 'field field-full';
+      wrap.id = 'auto-imageurl-wrap';
+      wrap.innerHTML =
+        '<label>🖼️ صورة الغلاف (اختياري)</label>'
+        + '<input id="f_imageUrl" type="url" dir="ltr" value="" placeholder="https://..." />'
+        + '<div class="upload-widget" style="display:flex;gap:6px;align-items:center;margin-top:6px;font-size:11px;">'
+        +   '<input type="file" id="up_imageUrl" accept="image/*" style="display:none" onchange="uploadFileFor(\'imageUrl\', this)" />'
+        +   '<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'up_imageUrl\').click()">📤 رفع صورة من جهازك</button>'
+        +   '<span id="upstatus_imageUrl" style="font-size:11px;opacity:0.7;"></span>'
+        + '</div>';
+      /* Insert near the top of the form for visibility */
+      grid.insertBefore(wrap, grid.firstChild);
+    }
   })();
   </script>
 </body>
