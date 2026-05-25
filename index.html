@@ -11709,9 +11709,76 @@
       if (window.lucide) try { lucide.createIcons(); } catch(_){}
     }
 
+    /* Ensure the news article modal HTML exists — recreates it if missing/truncated */
+    function ensureNewsModalExists() {
+      let overlay = document.getElementById('news-article-modal');
+      if (overlay && document.querySelector('.news-modal-card')) return overlay;
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'news-article-modal';
+        overlay.className = 'news-modal-overlay';
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(overlay);
+      }
+      overlay.innerHTML = ''
+        + '<style>'
+        + '.news-modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.85);backdrop-filter:blur(10px);z-index:9999;display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}'
+        + '.news-modal-overlay.is-open{display:flex}'
+        + '.news-modal-card{background:linear-gradient(155deg,#0f1a3d 0%,#0a0e27 100%);border:1px solid rgba(212,175,55,.25);border-radius:24px;max-width:860px;width:100%;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:nm-in .25s ease-out;position:relative}'
+        + '@keyframes nm-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}'
+        + '.news-modal-header{position:relative;height:280px;background:#1a2b4d center/cover no-repeat;flex-shrink:0}'
+        + '.news-modal-header::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(10,14,39,.95) 0%,rgba(10,14,39,.4) 50%,transparent 100%)}'
+        + '.news-modal-close{position:absolute;top:18px;inset-inline-end:18px;z-index:2;width:38px;height:38px;border-radius:50%;background:rgba(10,14,39,.8);border:1px solid rgba(255,255,255,.15);color:#fff;display:grid;place-items:center;cursor:pointer;font-size:22px;transition:all .2s}'
+        + '.news-modal-close:hover{background:#d4af37;color:#0A0E27}'
+        + '.news-modal-body{padding:28px 32px;color:#fff}'
+        + '.news-modal-meta{display:flex;gap:12px;align-items:center;font-size:12px;color:rgba(255,255,255,.55);margin-bottom:14px;flex-wrap:wrap}'
+        + '.news-modal-pill{background:rgba(244,208,63,.15);color:#F4D03F;border:1px solid rgba(244,208,63,.3);padding:4px 10px;border-radius:999px;font-weight:600}'
+        + '.news-modal-title{font-size:28px;font-weight:800;line-height:1.3;margin-bottom:18px;color:#fff}'
+        + '.news-modal-content{font-size:16px;line-height:1.9;color:rgba(255,255,255,.85)}'
+        + '.news-modal-content p{margin-bottom:14px}'
+        + '.news-modal-content h1,.news-modal-content h2,.news-modal-content h3{color:#F4D03F;margin:20px 0 12px}'
+        + '.news-modal-content ul,.news-modal-content ol{margin:12px 0;padding-inline-start:24px}'
+        + '.news-modal-content li{margin-bottom:6px}'
+        + '.news-modal-content a{color:#F4D03F;text-decoration:underline}'
+        + '.news-modal-content blockquote{border-inline-start:3px solid #F4D03F;padding:8px 18px;margin:14px 0;background:rgba(244,208,63,.05);border-radius:8px}'
+        + '.news-modal-ai{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(244,208,63,.06));border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:16px;margin:22px 0}'
+        + '.news-modal-ai-head{display:flex;align-items:center;gap:8px;font-size:12px;color:#c084fc;font-weight:700;margin-bottom:8px}'
+        + '.news-modal-ai-body{font-size:14px;line-height:1.7;color:rgba(255,255,255,.8)}'
+        + '.news-modal-actions{display:flex;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.1)}'
+        + '.news-modal-actions button{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;padding:9px 16px;border-radius:10px;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px;transition:all .2s;font-family:inherit}'
+        + '.news-modal-actions button:hover{background:rgba(244,208,63,.15);border-color:#F4D03F;color:#F4D03F}'
+        + '</style>'
+        + '<div class="news-modal-card">'
+        +   '<button class="news-modal-close" onclick="closeNewsArticle()" aria-label="إغلاق">×</button>'
+        +   '<div class="news-modal-header" id="news-modal-image"></div>'
+        +   '<div class="news-modal-body">'
+        +     '<div class="news-modal-meta">'
+        +       '<span class="news-modal-pill" id="news-modal-cat">—</span>'
+        +       '<span>•</span><span id="news-modal-time">—</span>'
+        +       '<span>•</span><span id="news-modal-author">—</span>'
+        +       '<span>•</span><span>AI Score: <span id="news-modal-score" style="color:#F4D03F;font-weight:700">—</span></span>'
+        +     '</div>'
+        +     '<h1 class="news-modal-title" id="news-modal-title">—</h1>'
+        +     '<div class="news-modal-ai">'
+        +       '<div class="news-modal-ai-head"><span>✨</span><span>ملخص بالذكاء الاصطناعي</span>'
+        +       '<button onclick="if(typeof generateAiSummary===\'function\')generateAiSummary()" style="background:rgba(244,208,63,.15);color:#F4D03F;border:1px solid rgba(244,208,63,.3);padding:3px 10px;border-radius:6px;cursor:pointer;font-size:11px;margin-inline-start:auto;font-family:inherit;">🔄 جدّد</button>'
+        +       '</div>'
+        +       '<div class="news-modal-ai-body" id="news-modal-ai-body">اضغط جدّد لتوليد ملخص AI.</div>'
+        +     '</div>'
+        +     '<div class="news-modal-content" id="news-modal-content"></div>'
+        +     '<div class="news-modal-actions">'
+        +       '<button onclick="if(typeof shareNewsArticle===\'function\')shareNewsArticle()">📤 مشاركة</button>'
+        +       '<button onclick="if(typeof copyNewsLink===\'function\')copyNewsLink()">🔗 <span id="news-modal-copy-label">نسخ الرابط</span></button>'
+        +     '</div>'
+        +   '</div>'
+        + '</div>';
+      return overlay;
+    }
+
     /* ===== News article modal: open + close + AI summary ===== */
     function openNewsArticle(id) {
       try {
+        ensureNewsModalExists();
         const item = (window.NEWS_BY_ID || {})[id];
         if (!item) return;
         window.__currentNewsArticle = item;
@@ -17398,3 +17465,156 @@
           transition: all .2s;
         }
         .news-modal-close:hover { background: #d4af37;
+/* Close the truncated CSS block — browsers parse what's there, this just terminates safely */
+        .news-modal-close:hover { color: #0A0E27; }
+        .news-modal-body { padding: 28px 32px; color: #fff; }
+        .news-modal-meta { display: flex; gap: 12px; align-items: center; font-size: 12px; color: rgba(255,255,255,.55); margin-bottom: 14px; flex-wrap: wrap; }
+        .news-modal-pill { background: rgba(244,208,63,.15); color: #F4D03F; border: 1px solid rgba(244,208,63,.3); padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+        .news-modal-title { font-size: 28px; font-weight: 800; line-height: 1.3; margin-bottom: 18px; color: #fff; }
+        .news-modal-content { font-size: 16px; line-height: 1.9; color: rgba(255,255,255,.85); }
+        .news-modal-content p { margin-bottom: 14px; }
+        .news-modal-content h1, .news-modal-content h2, .news-modal-content h3 { color: #F4D03F; margin: 20px 0 12px; }
+        .news-modal-content ul, .news-modal-content ol { margin: 12px 0; padding-inline-start: 24px; }
+        .news-modal-content li { margin-bottom: 6px; }
+        .news-modal-content a { color: #F4D03F; text-decoration: underline; }
+        .news-modal-content blockquote { border-inline-start: 3px solid #F4D03F; padding: 8px 18px; margin: 14px 0; background: rgba(244,208,63,.05); border-radius: 8px; }
+        .news-modal-ai { background: linear-gradient(135deg, rgba(139,92,246,.12), rgba(244,208,63,.06)); border: 1px solid rgba(139,92,246,.3); border-radius: 12px; padding: 16px; margin: 22px 0; }
+        .news-modal-ai-head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #c084fc; font-weight: 700; margin-bottom: 8px; }
+        .news-modal-ai-body { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,.8); }
+        .news-modal-actions { display: flex; gap: 10px; margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.1); }
+        .news-modal-actions button { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: #fff; padding: 9px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; transition: all .2s; }
+        .news-modal-actions button:hover { background: rgba(244,208,63,.15); border-color: #F4D03F; color: #F4D03F; }
+      </style>
+
+      <!-- Card -->
+      <div class="news-modal-card" onclick="event.stopPropagation()">
+        <button class="news-modal-close" onclick="closeNewsArticle()" aria-label="إغلاق">×</button>
+        <div class="news-modal-header" id="news-modal-image"></div>
+        <div class="news-modal-body">
+          <div class="news-modal-meta">
+            <span class="news-modal-pill" id="news-modal-cat">—</span>
+            <span>•</span>
+            <span id="news-modal-time">—</span>
+            <span>•</span>
+            <span id="news-modal-author">—</span>
+            <span>•</span>
+            <span>AI Score: <span id="news-modal-score" style="color:#F4D03F;font-weight:700">—</span></span>
+          </div>
+          <h1 class="news-modal-title" id="news-modal-title">—</h1>
+
+          <!-- AI Summary -->
+          <div class="news-modal-ai">
+            <div class="news-modal-ai-head">
+              <span>✨</span><span>ملخص بالذكاء الاصطناعي</span>
+              <button onclick="generateAiSummary && generateAiSummary()" style="background:rgba(244,208,63,.15);color:#F4D03F;border:1px solid rgba(244,208,63,.3);padding:3px 10px;border-radius:6px;cursor:pointer;font-size:11px;margin-inline-start:auto;">🔄 جدّد الملخص</button>
+            </div>
+            <div class="news-modal-ai-body" id="news-modal-ai-body">اضغط "جدّد الملخص" لتوليد ملخص AI من النص.</div>
+          </div>
+
+          <!-- Article body -->
+          <div class="news-modal-content" id="news-modal-content"></div>
+
+          <!-- Actions -->
+          <div class="news-modal-actions">
+            <button onclick="shareNewsArticle()"><i data-lucide="share-2" class="w-4 h-4"></i><span>مشاركة</span></button>
+            <button onclick="copyNewsLink()"><i data-lucide="link" class="w-4 h-4"></i><span id="news-modal-copy-label">نسخ الرابط</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>
+business-backend.vercel.app';
+      /* Truncated function — closed safely to prevent script parse errors */
+    }
+  </script>
+
+  <!-- ═════════════════════════════════════════════════════════════
+       News Article Modal — Full HTML structure (was missing)
+       ═════════════════════════════════════════════════════════════ -->
+  <div id="news-article-modal" class="news-modal-overlay" aria-hidden="true" onclick="if(event.target===this)closeNewsArticle()">
+    <style>
+      .news-modal-overlay {
+        position: fixed; inset: 0; background: rgba(2,6,23,.85); backdrop-filter: blur(10px);
+        z-index: 9999; display: none; align-items: flex-start; justify-content: center;
+        padding: 40px 20px; overflow-y: auto;
+      }
+      .news-modal-overlay.is-open { display: flex; }
+      .news-modal-card {
+        background: linear-gradient(155deg, #0f1a3d 0%, #0a0e27 100%);
+        border: 1px solid rgba(212,175,55,.25); border-radius: 24px;
+        max-width: 860px; width: 100%;
+        overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.6);
+        animation: nm-in .25s ease-out; position: relative;
+      }
+      @keyframes nm-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+      .news-modal-header {
+        position: relative; height: 280px; background: #1a2b4d center/cover no-repeat; flex-shrink: 0;
+      }
+      .news-modal-header::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(to top, rgba(10,14,39,.95) 0%, rgba(10,14,39,.4) 50%, transparent 100%);
+      }
+      .news-modal-close {
+        position: absolute; top: 18px; inset-inline-end: 18px; z-index: 2;
+        width: 38px; height: 38px; border-radius: 50%;
+        background: rgba(10,14,39,.8); border: 1px solid rgba(255,255,255,.15);
+        color: #fff; display: grid; place-items: center; cursor: pointer; font-size: 22px;
+        transition: all .2s;
+      }
+      .news-modal-close:hover { background: #d4af37; color: #0A0E27; }
+      .news-modal-body { padding: 28px 32px; color: #fff; }
+      .news-modal-meta { display: flex; gap: 12px; align-items: center; font-size: 12px; color: rgba(255,255,255,.55); margin-bottom: 14px; flex-wrap: wrap; }
+      .news-modal-pill { background: rgba(244,208,63,.15); color: #F4D03F; border: 1px solid rgba(244,208,63,.3); padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+      .news-modal-title { font-size: 28px; font-weight: 800; line-height: 1.3; margin-bottom: 18px; color: #fff; }
+      .news-modal-content { font-size: 16px; line-height: 1.9; color: rgba(255,255,255,.85); }
+      .news-modal-content p { margin-bottom: 14px; }
+      .news-modal-content h1, .news-modal-content h2, .news-modal-content h3 { color: #F4D03F; margin: 20px 0 12px; }
+      .news-modal-content ul, .news-modal-content ol { margin: 12px 0; padding-inline-start: 24px; }
+      .news-modal-content li { margin-bottom: 6px; }
+      .news-modal-content a { color: #F4D03F; text-decoration: underline; }
+      .news-modal-content blockquote { border-inline-start: 3px solid #F4D03F; padding: 8px 18px; margin: 14px 0; background: rgba(244,208,63,.05); border-radius: 8px; }
+      .news-modal-ai { background: linear-gradient(135deg, rgba(139,92,246,.12), rgba(244,208,63,.06)); border: 1px solid rgba(139,92,246,.3); border-radius: 12px; padding: 16px; margin: 22px 0; }
+      .news-modal-ai-head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #c084fc; font-weight: 700; margin-bottom: 8px; }
+      .news-modal-ai-body { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,.8); }
+      .news-modal-actions { display: flex; gap: 10px; margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.1); }
+      .news-modal-actions button { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: #fff; padding: 9px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; transition: all .2s; font-family: inherit; }
+      .news-modal-actions button:hover { background: rgba(244,208,63,.15); border-color: #F4D03F; color: #F4D03F; }
+    </style>
+
+    <div class="news-modal-card">
+      <button class="news-modal-close" onclick="closeNewsArticle()" aria-label="إغلاق">×</button>
+      <div class="news-modal-header" id="news-modal-image"></div>
+      <div class="news-modal-body">
+        <div class="news-modal-meta">
+          <span class="news-modal-pill" id="news-modal-cat">—</span>
+          <span>•</span>
+          <span id="news-modal-time">—</span>
+          <span>•</span>
+          <span id="news-modal-author">—</span>
+          <span>•</span>
+          <span>AI Score: <span id="news-modal-score" style="color:#F4D03F;font-weight:700">—</span></span>
+        </div>
+        <h1 class="news-modal-title" id="news-modal-title">—</h1>
+
+        <div class="news-modal-ai">
+          <div class="news-modal-ai-head">
+            <span>✨</span><span>ملخص بالذكاء الاصطناعي</span>
+            <button onclick="if(typeof generateAiSummary==='function')generateAiSummary()" style="background:rgba(244,208,63,.15);color:#F4D03F;border:1px solid rgba(244,208,63,.3);padding:3px 10px;border-radius:6px;cursor:pointer;font-size:11px;margin-inline-start:auto;font-family:inherit;">🔄 جدّد الملخص</button>
+          </div>
+          <div class="news-modal-ai-body" id="news-modal-ai-body">اضغط "جدّد الملخص" لتوليد ملخص AI من النص.</div>
+        </div>
+
+        <div class="news-modal-content" id="news-modal-content"></div>
+
+        <div class="news-modal-actions">
+          <button onclick="if(typeof shareNewsArticle==='function')shareNewsArticle()">📤 <span>مشاركة</span></button>
+          <button onclick="if(typeof copyNewsLink==='function')copyNewsLink()">🔗 <span id="news-modal-copy-label">نسخ الرابط</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
