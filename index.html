@@ -11732,10 +11732,20 @@
         const elA = document.getElementById('news-modal-author'); if (elA) elA.textContent = author;
         const elContent = document.getElementById('news-modal-content');
         if (elContent) {
-          const paragraphs = (excerpt || '').split(/\n\n+|(?<=[.!?])\s{2,}/).filter(p => p.trim());
-          elContent.innerHTML = paragraphs.length
-            ? paragraphs.map(p => '<p>' + p.replace(/</g, '&lt;') + '</p>').join('')
-            : '<p>' + (isAr ? 'لا يوجد محتوى متاح لهذا الخبر.' : 'No content available for this story.') + '</p>';
+          /* Prefer rich body (HTML from Quill); fall back to excerpt; fall back to placeholder */
+          const fullBody = item.body || '';
+          if (fullBody && /<[a-z][\s\S]*>/i.test(fullBody)) {
+            /* Rich HTML body — render as-is */
+            elContent.innerHTML = fullBody;
+          } else {
+            const text = fullBody || excerpt || '';
+            const paragraphs = (text || '').split(/\n\n+|(?<=[.!?])\s{2,}/).filter(p => p.trim());
+            elContent.innerHTML = paragraphs.length
+              ? paragraphs.map(p => '<p>' + p.replace(/</g, '&lt;') + '</p>').join('')
+              : '<p>' + (isAr ? 'لا يوجد محتوى متاح لهذا الخبر.' : 'No content available for this story.') + '</p>';
+          }
+          /* Append comments section after article body */
+          renderCommentsSection(item.id, elContent);
         }
         const elImg = document.getElementById('news-modal-image');
         if (elImg) {
@@ -11779,6 +11789,105 @@
           history.pushState(null, '', location.pathname + location.search);
         }
       } catch (_e) {}
+    }
+
+    /* ───────── Comments section for news articles ───────── */
+    async function renderCommentsSection(newsId, hostEl) {
+      if (!newsId || !hostEl) return;
+      const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
+      const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND) || 'https://cairo-business-backend.vercel.app';
+
+      /* Create or replace comments container */
+      let cont = document.getElementById('news-comments-section');
+      if (!cont) {
+        cont = document.createElement('div');
+        cont.id = 'news-comments-section';
+        cont.style.cssText = 'margin-top:36px;padding-top:24px;border-top:1px solid rgba(255,255,255,.1);';
+        hostEl.parentElement.appendChild(cont);
+      }
+      cont.innerHTML = '<div style="font-size:18px;font-weight:700;color:#F4D03F;margin-bottom:14px;display:flex;align-items:center;gap:8px;">💬 ' + (isAr ? 'التعليقات' : 'Comments') + '</div>'
+        + '<div id="comments-list" style="margin-bottom:18px;"><div style="opacity:0.5;font-size:13px;">' + (isAr ? '⏳ تحميل التعليقات...' : 'Loading...') + '</div></div>'
+        + '<form id="comment-form" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;">'
+        + '  <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:#F4D03F;">' + (isAr ? '✍️ اكتب تعليقك' : 'Write a comment') + '</div>'
+        + '  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'
+        + '    <input id="comment-name" type="text" placeholder="' + (isAr ? 'الاسم *' : 'Name *') + '" style="padding:10px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:inherit;font-size:13px;" required />'
+        + '    <input id="comment-email" type="email" placeholder="' + (isAr ? 'الإيميل (اختياري)' : 'Email (optional)') + '" style="padding:10px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:inherit;font-size:13px;" />'
+        + '  </div>'
+        + '  <textarea id="comment-body" rows="3" placeholder="' + (isAr ? 'تعليقك...' : 'Your comment...') + '" style="width:100%;padding:10px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:inherit;font-size:13px;resize:vertical;" required></textarea>'
+        + '  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap;">'
+        + '    <div id="comment-status" style="font-size:12px;flex:1;"></div>'
+        + '    <button type="submit" id="comment-submit-btn" style="background:linear-gradient(135deg,#F4D03F,#c9a227);color:#0A0E27;font-weight:700;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:13px;">' + (isAr ? '📨 نشر التعليق' : 'Post Comment') + '</button>'
+        + '  </div>'
+        + '</form>';
+
+      /* Load comments */
+      try {
+        const r = await fetch(backend + '/api/comments?entityType=news&entityId=' + encodeURIComponent(newsId));
+        const j = await r.json();
+        const list = document.getElementById('comments-list');
+        const items = (j && j.data) || [];
+        if (!items.length) {
+          list.innerHTML = '<div style="opacity:0.5;font-size:13px;padding:14px;text-align:center;">' + (isAr ? '💭 لا توجد تعليقات بعد. كن أول من يعلّق!' : 'No comments yet. Be the first!') + '</div>';
+        } else {
+          list.innerHTML = items.map(c => {
+            const ago = (typeof newsTimeAgo === 'function') ? newsTimeAgo(c.createdAt, currentLang) : new Date(c.createdAt).toLocaleString('ar-EG');
+            const initial = (c.authorName || '?').charAt(0).toUpperCase();
+            return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;margin-bottom:10px;">'
+              + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+              + '<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#F4D03F,#c9a227);color:#0A0E27;display:grid;place-items:center;font-weight:700;font-size:13px;">' + initial.replace(/</g,'') + '</div>'
+              + '<div><div style="font-weight:600;font-size:13px;">' + (c.authorName || 'مجهول').replace(/</g, '&lt;') + '</div><div style="font-size:11px;opacity:0.5;">' + ago + '</div></div>'
+              + '</div>'
+              + '<div style="font-size:14px;line-height:1.7;color:rgba(255,255,255,0.85);">' + (c.body || '').replace(/</g, '&lt;') + '</div>'
+              + '</div>';
+          }).join('');
+        }
+      } catch (e) {
+        const list = document.getElementById('comments-list');
+        if (list) list.innerHTML = '<div style="opacity:0.5;font-size:13px;">' + (isAr ? 'تعذّر تحميل التعليقات' : 'Failed to load comments') + '</div>';
+      }
+
+      /* Submit handler */
+      const form = document.getElementById('comment-form');
+      if (form && !form.dataset.cbWired) {
+        form.dataset.cbWired = '1';
+        form.addEventListener('submit', async (ev) => {
+          ev.preventDefault();
+          const nameEl = document.getElementById('comment-name');
+          const emailEl = document.getElementById('comment-email');
+          const bodyEl = document.getElementById('comment-body');
+          const statusEl = document.getElementById('comment-status');
+          const btn = document.getElementById('comment-submit-btn');
+          const authorName = (nameEl && nameEl.value || '').trim();
+          const authorEmail = (emailEl && emailEl.value || '').trim();
+          const body = (bodyEl && bodyEl.value || '').trim();
+          if (!authorName || !body) {
+            statusEl.innerHTML = '<span style="color:#ef4444">يرجى ملء الاسم والتعليق</span>';
+            return;
+          }
+          if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+          statusEl.innerHTML = '<span style="color:#F4D03F">⏳ جاري الإرسال...</span>';
+          try {
+            const res = await fetch(backend + '/api/comments', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ entityType: 'news', entityId: newsId, authorName, authorEmail, body })
+            });
+            const j = await res.json();
+            if (res.ok && j.success) {
+              statusEl.innerHTML = '<span style="color:#22c55e">✅ ' + (j.message || (isAr ? 'تم! تعليقك تحت المراجعة' : 'Thanks! Your comment is awaiting review')) + '</span>';
+              if (nameEl) nameEl.value = '';
+              if (emailEl) emailEl.value = '';
+              if (bodyEl) bodyEl.value = '';
+            } else {
+              statusEl.innerHTML = '<span style="color:#ef4444">❌ ' + (j.error || 'فشل الإرسال') + '</span>';
+            }
+          } catch (err) {
+            statusEl.innerHTML = '<span style="color:#ef4444">❌ خطأ في الاتصال</span>';
+          } finally {
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+          }
+        });
+      }
     }
 
     /* Share + copy link — uses Vercel rewrite to backend OG redirector so URL stays on cairobusiness.net */
@@ -17025,6 +17134,59 @@
           }
         });
         try { if (typeof initTop10ApplyForm === 'function') initTop10ApplyForm(); } catch (e) { console.warn('initTop10ApplyForm failed:', e); }
+        /* Wire Top10 Apply form to /api/submissions */
+        try {
+          const top10Form = document.getElementById('top10-apply-form');
+          if (top10Form && !top10Form.dataset.cbWired) {
+            top10Form.dataset.cbWired = '1';
+            top10Form.addEventListener('submit', async function (ev) {
+              ev.preventDefault();
+              const statusEl = document.getElementById('apply-status');
+              const submitBtn = top10Form.querySelector('button[type=submit]');
+              const fd = new FormData(top10Form);
+              const obj = {};
+              for (const [k, v] of fd.entries()) {
+                /* Skip file inputs — handled separately */
+                if (v instanceof File) continue;
+                obj[k] = v;
+              }
+              if (!obj.nameAr || !obj.contactName || !obj.email || !obj.consent1 || !obj.consent2 || !obj.consent3) {
+                statusEl.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);margin-top:14px;">يرجى ملء كل الحقول المطلوبة والموافقة على الشروط.</div>';
+                return;
+              }
+              if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.6'; }
+              statusEl.innerHTML = '<div style="background:rgba(244,208,63,0.12);color:#F4D03F;padding:12px;border-radius:10px;border:1px solid rgba(244,208,63,0.3);margin-top:14px;">⏳ جاري إرسال طلبك...</div>';
+              const payload = {
+                formKey: 'top10-apply',
+                name: obj.contactName,
+                email: obj.email,
+                phone: obj.phone,
+                company: obj.nameEn || obj.nameAr,
+                message: 'طلب تأهيل Top 10 — ' + (obj.nameAr || ''),
+                ...obj  /* include all extra fields in payload JSON */
+              };
+              try {
+                const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND) || 'https://cairo-business-backend.vercel.app';
+                const res = await fetch(backend + '/api/submissions', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+                });
+                const j = await res.json();
+                if (res.ok && j.success) {
+                  statusEl.innerHTML = '<div style="background:rgba(16,185,129,0.12);color:#6ee7b7;padding:14px;border-radius:10px;border:1px solid rgba(16,185,129,0.3);margin-top:14px;">✅ تم استلام طلبك بنجاح! فريقنا هيراجعه ويتواصل معك خلال أسبوع.</div>';
+                  top10Form.reset();
+                } else {
+                  statusEl.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);margin-top:14px;">❌ ' + (j.error || 'حصل خطأ. حاول مرة تانية.') + '</div>';
+                }
+              } catch (err) {
+                statusEl.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);margin-top:14px;">❌ خطأ في الاتصال. تأكّد من الإنترنت وحاول تاني.</div>';
+              } finally {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; }
+              }
+            });
+          }
+        } catch (e) { console.warn('Top10 form wiring failed:', e); }
         setTimeout(function () {
           try { if (typeof pullHomepageDataFromApi === 'function') pullHomepageDataFromApi(); } catch (e) { console.warn('pullHomepageDataFromApi failed:', e); }
         }, 800);

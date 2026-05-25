@@ -141,16 +141,44 @@
       </ul>
 
       <script>
-        function handleSubmit(e) {
+        const CB_BACKEND_CONTACT = 'https://cairo-business-backend.vercel.app';
+
+        async function handleSubmit(e) {
           e.preventDefault();
           const status = document.getElementById('form-status');
-          const formData = new FormData(e.target);
-          const subject = encodeURIComponent('[Cairo Business] ' + formData.get('subject'));
-          const body = encodeURIComponent(
-            'من: ' + formData.get('name') + ' (' + formData.get('email') + ')\n\n' + formData.get('message')
-          );
-          window.location.href = 'mailto:hello@cairobusiness.net?subject=' + subject + '&body=' + body;
-          status.innerHTML = '<div style="background:rgba(16,185,129,0.12);color:#6ee7b7;padding:12px;border-radius:10px;border:1px solid rgba(16,185,129,0.3);">سيتم فتح برنامج البريد الإلكتروني عندك خلال ثانية...</div>';
+          const btn = e.target.querySelector('button[type=submit]');
+          const fd = new FormData(e.target);
+          const payload = {
+            formKey: 'contact',
+            name: fd.get('name') || '',
+            email: fd.get('email') || '',
+            subject: fd.get('subject') || '',
+            message: fd.get('message') || ''
+          };
+          if (!payload.name || !payload.email || !payload.message) {
+            status.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);">يرجى ملء كل الحقول.</div>';
+            return false;
+          }
+          if (btn) { btn.disabled = true; btn.textContent = 'جاري الإرسال...'; }
+          status.innerHTML = '<div style="background:rgba(244,208,63,0.12);color:#F4D03F;padding:12px;border-radius:10px;border:1px solid rgba(244,208,63,0.3);">⏳ جاري إرسال رسالتك...</div>';
+          try {
+            const res = await fetch(CB_BACKEND_CONTACT + '/api/submissions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const j = await res.json();
+            if (res.ok && j.success) {
+              status.innerHTML = '<div style="background:rgba(16,185,129,0.12);color:#6ee7b7;padding:14px;border-radius:10px;border:1px solid rgba(16,185,129,0.3);">✅ تم استلام رسالتك بنجاح! هنرد عليك في أقرب وقت.</div>';
+              e.target.reset();
+            } else {
+              status.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);">❌ ' + (j.error || 'حصل خطأ. حاول تاني.') + '</div>';
+            }
+          } catch (err) {
+            status.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);">❌ خطأ في الاتصال. تأكّد من الإنترنت وحاول تاني.</div>';
+          } finally {
+            if (btn) { btn.disabled = false; btn.textContent = 'إرسال الرسالة'; }
+          }
           return false;
         }
       </script>

@@ -3094,13 +3094,59 @@ async function switchToActivity() {
 /* ═════════════════════════════════════════════════════════════
    File upload helper — uploads to /api/admin/upload (Supabase Storage)
    and fills the target URL input with the public URL on success.
+   Client-side image optimization: resizes > 1920px and compresses to ~85%
+   before upload, dramatically reducing storage cost and load time.
    ═════════════════════════════════════════════════════════════ */
+async function optimizeImage(file, maxWidth = 1920, quality = 0.85) {
+  /* Only optimize images; skip non-image files */
+  if (!file.type.startsWith('image/')) return file;
+  /* SVGs and very small images are passed through */
+  if (file.type === 'image/svg+xml' || file.size < 100 * 1024) return file;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (e) => { img.src = e.target.result; };
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = Math.round(height * (maxWidth / width));
+        width = maxWidth;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      const outType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+      canvas.toBlob((blob) => {
+        if (!blob) { resolve(file); return; }
+        /* Only use the optimized version if it's actually smaller */
+        if (blob.size >= file.size) { resolve(file); return; }
+        const ext = outType === 'image/png' ? '.png' : '.jpg';
+        const newName = file.name.replace(/\.[^.]+$/, '') + ext;
+        const optimized = new File([blob], newName, { type: outType });
+        resolve(optimized);
+      }, outType, quality);
+    };
+    img.onerror = () => resolve(file);
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
 async function uploadFileFor(fieldId, fileInput) {
   if (!fileInput.files || !fileInput.files.length) return;
-  const file = fileInput.files[0];
+  let file = fileInput.files[0];
+  const originalSize = file.size;
   const status = document.getElementById('upstatus_' + fieldId);
   const urlInput = document.getElementById('f_' + fieldId);
-  if (status) status.innerHTML = '<span style="color:#F4D03F">⏳ جاري الرفع (' + Math.round(file.size/1024) + ' كيلوبايت)...</span>';
+  if (status) status.innerHTML = '<span style="color:#F4D03F">⚙️ تحسين الصورة...</span>';
+
+  /* Optimize before upload (resize + compress) */
+  file = await optimizeImage(file);
+  const savedKb = Math.max(0, Math.round((originalSize - file.size) / 1024));
+  if (status) status.innerHTML = '<span style="color:#F4D03F">⏳ جاري الرفع (' + Math.round(file.size/1024) + ' كيلوبايت' + (savedKb > 0 ? `, وفّرنا ${savedKb} كيلوبايت ✨` : '') + ')...</span>';
 
   const fd = new FormData();
   fd.append('file', file);
