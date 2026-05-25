@@ -1730,7 +1730,8 @@ async function loadDraftsUI() {
     html += '        <option value="creative">إبداعي — صياغة جديدة</option>';
     html += '      </select></div>';
     html += '    <div><label style="font-size:11px;opacity:0.7;display:block;margin-bottom:4px;">🔢 عدد الأخبار</label>';
-    html += '      <input id="gen-count" type="number" min="3" max="20" value="8" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:inherit;font-size:13px;" /></div>';
+    html += '      <input id="gen-count" type="number" min="3" max="15" value="5" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:inherit;font-size:13px;" />';
+    html += '      <div style="font-size:10px;opacity:0.5;margin-top:3px;">يُنصح بـ 3-7 لتجنب الـ timeout.</div></div>';
     html += '  </div>';
     html += '  <div style="margin-top:12px;">';
     html += '    <label style="font-size:11px;opacity:0.7;display:block;margin-bottom:4px;">🚫 مواضيع/كلمات يجب تجنّبها</label>';
@@ -1829,7 +1830,7 @@ async function generateDraftsNow() {
   const cats = Array.from(document.getElementById('gen-category')?.selectedOptions || []).map(o => o.value).filter(Boolean);
   const language = document.getElementById('gen-language')?.value || 'ar_fusha';
   const creativity = document.getElementById('gen-creativity')?.value || 'balanced';
-  const count = parseInt(document.getElementById('gen-count')?.value || '8', 10);
+  const count = parseInt(document.getElementById('gen-count')?.value || '5', 10);
   const avoid = (document.getElementById('gen-avoid')?.value || '').trim();
 
   const params = new URLSearchParams();
@@ -1848,6 +1849,18 @@ async function generateDraftsNow() {
   status.innerHTML = '<span style="color:#F4D03F">⏳ Tavily + Groq يصيغان ' + count + ' خبر بـ ' + ({ar_fusha:'العربية الفصحى',ar_egy:'العامية المصرية',en:'English'}[language]||'العربية') + ' (~' + Math.round(count*8) + ' ثانية)...</span>';
   try {
     const res = await fetch('https://cairo-business-backend.vercel.app/api/cron/fetch-news?' + params.toString(), { cache: 'no-store' });
+    /* Robust parsing — if Vercel returns HTML (timeout / 5xx), don't crash with "Unexpected token" */
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) {
+      const text = await res.text();
+      const isTimeout = res.status === 504 || text.toLowerCase().includes('timeout') || text.toLowerCase().includes('gateway');
+      if (isTimeout) {
+        status.innerHTML = '<span style="color:#f59e0b">⏱️ الخادم ما رجعش في الوقت المحدد. قلّل العدد لـ 3-4 أخبار وحاول تاني.</span>';
+      } else {
+        status.innerHTML = '<span style="color:#ef4444">❌ الخادم رجّع خطأ (HTTP ' + res.status + '). حاول تاني بعد دقيقة.</span>';
+      }
+      return;
+    }
     const j = await res.json();
     if (!j.success) {
       status.innerHTML = '<span style="color:#ef4444">❌ فشل: ' + (j.error || 'unknown') + '</span>';
