@@ -453,6 +453,58 @@ const ENTITIES = {
       'مميزة ⭐': items.filter(c=>c.isFeatured).length,
       'مطوّرين مختلفين': new Set(items.map(c=>c.developer).filter(Boolean)).size
     })
+  },
+  videos: {
+    key: 'videos', icon: '🎬', nameAr: 'الفيديوهات', singularAr: 'فيديو',
+    endpoint: '/api/admin/videos',
+    fields: [
+      { id: 'titleAr', label: 'العنوان بالعربية *', type: 'text', required: true },
+      { id: 'titleEn', label: 'Title in English *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'youtubeUrl', label: 'رابط YouTube أو Vimeo *', type: 'url', dir: 'ltr', placeholder: 'https://youtube.com/watch?v=... أو https://youtu.be/...', full: true, required: true },
+      { id: 'category', label: 'التصنيف *', type: 'select', required: true, default: 'interview', options: [
+        ['interview','مقابلات'],['analysis','تحليلات'],['events','فعاليات'],
+        ['education','تعليمي'],['reels','ريلز / قصير'],['series','سلسلة']
+      ]},
+      { id: 'durationSec', label: 'المدة بالثواني (مثلاً 195 لـ 3:15)', type: 'number', nullable: true, min: 0 },
+      { id: 'views', label: 'عدد المشاهدات (نص: 480K, 1.2M)', type: 'text', nullable: true, placeholder: '120K' },
+      { id: 'presenterAr', label: 'اسم المقدّم بالعربية', type: 'text', nullable: true, placeholder: 'محمد الغمراوي' },
+      { id: 'presenterEn', label: 'Presenter Name in English', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'thumbnailUrl', label: 'صورة مصغّرة مخصّصة (اختياري — تُسحب تلقائياً من YouTube)', type: 'url', dir: 'ltr', nullable: true, full: true },
+      { id: 'descriptionAr', label: 'الوصف بالعربية', type: 'textarea', full: true, nullable: true },
+      { id: 'descriptionEn', label: 'Description in English', type: 'textarea', full: true, nullable: true, dir: 'ltr' },
+      { id: 'isFeatured', label: '⭐ فيديو مميّز — يظهر في الفيديو الرئيسي بالأعلى (واحد فقط)', type: 'checkbox', full: true },
+      { id: 'isTrending', label: '🔥 رائج — يظهر في القائمة الجانبية', type: 'checkbox', full: true },
+      { id: 'isReel', label: '⚡ ريل — يظهر في شريط الفيديوهات القصيرة', type: 'checkbox', full: true },
+      { id: 'isSeries', label: '📚 سلسلة — يظهر كبطاقة سلسلة (يتطلب عدد الحلقات)', type: 'checkbox', full: true },
+      { id: 'seriesEpisodes', label: 'عدد حلقات السلسلة (لو isSeries مفعّل)', type: 'number', nullable: true, min: 0 },
+      { id: 'seriesTotalHrs', label: 'إجمالي ساعات السلسلة (مثل 18:42)', type: 'text', nullable: true, placeholder: '18:42' },
+      { id: 'sortOrder', label: 'ترتيب العرض (الأصغر يظهر أولاً)', type: 'number', default: 0 },
+      { id: 'publishedAt', label: 'تاريخ النشر', type: 'datetime-local', default: () => nowLocalISO() }
+    ],
+    list: {
+      title: v => v.titleAr,
+      excerpt: v => (v.descriptionAr || v.descriptionEn || '').slice(0, 140) + (((v.descriptionAr||v.descriptionEn||'').length > 140) ? '...' : ''),
+      thumb: v => v.thumbnailUrl || (v.youtubeId ? 'https://i.ytimg.com/vi/' + v.youtubeId + '/hqdefault.jpg' : null),
+      emoji: '🎬',
+      badges: v => [
+        { text: v.category, kind: 'gold' },
+        ...(v.isFeatured ? [{ text: '⭐ مميّز', kind: 'green' }] : []),
+        ...(v.isTrending ? [{ text: '🔥 رائج', kind: 'red' }] : []),
+        ...(v.isReel ? [{ text: '⚡ ريل', kind: 'purple' }] : []),
+        ...(v.isSeries ? [{ text: '📚 سلسلة', kind: 'blue' }] : []),
+      ],
+      meta: v => [
+        ...(v.presenterAr ? ['تقديم: ' + v.presenterAr] : []),
+        ...(v.durationSec ? [Math.floor(v.durationSec/60)+':'+String(v.durationSec%60).padStart(2,'0')] : []),
+        ...(v.views ? [v.views + ' مشاهدة'] : [])
+      ]
+    },
+    stats: items => ({
+      'إجمالي الفيديوهات': items.length,
+      'مميّز ⭐': items.filter(v=>v.isFeatured).length,
+      'ريلز ⚡': items.filter(v=>v.isReel).length,
+      'سلاسل 📚': items.filter(v=>v.isSeries).length
+    })
   }
 };
 
