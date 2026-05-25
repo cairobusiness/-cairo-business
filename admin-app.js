@@ -96,6 +96,7 @@ const ENTITIES = {
       { id: 'titleEn', label: 'Title in English *', type: 'text', required: true, dir: 'ltr' },
       { id: 'excerptAr', label: 'الملخص بالعربية *', type: 'textarea', required: true, full: true },
       { id: 'excerptEn', label: 'Excerpt in English *', type: 'textarea', required: true, full: true, dir: 'ltr' },
+      { id: 'body', label: '📝 محتوى المقال الكامل (Rich Text — bold, headings, lists, links) ✨', type: 'richtext', full: true, nullable: true },
       { id: 'category', label: 'التصنيف *', type: 'select', required: true, options: [
         ['business','أعمال'],['markets','أسواق'],['realestate','عقارات'],['tech','تكنولوجيا'],
         ['energy','طاقة'],['banking','بنوك'],['startups','شركات ناشئة'],['ma','صفقات واستحواذات']
@@ -781,6 +782,16 @@ function renderTabs() {
   const heroTab = (isAdmin || isEditor) ? mk('__hero__', '🎯', 'الواجهة (Hero)', 'switchToHero') : '';
   // Site Content (key/value copy) — Admin + Editor
   const siteContentTab = (isAdmin || isEditor) ? mk('__sitecontent__', '📝', 'نصوص الموقع', 'switchToSiteContent') : '';
+  // Brand Settings — Admin only
+  const brandTab = isAdmin ? mk('__brand__', '🎨', 'العلامة التجارية', 'switchToBrand') : '';
+  // Form submissions (contact + top10 apply) — Admin + Editor + Moderator
+  const submissionsTab = (isAdmin || isEditor || isModerator) ? mk('__submissions__', '📬', 'طلبات التواصل', 'switchToSubmissions') : '';
+  // Comments moderation — Admin + Editor + Moderator
+  const commentsTab = (isAdmin || isEditor || isModerator) ? mk('__comments__', '💬', 'التعليقات', 'switchToCommentsMod') : '';
+  // Global Search — Admin + Editor
+  const searchTab = (isAdmin || isEditor) ? mk('__gsearch__', '🔍', 'بحث شامل', 'switchToGlobalSearch') : '';
+  // Activity Log — Admin only
+  const activityTab = isAdmin ? mk('__activity__', '📋', 'سجل النشاط', 'switchToActivity') : '';
   /* News Drafts tab removed per user request — drafts feature deprecated.
    * The switchToDrafts/loadDraftsUI/generateDraftsNow functions remain in code
    * but are unreachable from the UI. */
@@ -796,7 +807,7 @@ function renderTabs() {
   ) : '';
   // Moderator gets messages
   const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + siteContentTab + layoutTab + adminOnlyTabs + modOnlyTabs;
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + siteContentTab + brandTab + submissionsTab + commentsTab + searchTab + layoutTab + activityTab + adminOnlyTabs + modOnlyTabs;
 }
 
 /* Drafts counter kept for backward compat (no longer displayed) */
@@ -2834,6 +2845,251 @@ async function saveSiteContent() {
   }
   if (status) status.innerHTML = '<span style="color:#22c55e">✅ تم حفظ ' + r.data.saved + ' نص بنجاح — التغيير ينعكس خلال دقيقة.</span>';
 }
+
+/* ═════════════════════════════════════════════════════════════
+   Brand Settings — singleton form (logo + colors + social links + contact info)
+   ═════════════════════════════════════════════════════════════ */
+let _brandData = null;
+async function switchToBrand() {
+  currentEntityKey = '__brand__';
+  renderTabs();
+  document.getElementById('page-title').textContent = '🎨 إعدادات العلامة التجارية';
+  document.getElementById('search-input').style.display = 'none';
+  const addBtn = document.querySelector('.actions button.btn-primary');
+  if (addBtn) addBtn.style.display = 'none';
+  document.getElementById('stats-section').innerHTML = '';
+  const c = document.getElementById('list-container');
+  c.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const r = await api('/api/admin/brand');
+  if (!r.ok || !r.data?.data) {
+    c.innerHTML = '<div class="msg msg-error">شغّل migration: <a href="https://cairo-business-backend.vercel.app/api/admin/migrate-extras" target="_blank">/api/admin/migrate-extras</a></div>';
+    return;
+  }
+  _brandData = r.data.data;
+  renderBrandForm();
+}
+function renderBrandForm() {
+  const b = _brandData || {};
+  const fld = (key, label, type) => {
+    const v = (b[key] || '').replace(/"/g, '&quot;');
+    const dir = (key.startsWith('contact') || key.startsWith('social') || key.endsWith('Url')) ? 'ltr' : 'rtl';
+    if (type === 'color') return '<div style="margin-bottom:12px;"><label style="font-size:12px;opacity:.7">' + label + '</label><div style="display:flex;gap:8px;align-items:center;"><input data-brand-key="' + key + '" type="color" value="' + v + '" style="width:56px;height:40px;border:none;border-radius:6px;cursor:pointer;background:transparent;" /><input data-brand-key="' + key + '_text" type="text" dir="ltr" value="' + v + '" style="flex:1;padding:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;font-family:monospace;" onchange="this.previousElementSibling.value=this.value" /></div></div>';
+    return '<div style="margin-bottom:12px;"><label style="font-size:12px;opacity:.7">' + label + '</label><input data-brand-key="' + key + '" dir="' + dir + '" type="' + (type || 'text') + '" value="' + v + '" style="width:100%;padding:9px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;" /></div>';
+  };
+  let html = '';
+  html += '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">';
+  html += '  <div><div style="font-size:15px;font-weight:700;color:#F4D03F;">🎨 إعدادات العلامة التجارية</div><div style="font-size:12px;opacity:0.7;margin-top:2px;">الـ logo + الألوان + روابط السوشيال — تطبّق على كل الموقع.</div></div>';
+  html += '  <button class="btn btn-primary" id="brand-save-btn" onclick="saveBrand()">💾 حفظ</button>';
+  html += '</div>';
+  html += '<div id="brand-save-status" style="margin-bottom:14px;display:none;font-size:13px;"></div>';
+
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:18px;margin-bottom:18px;"><h3 style="color:#F4D03F;font-size:14px;margin-bottom:12px;">🏷️ الاسم والشعار</h3>';
+  html += fld('siteName', 'اسم الموقع', 'text');
+  html += fld('tagline', 'الشعار / Tagline', 'text');
+  html += fld('logoUrl', 'رابط اللوجو (يفضّل SVG أو PNG شفاف)', 'url');
+  html += fld('faviconUrl', 'رابط الـ favicon', 'url');
+  html += '</div>';
+
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:18px;margin-bottom:18px;"><h3 style="color:#F4D03F;font-size:14px;margin-bottom:12px;">🎨 الألوان</h3>';
+  html += fld('primaryColor', 'اللون الأساسي (الذهبي)', 'color');
+  html += fld('secondaryColor', 'اللون الثانوي', 'color');
+  html += fld('accentColor', 'لون البريق', 'color');
+  html += '</div>';
+
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:18px;margin-bottom:18px;"><h3 style="color:#F4D03F;font-size:14px;margin-bottom:12px;">📱 روابط السوشيال</h3>';
+  html += fld('socialTwitter', 'Twitter / X', 'url');
+  html += fld('socialLinkedin', 'LinkedIn', 'url');
+  html += fld('socialFacebook', 'Facebook', 'url');
+  html += fld('socialInstagram', 'Instagram', 'url');
+  html += fld('socialYoutube', 'YouTube', 'url');
+  html += '</div>';
+
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:18px;margin-bottom:18px;"><h3 style="color:#F4D03F;font-size:14px;margin-bottom:12px;">📞 معلومات التواصل</h3>';
+  html += fld('contactEmail', 'البريد الإلكتروني', 'email');
+  html += fld('contactPhone', 'الهاتف', 'tel');
+  html += fld('contactAddress', 'العنوان', 'text');
+  html += '</div>';
+
+  html += '<div style="text-align:center;padding:18px;"><button class="btn btn-primary" onclick="saveBrand()" style="font-size:15px;padding:12px 32px;">💾 حفظ كل الإعدادات</button></div>';
+
+  document.getElementById('list-container').innerHTML = html;
+}
+async function saveBrand() {
+  const status = document.getElementById('brand-save-status');
+  status.style.display = 'block';
+  status.innerHTML = '<span style="color:#F4D03F">⏳ جاري الحفظ...</span>';
+  const updates = {};
+  document.querySelectorAll('[data-brand-key]').forEach(el => {
+    const k = el.dataset.brandKey;
+    if (k.endsWith('_text')) return;
+    updates[k] = el.value;
+  });
+  const r = await api('/api/admin/brand', { method: 'PATCH', body: JSON.stringify(updates) });
+  if (!r.ok || !r.data?.success) {
+    status.innerHTML = '<span style="color:#ef4444">❌ ' + escapeHtml(r.data?.error || 'فشل') + '</span>'; return;
+  }
+  _brandData = r.data.data;
+  status.innerHTML = '<span style="color:#22c55e">✅ تم الحفظ — التغيير ينعكس خلال دقيقة.</span>';
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Form Submissions — viewer + mark-as-handled
+   ═════════════════════════════════════════════════════════════ */
+async function switchToSubmissions() {
+  setupListView({ key: '__submissions__', label: '📬 طلبات التواصل + Top 10' });
+  const r = await api('/api/admin/submissions');
+  const c = document.getElementById('list-container');
+  if (!r.ok) { c.innerHTML = '<div class="msg msg-error">شغّل migration: /api/admin/migrate-extras</div>'; return; }
+  const items = r.data.data || [];
+  if (!items.length) { c.innerHTML = '<div class="empty-state"><div class="icon">📬</div><div class="title">لا توجد طلبات بعد</div><div class="subtitle">لما حد يبعت من contact form أو Top 10 apply، هيظهر هنا.</div></div>'; return; }
+  const byKey = {};
+  for (const it of items) { if (!byKey[it.formKey]) byKey[it.formKey] = []; byKey[it.formKey].push(it); }
+  let html = '<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;"><span class="pill">إجمالي ' + items.length + '</span>';
+  html += '<span class="pill" style="background:rgba(34,197,94,0.2);color:#22c55e">جديد: ' + items.filter(i=>i.status==='new').length + '</span>';
+  html += '<span class="pill" style="background:rgba(244,208,63,0.2);color:#F4D03F">تم التعامل: ' + items.filter(i=>i.status==='handled').length + '</span>';
+  html += '</div>';
+  for (const key of Object.keys(byKey)) {
+    html += '<h3 style="font-size:14px;color:#F4D03F;margin:18px 0 10px;">' + escapeHtml(key === 'contact' ? '✉️ نموذج التواصل' : (key === 'top10-apply' ? '🏆 طلبات Top 10' : '📋 ' + key)) + ' (' + byKey[key].length + ')</h3>';
+    html += '<div class="item-grid">';
+    for (const s of byKey[key]) {
+      const badge = s.status === 'new' ? '<span class="pill" style="background:rgba(34,197,94,0.2);color:#22c55e">🆕 جديد</span>' :
+                    s.status === 'handled' ? '<span class="pill" style="background:rgba(100,150,255,0.2);color:#94aaff">✓ تم</span>' :
+                    '<span class="pill" style="background:rgba(239,68,68,0.2);color:#ef4444">🚫 spam</span>';
+      html += '<div class="item-row"><div class="item-thumb">' + (key==='contact'?'✉️':'🏆') + '</div><div>';
+      html += '<div class="item-meta">' + badge + '<span>' + formatDate(s.createdAt) + '</span></div>';
+      html += '<div class="item-title">' + escapeHtml(s.name || s.email || s.phone || 'بدون اسم') + '</div>';
+      if (s.email || s.phone) html += '<div class="item-meta" style="margin-top:4px;font-size:11px;direction:ltr;">' + (s.email || '') + (s.email && s.phone ? ' · ' : '') + (s.phone || '') + (s.company ? ' · ' + escapeHtml(s.company) : '') + '</div>';
+      if (s.message) html += '<div class="item-excerpt">' + escapeHtml((s.message || '').slice(0, 200)) + '</div>';
+      html += '</div><div class="item-actions">';
+      if (s.status !== 'handled') html += '<button class="btn btn-ghost btn-sm" onclick="markSubmission(\'' + s.id + '\', \'handled\')">✓ تم</button>';
+      if (s.status !== 'spam') html += '<button class="btn btn-ghost btn-sm" onclick="markSubmission(\'' + s.id + '\', \'spam\')">🚫 spam</button>';
+      html += '<button class="btn btn-ghost btn-sm" onclick="deleteSubmission(\'' + s.id + '\')">🗑️</button>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+  }
+  c.innerHTML = html;
+}
+async function markSubmission(id, status) {
+  const r = await api('/api/admin/submissions/' + id, { method: 'PATCH', body: JSON.stringify({ status }) });
+  if (r.ok) switchToSubmissions();
+}
+async function deleteSubmission(id) {
+  if (!confirm('حذف هذا الطلب نهائياً؟')) return;
+  const r = await api('/api/admin/submissions/' + id, { method: 'DELETE' });
+  if (r.ok) switchToSubmissions();
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Comments moderation — pending → approved/spam → publish
+   ═════════════════════════════════════════════════════════════ */
+async function switchToCommentsMod() {
+  setupListView({ key: '__comments__', label: '💬 إدارة التعليقات' });
+  const r = await api('/api/admin/comments');
+  const c = document.getElementById('list-container');
+  if (!r.ok) { c.innerHTML = '<div class="msg msg-error">شغّل migration: /api/admin/migrate-extras</div>'; return; }
+  const items = r.data.data || [];
+  if (!items.length) { c.innerHTML = '<div class="empty-state"><div class="icon">💬</div><div class="title">لا توجد تعليقات</div></div>'; return; }
+  const pending = items.filter(i => i.status === 'pending');
+  const approved = items.filter(i => i.status === 'approved');
+  const spam = items.filter(i => i.status === 'spam');
+  let html = '<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;">';
+  html += '<span class="pill" style="background:rgba(244,208,63,0.2);color:#F4D03F">⏳ مراجعة: ' + pending.length + '</span>';
+  html += '<span class="pill" style="background:rgba(34,197,94,0.2);color:#22c55e">✅ موافق: ' + approved.length + '</span>';
+  html += '<span class="pill" style="background:rgba(239,68,68,0.2);color:#ef4444">🚫 spam: ' + spam.length + '</span>';
+  html += '</div>';
+  const groups = [['⏳ تعليقات في انتظار المراجعة', pending], ['✅ تعليقات معتمدة', approved], ['🚫 spam', spam]];
+  for (const [label, group] of groups) {
+    if (!group.length) continue;
+    html += '<h3 style="color:#F4D03F;font-size:14px;margin:18px 0 10px;">' + label + '</h3><div class="item-grid">';
+    for (const cm of group) {
+      html += '<div class="item-row"><div class="item-thumb">💬</div><div>';
+      html += '<div class="item-meta"><span>' + escapeHtml(cm.entityType + ':' + cm.entityId.slice(0,12)) + '</span><span>' + formatDate(cm.createdAt) + '</span></div>';
+      html += '<div class="item-title">' + escapeHtml(cm.authorName) + '</div>';
+      html += '<div class="item-excerpt">' + escapeHtml(cm.body) + '</div>';
+      html += '</div><div class="item-actions">';
+      if (cm.status !== 'approved') html += '<button class="btn btn-ghost btn-sm" onclick="moderateComment(\'' + cm.id + '\', \'approved\')">✅ موافقة</button>';
+      if (cm.status !== 'spam') html += '<button class="btn btn-ghost btn-sm" onclick="moderateComment(\'' + cm.id + '\', \'spam\')">🚫 spam</button>';
+      html += '<button class="btn btn-ghost btn-sm" onclick="deleteComment(\'' + cm.id + '\')">🗑️</button>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+  }
+  c.innerHTML = html;
+}
+async function moderateComment(id, status) {
+  const r = await api('/api/admin/comments/' + id, { method: 'PATCH', body: JSON.stringify({ status }) });
+  if (r.ok) switchToCommentsMod();
+}
+async function deleteComment(id) {
+  if (!confirm('حذف التعليق نهائياً؟')) return;
+  const r = await api('/api/admin/comments/' + id, { method: 'DELETE' });
+  if (r.ok) switchToCommentsMod();
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Global Search — search across all entities
+   ═════════════════════════════════════════════════════════════ */
+async function switchToGlobalSearch() {
+  setupListView({ key: '__gsearch__', label: '🔍 بحث شامل في كل المحتوى' });
+  document.getElementById('search-input').style.display = 'none';
+  const c = document.getElementById('list-container');
+  c.innerHTML = '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:18px;margin-bottom:18px;">'
+    + '<div style="font-size:14px;font-weight:700;color:#F4D03F;margin-bottom:10px;">🔍 ابحث في كل قاعدة البيانات دفعة واحدة</div>'
+    + '<div style="display:flex;gap:8px;">'
+    + '<input id="gs-query" type="text" placeholder="اكتب كلمة البحث (عربية أو إنجليزية)..." style="flex:1;padding:10px;background:rgba(0,0,0,0.2);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;" onkeydown="if(event.key===\'Enter\')runGlobalSearch()" />'
+    + '<button class="btn btn-primary" onclick="runGlobalSearch()">بحث</button>'
+    + '</div></div><div id="gs-results"></div>';
+}
+async function runGlobalSearch() {
+  const q = (document.getElementById('gs-query')||{}).value || '';
+  const out = document.getElementById('gs-results');
+  if (q.trim().length < 2) { out.innerHTML = '<div class="msg msg-error">اكتب على الأقل حرفين</div>'; return; }
+  out.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const r = await api('/api/admin/search?q=' + encodeURIComponent(q));
+  if (!r.ok || !r.data?.success) { out.innerHTML = '<div class="msg msg-error">' + escapeHtml(r.data?.error || 'فشل البحث') + '</div>'; return; }
+  const res = r.data.results;
+  const labels = { news:'📰 أخبار', events:'📅 فعاليات', companies:'🏢 شركات', businessmen:'👔 رجال أعمال', realestate:'🏠 عقارات', compounds:'🏙️ كمبوندات', startups:'🚀 شركات ناشئة', deals:'💼 صفقات', videos:'🎬 فيديوهات', contentBlocks:'📦 محتوى أقسام', submissions:'📬 طلبات تواصل' };
+  let html = '<div style="margin-bottom:14px;"><span class="pill">إجمالي ' + r.data.total + ' نتيجة لـ &quot;' + escapeHtml(q) + '&quot;</span></div>';
+  let any = false;
+  for (const key of Object.keys(res)) {
+    if (!res[key].length) continue;
+    any = true;
+    html += '<h3 style="color:#F4D03F;font-size:14px;margin:14px 0 8px;">' + labels[key] + ' (' + res[key].length + ')</h3>';
+    html += '<div style="display:grid;gap:6px;">';
+    for (const item of res[key]) {
+      const title = item.titleAr || item.nameAr || item.name || item.email || item.id;
+      html += '<div style="background:rgba(255,255,255,0.04);padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);"><div style="font-weight:600;">' + escapeHtml(title) + '</div><div style="font-size:11px;opacity:0.55;direction:ltr;margin-top:4px;">' + escapeHtml(item.id) + '</div></div>';
+    }
+    html += '</div>';
+  }
+  if (!any) html += '<div class="empty-state"><div class="title">لا توجد نتائج</div></div>';
+  out.innerHTML = html;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Activity Log viewer
+   ═════════════════════════════════════════════════════════════ */
+async function switchToActivity() {
+  setupListView({ key: '__activity__', label: '📋 سجل النشاط' });
+  const r = await api('/api/admin/activity?limit=200');
+  const c = document.getElementById('list-container');
+  if (!r.ok) { c.innerHTML = '<div class="msg msg-error">شغّل migration: /api/admin/migrate-extras</div>'; return; }
+  const items = r.data.data || [];
+  if (!items.length) { c.innerHTML = '<div class="empty-state"><div class="icon">📋</div><div class="title">لا يوجد نشاط مسجّل بعد</div><div class="subtitle">يتم تسجيل التعديلات هنا تلقائياً بعد بدء استخدام النظام.</div></div>'; return; }
+  const html = '<div class="item-grid">' + items.map(a =>
+    '<div class="item-row"><div class="item-thumb">' + (a.action==='delete'?'🗑️':a.action==='create'?'➕':'✏️') + '</div><div>'
+    + '<div class="item-meta"><span class="pill">' + escapeHtml(a.entityType) + '</span><span class="pill">' + escapeHtml(a.action) + '</span><span>' + formatDate(a.createdAt) + '</span></div>'
+    + '<div class="item-title">' + escapeHtml(a.userName || a.userId || 'غير معروف') + '</div>'
+    + (a.summary ? '<div class="item-excerpt">' + escapeHtml(a.summary) + '</div>' : '')
+    + '</div></div>'
+  ).join('') + '</div>';
+  c.innerHTML = html;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Brand Settings Applier (frontend hook) — runs in admin too, for live preview
+   ═════════════════════════════════════════════════════════════ */
 
 /* ═════════════════════════════════════════════════════════════
    File upload helper — uploads to /api/admin/upload (Supabase Storage)

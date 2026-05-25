@@ -14110,8 +14110,121 @@
     setTimeout(() => { try { if (typeof fetchVideosFromAPI === 'function') fetchVideosFromAPI(); } catch (_) {} }, 500);
     /* Hero fetcher — runs after the i18n system finishes its initial pass */
     setTimeout(() => { try { if (typeof fetchHeroFromAPI === 'function') fetchHeroFromAPI(); } catch (_) {} }, 600);
+
+    /* ───────── Schema.org structured data injector ─────────
+       Adds JSON-LD for the homepage (Organization + WebSite + ItemList of latest news)
+       so search engines can render rich results. */
+    setTimeout(async () => {
+      try {
+        const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND) || 'https://cairo-business-backend.vercel.app';
+        const newsRes = await fetch(backend + '/api/news?limit=10', { cache: 'default' });
+        let articles = [];
+        if (newsRes.ok) {
+          const j = await newsRes.json();
+          articles = j?.data || j?.items || [];
+        }
+        const schemas = [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'Cairo Business',
+            alternateName: 'كايرو بيزنس',
+            url: 'https://cairobusiness.net',
+            logo: 'https://cairobusiness.net/og-image.jpg',
+            description: 'منصة القرار لرجال الأعمال في الشرق الأوسط',
+            sameAs: [
+              'https://twitter.com/cairobusiness',
+              'https://linkedin.com/company/cairobusiness'
+            ]
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'Cairo Business',
+            url: 'https://cairobusiness.net',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: 'https://cairobusiness.net/?q={search_term_string}',
+              'query-input': 'required name=search_term_string'
+            }
+          }
+        ];
+        if (articles.length) {
+          schemas.push({
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            itemListElement: articles.slice(0, 10).map((a, i) => ({
+              '@type': 'ListItem',
+              position: i + 1,
+              item: {
+                '@type': 'NewsArticle',
+                headline: a.titleAr || a.titleEn,
+                description: a.excerptAr || a.excerptEn,
+                image: a.imageUrl || 'https://cairobusiness.net/og-image.jpg',
+                datePublished: a.publishedAt || a.createdAt,
+                dateModified: a.updatedAt || a.publishedAt || a.createdAt,
+                author: { '@type': 'Person', name: a.author || 'فريق Cairo Business' },
+                publisher: {
+                  '@type': 'Organization',
+                  name: 'Cairo Business',
+                  logo: { '@type': 'ImageObject', url: 'https://cairobusiness.net/og-image.jpg' }
+                },
+                mainEntityOfPage: 'https://cairobusiness.net/news.html?id=' + a.id
+              }
+            }))
+          });
+        }
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.id = 'cb-schema-org';
+        script.textContent = JSON.stringify(schemas, null, 0);
+        const existing = document.getElementById('cb-schema-org');
+        if (existing) existing.replaceWith(script);
+        else document.head.appendChild(script);
+      } catch (e) { console.warn('schema.org injection failed:', e); }
+    }, 1200);
     /* SiteContent applier — overrides every data-i18n key with admin-managed copy */
     setTimeout(() => { try { if (typeof fetchSiteContent === 'function') fetchSiteContent(); } catch (_) {} }, 700);
+    /* Brand applier — applies admin-set logo + colors + social links */
+    setTimeout(() => { try { if (typeof fetchBrandSettings === 'function') fetchBrandSettings(); } catch (_) {} }, 750);
+
+    async function fetchBrandSettings() {
+      try {
+        const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND) || 'https://cairo-business-backend.vercel.app';
+        const r = await fetch(backend + '/api/brand', { cache: 'default' });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (!j || !j.success || !j.data) return;
+        const b = j.data;
+        /* Inject CSS variables */
+        const root = document.documentElement;
+        if (b.primaryColor)   root.style.setProperty('--brand-primary', b.primaryColor);
+        if (b.secondaryColor) root.style.setProperty('--brand-secondary', b.secondaryColor);
+        if (b.accentColor)    root.style.setProperty('--brand-accent', b.accentColor);
+        /* Replace logo images */
+        if (b.logoUrl) {
+          document.querySelectorAll('img[data-cb-logo], .cb-logo img').forEach(img => { img.src = b.logoUrl; });
+        }
+        /* Replace favicon */
+        if (b.faviconUrl) {
+          let link = document.querySelector('link[rel="icon"]');
+          if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+          link.href = b.faviconUrl;
+        }
+        /* Update social links */
+        const socials = { socialTwitter: 'twitter', socialLinkedin: 'linkedin', socialFacebook: 'facebook', socialInstagram: 'instagram', socialYoutube: 'youtube' };
+        for (const key of Object.keys(socials)) {
+          if (!b[key]) continue;
+          document.querySelectorAll('a[data-cb-social="' + socials[key] + '"]').forEach(a => { a.href = b[key]; });
+        }
+        /* Update contact info */
+        if (b.contactEmail)   document.querySelectorAll('[data-cb-contact="email"]').forEach(el => { el.textContent = b.contactEmail; if (el.tagName === 'A') el.href = 'mailto:' + b.contactEmail; });
+        if (b.contactPhone)   document.querySelectorAll('[data-cb-contact="phone"]').forEach(el => { el.textContent = b.contactPhone; if (el.tagName === 'A') el.href = 'tel:' + b.contactPhone; });
+        if (b.contactAddress) document.querySelectorAll('[data-cb-contact="address"]').forEach(el => { el.textContent = b.contactAddress; });
+        /* Store globally for forms to reference */
+        window.__cbBrand = b;
+      } catch (e) { console.warn('fetchBrandSettings failed:', e); }
+    }
     /* Content blocks for sections converted to CMS */
     setTimeout(() => {
       try {
