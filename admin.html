@@ -230,10 +230,13 @@
 
     /* ---------- Find the URL input next to the file picker ---------- */
     function _findTargetInput(fieldId) {
-      /* Convention used elsewhere: input id is the field id */
-      let el = document.getElementById(fieldId);
+      /* admin-app.js convention: form inputs are id="f_<fieldId>" */
+      let el = document.getElementById('f_' + fieldId);
       if (el) return el;
-      /* Try sibling input near up_<fieldId> */
+      /* Fallback: plain id match */
+      el = document.getElementById(fieldId);
+      if (el) return el;
+      /* Last resort: look near the up_<fieldId> file picker */
       const fileInput = document.getElementById('up_' + fieldId);
       if (fileInput) {
         const wrap = fileInput.closest('.field, .form-field, td, div');
@@ -325,6 +328,104 @@
     }
     /* Expose globally — overrides any earlier definition */
     window.uploadFileFor = _uploadFileFor;
+
+    /* ============================================================
+       PREVIEW MODAL — opens the current entity form data in a styled
+       preview window before publish. Works for news + content blocks
+       + any entity that has imageUrl/title/excerpt/body fields.
+       ============================================================ */
+    function _collectFormData() {
+      const data = {};
+      document.querySelectorAll('[id^="f_"]').forEach((el) => {
+        const key = el.id.slice(2);
+        if (el.type === 'checkbox') data[key] = el.checked;
+        else data[key] = el.value;
+      });
+      /* Pull rich-text Quill content if present */
+      try {
+        const quillRoot = document.querySelector('.ql-editor');
+        if (quillRoot) data.body = quillRoot.innerHTML;
+      } catch (_) {}
+      return data;
+    }
+
+    function _previewHtml(d) {
+      const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const title = d.titleAr || d.title || d.headline || d.name || '(بدون عنوان)';
+      const excerpt = d.excerptAr || d.excerpt || d.subtitle || d.description || '';
+      const body = d.body || d.contentAr || d.content || '';
+      const img = d.imageUrl || d.image || d.thumbnail || '';
+      const category = d.category || d.tag || d.section || '';
+      const author = d.author || 'فريق التحرير';
+      const now = new Date().toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' });
+      return ''
+        + '<div style="max-width:780px;margin:0 auto;font-family:Cairo,Arial,sans-serif;color:#fff;">'
+        + (img ? '<div style="width:100%;height:340px;background:url(' + esc(img) + ') center/cover no-repeat;border-radius:16px;margin-bottom:24px;border:1px solid rgba(255,255,255,.1);"></div>' : '')
+        + '<div style="display:flex;gap:12px;font-size:12px;color:rgba(255,255,255,.6);margin-bottom:14px;flex-wrap:wrap;">'
+        +   (category ? '<span style="background:rgba(244,208,63,.15);color:#F4D03F;border:1px solid rgba(244,208,63,.3);padding:4px 12px;border-radius:9999px;font-weight:700;">' + esc(category) + '</span>' : '')
+        +   '<span>•</span><span>' + esc(now) + '</span>'
+        +   '<span>•</span><span>' + esc(author) + '</span>'
+        + '</div>'
+        + '<h1 style="font-size:32px;font-weight:900;line-height:1.3;margin-bottom:18px;color:#fff;">' + esc(title) + '</h1>'
+        + (excerpt ? '<p style="font-size:17px;line-height:1.7;color:rgba(255,255,255,.75);margin-bottom:22px;font-style:italic;border-inline-start:3px solid #F4D03F;padding-inline-start:14px;">' + esc(excerpt) + '</p>' : '')
+        + '<div style="font-size:16px;line-height:1.9;color:rgba(255,255,255,.88);">'
+        +   (body && /<[a-z][\s\S]*>/i.test(body) ? body : '<p>' + esc(body).replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>') + '</p>')
+        + '</div>'
+        + '<div style="margin-top:30px;padding-top:18px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:rgba(255,255,255,.5);text-align:center;">'
+        +   '🔍 معاينة فقط — لم يتم النشر بعد'
+        + '</div>'
+        + '</div>';
+    }
+
+    function openCBPreview() {
+      const data = _collectFormData();
+      let overlay = document.getElementById('cb-preview-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'cb-preview-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.92);backdrop-filter:blur(10px);z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;';
+        overlay.innerHTML = '<div style="background:linear-gradient(155deg,#0f1a3d 0%,#0a0e27 100%);border:1px solid rgba(212,175,55,.3);border-radius:20px;padding:34px 36px;max-width:860px;width:100%;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.7);">'
+          + '<button onclick="closeCBPreview()" style="position:absolute;top:14px;inset-inline-end:14px;width:38px;height:38px;border-radius:50%;background:rgba(10,14,39,.85);border:1px solid rgba(255,255,255,.18);color:#fff;cursor:pointer;font-size:22px;">×</button>'
+          + '<div id="cb-preview-body"></div>'
+          + '</div>';
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeCBPreview(); });
+        document.body.appendChild(overlay);
+      }
+      document.getElementById('cb-preview-body').innerHTML = _previewHtml(data);
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeCBPreview() {
+      const o = document.getElementById('cb-preview-overlay');
+      if (o) o.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    window.openCBPreview = openCBPreview;
+    window.closeCBPreview = closeCBPreview;
+
+    /* Auto-inject a "معاينة" button next to the Save button whenever the
+       create/edit modal opens. */
+    function _injectPreviewBtn() {
+      const saveBtn = document.getElementById('save-btn') || document.querySelector('.modal-footer .btn-primary');
+      if (!saveBtn || document.getElementById('cb-preview-btn')) return;
+      const btn = document.createElement('button');
+      btn.id = 'cb-preview-btn';
+      btn.type = 'button';
+      btn.className = 'btn btn-ghost';
+      btn.innerHTML = '👁️ معاينة';
+      btn.style.cssText = 'margin-inline-end:8px;';
+      btn.onclick = openCBPreview;
+      saveBtn.parentNode.insertBefore(btn, saveBtn);
+    }
+    /* Watch for modal open to inject the button */
+    const _modalObserver = new MutationObserver(() => { _injectPreviewBtn(); });
+    try {
+      const modal = document.getElementById('item-modal');
+      if (modal) _modalObserver.observe(modal, { attributes: true, childList: true, subtree: true });
+    } catch (_) {}
+    /* Initial pass in case modal is already in DOM */
+    document.addEventListener('DOMContentLoaded', _injectPreviewBtn);
+    setTimeout(_injectPreviewBtn, 600);
   })();
   </script>
 </body>
