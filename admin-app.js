@@ -505,6 +505,167 @@ const ENTITIES = {
       'ريلز ⚡': items.filter(v=>v.isReel).length,
       'سلاسل 📚': items.filter(v=>v.isSeries).length
     })
+  },
+  /* ─────────── ContentBlock-backed sections (sectionFilter directs which) ─────────── */
+  whosmoving: {
+    key: 'whosmoving', icon: '🔄', nameAr: 'تنقّلات تنفيذية', singularAr: 'تنقّل',
+    endpoint: '/api/admin/content-blocks', sectionFilter: 'whos-moving',
+    fields: [
+      { id: 'titleAr', label: 'العنوان بالعربية *', type: 'text', required: true, placeholder: 'مثل: تعيين أحمد سامي رئيساً تنفيذياً لـ EFG' },
+      { id: 'titleEn', label: 'Title EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'personAr', label: 'اسم الشخص بالعربية', type: 'text', nullable: true },
+      { id: 'personEn', label: 'Person Name EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'oldCompanyAr', label: 'الشركة السابقة (عربية)', type: 'text', nullable: true },
+      { id: 'oldCompanyEn', label: 'Old Company EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'newCompanyAr', label: 'الشركة الجديدة (عربية) *', type: 'text', required: true },
+      { id: 'newCompanyEn', label: 'New Company EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'positionAr', label: 'المنصب بالعربية *', type: 'text', required: true, placeholder: 'الرئيس التنفيذي' },
+      { id: 'positionEn', label: 'Position EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'publishedAt', label: 'تاريخ التعيين', type: 'datetime-local', default: () => nowLocalISO() },
+      { id: 'imageUrl', label: 'صورة الشخص (URL)', type: 'url', nullable: true, dir: 'ltr' },
+      { id: 'sortOrder', label: 'ترتيب العرض', type: 'number', default: 0 },
+      { id: 'isFeatured', label: '⭐ مميّز — يظهر في الأعلى', type: 'checkbox', full: true }
+    ],
+    list: { title: w => w.personAr || w.titleAr, excerpt: w => (w.positionAr || '') + ' — ' + (w.newCompanyAr || ''), thumb: w => w.imageUrl, emoji: '🔄', badges: w => [...(w.isFeatured?[{text:'⭐ مميّز',kind:'gold'}]:[]), ...(w.oldCompanyAr?[{text:'من '+w.oldCompanyAr,kind:'blue'}]:[]), ...(w.newCompanyAr?[{text:'إلى '+w.newCompanyAr,kind:'green'}]:[])], meta: w => [w.positionAr || '—', formatDate(w.publishedAt)] },
+    stats: items => ({ 'إجمالي التعيينات': items.length, 'مميّز': items.filter(w=>w.isFeatured).length, 'آخر تعيين': items[0] ? (items[0].personAr || items[0].titleAr || '').slice(0,30) : 'لا يوجد' })
+  },
+  research: {
+    key: 'research', icon: '📊', nameAr: 'الأبحاث والتقارير', singularAr: 'تقرير',
+    endpoint: '/api/admin/content-blocks', sectionFilter: 'research',
+    fields: [
+      { id: 'titleAr', label: 'عنوان التقرير بالعربية *', type: 'text', required: true },
+      { id: 'titleEn', label: 'Report Title EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'categoryAr', label: 'القطاع بالعربية', type: 'text', nullable: true, placeholder: 'بنوك / عقارات / طاقة...' },
+      { id: 'categoryEn', label: 'Category EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'pages', label: 'عدد الصفحات', type: 'number', nullable: true, min: 1 },
+      { id: 'publishedAt', label: 'تاريخ النشر', type: 'datetime-local', default: () => nowLocalISO() },
+      { id: 'linkUrl', label: 'رابط تحميل التقرير (PDF)', type: 'url', nullable: true, dir: 'ltr' },
+      { id: 'thumbnailUrl', label: 'صورة الغلاف', type: 'url', nullable: true, dir: 'ltr' },
+      { id: 'sortOrder', label: 'ترتيب العرض', type: 'number', default: 0 },
+      { id: 'isFree', label: '✅ مجاني للتحميل (بدون اشتراك)', type: 'checkbox', full: true, default: true },
+      { id: 'isFeatured', label: '⭐ مميّز', type: 'checkbox', full: true },
+      { id: 'descAr', label: 'الوصف بالعربية', type: 'textarea', full: true, nullable: true },
+      { id: 'descEn', label: 'Description EN', type: 'textarea', full: true, nullable: true, dir: 'ltr' }
+    ],
+    list: { title: r => r.titleAr, excerpt: r => (r.descAr||'').slice(0,140), thumb: r => r.thumbnailUrl, emoji: '📊', badges: r => [...(r.isFeatured?[{text:'⭐ مميّز',kind:'gold'}]:[]), ...(r.isFree?[{text:'🟢 مجاني',kind:'green'}]:[{text:'🔒 مدفوع',kind:'gold'}]), ...(r.categoryAr?[{text:r.categoryAr,kind:'blue'}]:[])], meta: r => [...(r.pages?[r.pages+' صفحة']:[]), formatDate(r.publishedAt)] },
+    stats: items => ({ 'إجمالي التقارير': items.length, 'مجاني': items.filter(r=>r.isFree).length, 'مميّز': items.filter(r=>r.isFeatured).length })
+  },
+  insights: {
+    key: 'insights', icon: '💡', nameAr: 'رؤى وتحليلات', singularAr: 'تحليل',
+    endpoint: '/api/admin/content-blocks', sectionFilter: 'insights',
+    fields: [
+      { id: 'titleAr', label: 'عنوان التحليل بالعربية *', type: 'text', required: true },
+      { id: 'titleEn', label: 'Article Title EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'authorAr', label: 'اسم الكاتب بالعربية', type: 'text', nullable: true },
+      { id: 'authorEn', label: 'Author EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'categoryAr', label: 'القطاع بالعربية', type: 'text', nullable: true },
+      { id: 'categoryEn', label: 'Category EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'durationSec', label: 'وقت القراءة (دقائق × 60)', type: 'number', nullable: true, placeholder: '300' },
+      { id: 'imageUrl', label: 'صورة المقال', type: 'url', nullable: true, dir: 'ltr' },
+      { id: 'linkUrl', label: 'رابط المقال الكامل', type: 'url', nullable: true, dir: 'ltr' },
+      { id: 'publishedAt', label: 'تاريخ النشر', type: 'datetime-local', default: () => nowLocalISO() },
+      { id: 'sortOrder', label: 'ترتيب العرض', type: 'number', default: 0 },
+      { id: 'isFeatured', label: '⭐ مميّز', type: 'checkbox', full: true },
+      { id: 'descAr', label: 'مقدمة المقال بالعربية', type: 'textarea', full: true, nullable: true },
+      { id: 'descEn', label: 'Excerpt EN', type: 'textarea', full: true, nullable: true, dir: 'ltr' }
+    ],
+    list: { title: i => i.titleAr, excerpt: i => (i.descAr||'').slice(0,140), thumb: i => i.imageUrl, emoji: '💡', badges: i => [...(i.isFeatured?[{text:'⭐',kind:'gold'}]:[]), ...(i.categoryAr?[{text:i.categoryAr,kind:'blue'}]:[])], meta: i => [i.authorAr || '—', formatDate(i.publishedAt)] },
+    stats: items => ({ 'إجمالي التحليلات': items.length, 'مميّز': items.filter(i=>i.isFeatured).length })
+  },
+  podcast: {
+    key: 'podcast', icon: '🎙️', nameAr: 'البودكاست', singularAr: 'حلقة',
+    endpoint: '/api/admin/content-blocks', sectionFilter: 'podcast',
+    fields: [
+      { id: 'titleAr', label: 'عنوان الحلقة بالعربية *', type: 'text', required: true },
+      { id: 'titleEn', label: 'Episode Title EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'authorAr', label: 'الضيف بالعربية', type: 'text', nullable: true },
+      { id: 'authorEn', label: 'Guest EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'audioUrl', label: 'رابط الحلقة الصوتية (Spotify/Apple/Anchor)', type: 'url', nullable: true, dir: 'ltr', full: true },
+      { id: 'videoUrl', label: 'رابط YouTube (اختياري)', type: 'url', nullable: true, dir: 'ltr', full: true },
+      { id: 'thumbnailUrl', label: 'صورة الحلقة', type: 'url', nullable: true, dir: 'ltr' },
+      { id: 'durationSec', label: 'مدة الحلقة (ثواني)', type: 'number', nullable: true, placeholder: '2400' },
+      { id: 'numericValue', label: 'رقم الحلقة', type: 'number', nullable: true },
+      { id: 'publishedAt', label: 'تاريخ النشر', type: 'datetime-local', default: () => nowLocalISO() },
+      { id: 'sortOrder', label: 'ترتيب العرض', type: 'number', default: 0 },
+      { id: 'isFeatured', label: '⭐ مميّزة', type: 'checkbox', full: true },
+      { id: 'descAr', label: 'وصف الحلقة', type: 'textarea', full: true, nullable: true },
+      { id: 'descEn', label: 'Description EN', type: 'textarea', full: true, nullable: true, dir: 'ltr' }
+    ],
+    list: { title: p => p.titleAr, excerpt: p => (p.descAr||'').slice(0,140), thumb: p => p.thumbnailUrl, emoji: '🎙️', badges: p => [...(p.isFeatured?[{text:'⭐',kind:'gold'}]:[]), ...(p.numericValue?[{text:'#'+p.numericValue,kind:'blue'}]:[])], meta: p => [p.authorAr || '—', ...(p.durationSec?[Math.floor(p.durationSec/60)+' دقيقة']:[]), formatDate(p.publishedAt)] },
+    stats: items => ({ 'إجمالي الحلقات': items.length, 'مميّز': items.filter(p=>p.isFeatured).length })
+  },
+  competitor: {
+    key: 'competitor', icon: '🎯', nameAr: 'تحليل المنافسين', singularAr: 'منافس',
+    endpoint: '/api/admin/content-blocks', sectionFilter: 'competitor-intel',
+    fields: [
+      { id: 'titleAr', label: 'اسم المنافس بالعربية *', type: 'text', required: true },
+      { id: 'titleEn', label: 'Competitor Name EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'categoryAr', label: 'القطاع', type: 'text', nullable: true },
+      { id: 'categoryEn', label: 'Sector EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'numericValue', label: 'حصة سوقية / قيمة الشركة', type: 'number', nullable: true },
+      { id: 'numericLabel', label: 'وحدة (% أو مليون $)', type: 'text', nullable: true, default: '%' },
+      { id: 'imageUrl', label: 'شعار المنافس', type: 'url', nullable: true, dir: 'ltr' },
+      { id: 'sortOrder', label: 'ترتيب العرض', type: 'number', default: 0 },
+      { id: 'descAr', label: 'تحليل الموقف', type: 'textarea', full: true, nullable: true },
+      { id: 'descEn', label: 'Position EN', type: 'textarea', full: true, nullable: true, dir: 'ltr' }
+    ],
+    list: { title: c => c.titleAr, excerpt: c => (c.descAr||'').slice(0,140), thumb: c => c.imageUrl, emoji: '🎯', badges: c => [...(c.categoryAr?[{text:c.categoryAr,kind:'blue'}]:[]), ...(c.numericValue?[{text:c.numericValue+(c.numericLabel||''),kind:'gold'}]:[])], meta: c => [] },
+    stats: items => ({ 'إجمالي المنافسين': items.length })
+  },
+  supply: {
+    key: 'supply', icon: '📦', nameAr: 'سلسلة التوريد', singularAr: 'بند',
+    endpoint: '/api/admin/content-blocks', sectionFilter: 'supply-chain',
+    fields: [
+      { id: 'titleAr', label: 'العنوان بالعربية *', type: 'text', required: true },
+      { id: 'titleEn', label: 'Title EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'numericValue', label: 'القيمة الرقمية', type: 'number', nullable: true },
+      { id: 'numericLabel', label: 'الوحدة', type: 'text', nullable: true },
+      { id: 'categoryAr', label: 'الفئة (موردين / لوجستيات / مخاطر)', type: 'text', nullable: true },
+      { id: 'categoryEn', label: 'Category EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'sortOrder', label: 'ترتيب العرض', type: 'number', default: 0 },
+      { id: 'descAr', label: 'الوصف', type: 'textarea', full: true, nullable: true },
+      { id: 'descEn', label: 'Description EN', type: 'textarea', full: true, nullable: true, dir: 'ltr' }
+    ],
+    list: { title: s => s.titleAr, excerpt: s => (s.descAr||'').slice(0,140), emoji: '📦', badges: s => [...(s.categoryAr?[{text:s.categoryAr,kind:'blue'}]:[]), ...(s.numericValue?[{text:s.numericValue+' '+(s.numericLabel||''),kind:'gold'}]:[])], meta: s => [] },
+    stats: items => ({ 'إجمالي البنود': items.length })
+  },
+  women: {
+    key: 'women', icon: '👩', nameAr: 'شبكة سيدات الأعمال', singularAr: 'عضوة',
+    endpoint: '/api/admin/content-blocks', sectionFilter: 'women-network',
+    fields: [
+      { id: 'titleAr', label: 'الاسم بالعربية *', type: 'text', required: true },
+      { id: 'titleEn', label: 'Name EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'positionAr', label: 'المنصب', type: 'text', nullable: true },
+      { id: 'positionEn', label: 'Position EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'newCompanyAr', label: 'الشركة', type: 'text', nullable: true },
+      { id: 'newCompanyEn', label: 'Company EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'imageUrl', label: 'الصورة الشخصية', type: 'url', nullable: true, dir: 'ltr' },
+      { id: 'linkUrl', label: 'رابط LinkedIn', type: 'url', nullable: true, dir: 'ltr' },
+      { id: 'sortOrder', label: 'ترتيب العرض', type: 'number', default: 0 },
+      { id: 'isFeatured', label: '⭐ مميّزة', type: 'checkbox', full: true },
+      { id: 'descAr', label: 'نبذة قصيرة', type: 'textarea', full: true, nullable: true },
+      { id: 'descEn', label: 'Bio EN', type: 'textarea', full: true, nullable: true, dir: 'ltr' }
+    ],
+    list: { title: w => w.titleAr, excerpt: w => (w.descAr||'').slice(0,140), thumb: w => w.imageUrl, emoji: '👩', badges: w => [...(w.isFeatured?[{text:'⭐',kind:'gold'}]:[]), ...(w.newCompanyAr?[{text:w.newCompanyAr,kind:'blue'}]:[])], meta: w => [w.positionAr || '—'] },
+    stats: items => ({ 'إجمالي العضوات': items.length, 'مميّزات': items.filter(w=>w.isFeatured).length })
+  },
+  club: {
+    key: 'club', icon: '🏆', nameAr: 'باقات النادي', singularAr: 'باقة',
+    endpoint: '/api/admin/content-blocks', sectionFilter: 'club',
+    fields: [
+      { id: 'titleAr', label: 'اسم الباقة بالعربية *', type: 'text', required: true, placeholder: 'البلاتينية' },
+      { id: 'titleEn', label: 'Tier Name EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'subtitleAr', label: 'وصف قصير', type: 'text', nullable: true },
+      { id: 'subtitleEn', label: 'Tagline EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'numericValue', label: 'سعر الاشتراك (شهري $)', type: 'number', nullable: true },
+      { id: 'linkUrl', label: 'رابط التسجيل', type: 'url', nullable: true, dir: 'ltr' },
+      { id: 'sortOrder', label: 'ترتيب العرض (الأرخص أولاً)', type: 'number', default: 0 },
+      { id: 'isFeatured', label: '⭐ الأكثر شعبية', type: 'checkbox', full: true },
+      { id: 'descAr', label: 'المميزات (سطر لكل ميزة)', type: 'textarea', full: true, nullable: true },
+      { id: 'descEn', label: 'Benefits EN', type: 'textarea', full: true, nullable: true, dir: 'ltr' }
+    ],
+    list: { title: c => c.titleAr, excerpt: c => (c.descAr||'').split('\n')[0], emoji: '🏆', badges: c => [...(c.isFeatured?[{text:'⭐ الأكثر شعبية',kind:'gold'}]:[]), ...(c.numericValue?[{text:'$'+c.numericValue+'/شهر',kind:'green'}]:[])], meta: c => [c.subtitleAr || ''] },
+    stats: items => ({ 'إجمالي الباقات': items.length, 'الأرخص': items.length ? '$' + Math.min(...items.filter(c=>c.numericValue).map(c=>c.numericValue)) : '—' })
   }
 };
 
@@ -597,6 +758,8 @@ function renderTabs() {
   const layoutTab = isAdmin ? mk('__layout__', '🎛️', 'تخطيط الصفحة', 'switchToLayout') : '';
   // Hero (waterhole CMS) — Admin + Editor
   const heroTab = (isAdmin || isEditor) ? mk('__hero__', '🎯', 'الواجهة (Hero)', 'switchToHero') : '';
+  // Site Content (key/value copy) — Admin + Editor
+  const siteContentTab = (isAdmin || isEditor) ? mk('__sitecontent__', '📝', 'نصوص الموقع', 'switchToSiteContent') : '';
   /* News Drafts tab removed per user request — drafts feature deprecated.
    * The switchToDrafts/loadDraftsUI/generateDraftsNow functions remain in code
    * but are unreachable from the UI. */
@@ -612,7 +775,7 @@ function renderTabs() {
   ) : '';
   // Moderator gets messages
   const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + layoutTab + adminOnlyTabs + modOnlyTabs;
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + siteContentTab + layoutTab + adminOnlyTabs + modOnlyTabs;
 }
 
 /* Drafts counter kept for backward compat (no longer displayed) */
@@ -1215,7 +1378,9 @@ async function loadList() {
   container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   const ent = currentEntity();
   const search = document.getElementById('search-input').value.trim();
-  const qs = search ? '?search=' + encodeURIComponent(search) + '&limit=100' : '?limit=100';
+  let qs = search ? '?search=' + encodeURIComponent(search) + '&limit=100' : '?limit=100';
+  /* Section-filtered entities (ContentBlock-backed) append &section=slug */
+  if (ent.sectionFilter) qs += '&section=' + encodeURIComponent(ent.sectionFilter);
   const r = await api(ent.endpoint + qs);
   if (!r.ok) {
     container.innerHTML = '<div class="msg msg-error">تعذّر التحميل: ' + (r.data?.error || 'خطأ') + '</div>';
@@ -1443,6 +1608,8 @@ async function saveItem() {
     });
   }
   if (missing.length) { msg.innerHTML = '<div class="msg msg-error">يرجى ملء: ' + escapeHtml(missing.join('، ')) + '</div>'; return; }
+  /* Section-filtered entities (ContentBlock-backed) need `section` in body */
+  if (ent.sectionFilter && !editingId) payload.section = ent.sectionFilter;
   btn.disabled = true; btn.textContent = 'جاري الحفظ...';
   try {
     const r = editingId
@@ -2422,6 +2589,111 @@ async function saveHero() {
   }
   _heroData = r.data.data;
   if (status) status.innerHTML = '<span style="color:#22c55e">✅ تم الحفظ بنجاح — التغيير ينعكس على الموقع خلال دقيقة.</span>';
+}
+
+/* ═════════════════════════════════════════════════════════════
+   SiteContent (key/value singleton copy) — admin form grouped by section
+   ═════════════════════════════════════════════════════════════ */
+let _siteContent = [];
+
+async function switchToSiteContent() {
+  currentEntityKey = '__sitecontent__';
+  renderTabs();
+  document.getElementById('page-title').textContent = '📝 نصوص الموقع (Headers + Footer + Subtitles)';
+  document.getElementById('search-input').style.display = 'none';
+  const addBtn = document.querySelector('.actions button.btn-primary');
+  if (addBtn) addBtn.style.display = 'none';
+  document.getElementById('stats-section').innerHTML = '';
+  await loadSiteContentUI();
+}
+
+async function loadSiteContentUI() {
+  const container = document.getElementById('list-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const r = await api('/api/admin/site-content');
+  if (!r.ok) {
+    container.innerHTML = '<div class="msg msg-error">فشل التحميل. شغّل: <a href="https://cairo-business-backend.vercel.app/api/admin/migrate-content" target="_blank">/api/admin/migrate-content</a></div>';
+    return;
+  }
+  _siteContent = r.data.data || [];
+  if (!_siteContent.length) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">📝</div><div class="title">لا توجد نصوص بعد</div><div class="subtitle">شغّل migration: <a href="https://cairo-business-backend.vercel.app/api/admin/migrate-content" target="_blank">/api/admin/migrate-content</a></div></div>';
+    return;
+  }
+  renderSiteContentForm();
+}
+
+const SECTION_LABELS = {
+  'live-dashboard':'📊 لوحة المؤشرات الحية', 'whos-moving':'🔄 تنقّلات تنفيذية',
+  'compare':'⚖️ أداة المقارنة', 'research':'📊 الأبحاث والتقارير',
+  'insights':'💡 رؤى وتحليلات', 'podcast':'🎙️ البودكاست',
+  'competitor-intel':'🎯 تحليل المنافسين', 'supply-chain':'📦 سلسلة التوريد',
+  'parallel-fx':'💱 الصرف الموازي', 'women-network':'👩 شبكة سيدات الأعمال',
+  'community':'🌐 المجتمع', 'club':'🏆 النادي', 'footer':'🦶 التذييل',
+  'hero':'🎯 الواجهة'
+};
+
+function renderSiteContentForm() {
+  let html = '';
+  html += '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">';
+  html += '  <div><div style="font-size:15px;font-weight:700;color:#F4D03F">📝 نصوص الترويسة والـ subtitle لكل قسم</div><div style="font-size:12px;opacity:0.7;margin-top:2px;">عدّل أي نص واضغط حفظ — التغييرات تظهر على الموقع خلال دقيقة.</div></div>';
+  html += '  <button class="btn btn-primary" id="sc-save-btn" onclick="saveSiteContent()" style="font-size:14px;padding:10px 24px;">💾 حفظ الكل</button>';
+  html += '</div>';
+  html += '<div id="sc-save-status" style="margin-bottom:14px;font-size:13px;display:none;"></div>';
+
+  /* Group by section */
+  const bySection = {};
+  for (const row of _siteContent) {
+    if (!bySection[row.section]) bySection[row.section] = [];
+    bySection[row.section].push(row);
+  }
+  const sectionOrder = Object.keys(bySection).sort();
+  for (const sec of sectionOrder) {
+    const label = SECTION_LABELS[sec] || sec;
+    html += '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:12px;padding:18px;margin-bottom:18px;">';
+    html += '<h3 style="font-size:15px;color:#F4D03F;margin-bottom:14px;font-weight:700;">' + escapeHtml(label) + '</h3>';
+    for (const row of bySection[sec]) {
+      const keyLabel = row.key.split('.').slice(1).join('.');
+      html += '<div style="margin-bottom:14px;padding:10px;background:rgba(0,0,0,0.15);border-radius:8px;">';
+      html += '<div style="font-size:11px;opacity:0.6;font-family:monospace;direction:ltr;margin-bottom:6px;">' + escapeHtml(row.key) + '</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+      html += '<div><label style="font-size:11px;opacity:0.7">العربية</label>';
+      html += '<textarea data-sc-key="' + escapeAttr(row.key) + '" data-sc-lang="ar" data-sc-section="' + escapeAttr(row.section) + '" dir="rtl" rows="2" style="width:100%;padding:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;resize:vertical;">' + escapeHtml(row.valueAr) + '</textarea></div>';
+      html += '<div><label style="font-size:11px;opacity:0.7">English</label>';
+      html += '<textarea data-sc-key="' + escapeAttr(row.key) + '" data-sc-lang="en" data-sc-section="' + escapeAttr(row.section) + '" dir="ltr" rows="2" style="width:100%;padding:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:6px;color:inherit;resize:vertical;">' + escapeHtml(row.valueEn) + '</textarea></div>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+  }
+
+  html += '<div style="position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--bg,#0A0E27) 30%);padding:18px 0;text-align:center;">';
+  html += '<button class="btn btn-primary" onclick="saveSiteContent()" style="font-size:15px;padding:12px 32px;">💾 حفظ كل النصوص</button>';
+  html += '</div>';
+  document.getElementById('list-container').innerHTML = html;
+}
+
+async function saveSiteContent() {
+  const btn = document.getElementById('sc-save-btn');
+  const status = document.getElementById('sc-save-status');
+  if (status) { status.style.display = 'block'; status.innerHTML = '<span style="color:#F4D03F">⏳ جاري الحفظ...</span>'; }
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+
+  /* Collect by key (combine AR + EN textareas) */
+  const byKey = {};
+  document.querySelectorAll('[data-sc-key]').forEach(el => {
+    const k = el.dataset.scKey;
+    if (!byKey[k]) byKey[k] = { key: k, section: el.dataset.scSection, valueAr: '', valueEn: '' };
+    if (el.dataset.scLang === 'ar') byKey[k].valueAr = el.value;
+    else byKey[k].valueEn = el.value;
+  });
+  const items = Object.values(byKey);
+  const r = await api('/api/admin/site-content', { method: 'POST', body: JSON.stringify({ items }) });
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  if (!r.ok || !r.data?.success) {
+    if (status) status.innerHTML = '<span style="color:#ef4444">❌ فشل الحفظ: ' + escapeHtml(r.data?.error || 'unknown') + '</span>';
+    return;
+  }
+  if (status) status.innerHTML = '<span style="color:#22c55e">✅ تم حفظ ' + r.data.saved + ' نص بنجاح — التغيير ينعكس خلال دقيقة.</span>';
 }
 
 const _lp = document.getElementById('login-password');

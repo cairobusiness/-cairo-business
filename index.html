@@ -14110,6 +14110,203 @@
     setTimeout(() => { try { if (typeof fetchVideosFromAPI === 'function') fetchVideosFromAPI(); } catch (_) {} }, 500);
     /* Hero fetcher — runs after the i18n system finishes its initial pass */
     setTimeout(() => { try { if (typeof fetchHeroFromAPI === 'function') fetchHeroFromAPI(); } catch (_) {} }, 600);
+    /* SiteContent applier — overrides every data-i18n key with admin-managed copy */
+    setTimeout(() => { try { if (typeof fetchSiteContent === 'function') fetchSiteContent(); } catch (_) {} }, 700);
+    /* Content blocks for sections converted to CMS */
+    setTimeout(() => {
+      try {
+        if (typeof fetchSectionBlocks === 'function') {
+          fetchSectionBlocks('whos-moving', renderMovesFromAPI);
+          fetchSectionBlocks('research',    renderResearchFromAPI);
+          fetchSectionBlocks('insights',    renderInsightsFromAPI);
+          fetchSectionBlocks('podcast',     renderPodcastFromAPI);
+          fetchSectionBlocks('competitor-intel', renderCompetitorFromAPI);
+          fetchSectionBlocks('supply-chain', renderSupplyFromAPI);
+          fetchSectionBlocks('women-network', renderWomenFromAPI);
+          fetchSectionBlocks('club',         renderClubFromAPI);
+        }
+      } catch (_) {}
+    }, 800);
+
+    /* ───────── SiteContent (key/value copy) applier ─────────
+       Calls /api/site-content once and updates every [data-i18n="X"] in the DOM. */
+    async function fetchSiteContent() {
+      try {
+        const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND)
+          || 'https://cairo-business-backend.vercel.app';
+        const r = await fetch(backend + '/api/site-content', { cache: 'default' });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (!j || !j.success || !j.data) return;
+        const isAr = (typeof currentLang === 'undefined' || currentLang === 'ar');
+        for (const key of Object.keys(j.data)) {
+          const entry = j.data[key];
+          const val = isAr ? entry.ar : (entry.en || entry.ar);
+          if (!val) continue;
+          document.querySelectorAll('[data-i18n="' + key + '"]').forEach(el => {
+            /* Only override headers/subtitles/eyebrows — skip elements with placeholder= or value= bindings */
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+              if (el.hasAttribute('placeholder')) el.placeholder = val;
+            } else {
+              el.textContent = val;
+            }
+          });
+        }
+      } catch (e) { console.warn('fetchSiteContent failed:', e); }
+    }
+
+    /* ───────── ContentBlock fetcher (per section) ─────────
+       Loads list-style content for a section then hands it to a section-specific renderer. */
+    async function fetchSectionBlocks(section, renderFn) {
+      try {
+        const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND)
+          || 'https://cairo-business-backend.vercel.app';
+        const r = await fetch(backend + '/api/content-blocks?section=' + encodeURIComponent(section), { cache: 'default' });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (!j || !j.success || !Array.isArray(j.data) || !j.data.length) return;
+        if (typeof renderFn === 'function') renderFn(j.data);
+      } catch (e) { console.warn('fetchSectionBlocks(' + section + ') failed:', e); }
+    }
+
+    /* Section-specific renderers — each overrides the existing static data array
+       and re-renders the section. If no API data is returned, the static fallback stays. */
+    function renderMovesFromAPI(blocks) {
+      if (typeof MOVES !== 'undefined') {
+        try {
+          window.MOVES = blocks.map(b => ({
+            person_ar: b.personAr || b.titleAr,
+            person_en: b.personEn || b.titleEn,
+            old_ar: b.oldCompanyAr, old_en: b.oldCompanyEn,
+            new_ar: b.newCompanyAr, new_en: b.newCompanyEn,
+            role_ar: b.positionAr,  role_en: b.positionEn,
+            date: b.publishedAt ? new Date(b.publishedAt).toLocaleDateString('ar-EG') : ''
+          }));
+          if (typeof renderMoves === 'function') renderMoves();
+        } catch (e) { console.warn('renderMoves overlay failed:', e); }
+      }
+    }
+    function renderResearchFromAPI(blocks) {
+      try {
+        if (typeof REPORTS !== 'undefined') {
+          window.REPORTS = blocks.map(b => ({
+            title_ar: b.titleAr, title_en: b.titleEn,
+            cat_ar: b.categoryAr || 'عام', cat_en: b.categoryEn || 'General',
+            pages: b.pages || 0,
+            date: b.publishedAt ? new Date(b.publishedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '',
+            free: !!b.isFree,
+            gradient: 'from-gold-400 to-amber-700',
+            linkUrl: b.linkUrl
+          }));
+          if (typeof renderResearch === 'function') renderResearch();
+        }
+      } catch (e) { console.warn('renderResearch overlay failed:', e); }
+    }
+    function renderInsightsFromAPI(blocks) {
+      try {
+        if (typeof INSIGHTS !== 'undefined' || typeof AI_INSIGHTS !== 'undefined') {
+          const arr = blocks.map(b => ({
+            title_ar: b.titleAr, title_en: b.titleEn,
+            author_ar: b.authorAr, author_en: b.authorEn,
+            cat_ar: b.categoryAr, cat_en: b.categoryEn,
+            excerpt_ar: b.descAr, excerpt_en: b.descEn,
+            image: b.imageUrl,
+            link: b.linkUrl,
+            date: b.publishedAt ? new Date(b.publishedAt).toLocaleDateString('ar-EG') : '',
+            readMin: b.durationSec ? Math.ceil(b.durationSec / 60) : 5
+          }));
+          if (typeof INSIGHTS !== 'undefined') window.INSIGHTS = arr;
+          if (typeof AI_INSIGHTS !== 'undefined') window.AI_INSIGHTS = arr;
+          if (typeof renderInsights === 'function') renderInsights();
+        }
+      } catch (e) { console.warn('renderInsights overlay failed:', e); }
+    }
+    function renderPodcastFromAPI(blocks) {
+      try {
+        if (typeof PODCAST_EPISODES !== 'undefined' || typeof EPISODES !== 'undefined') {
+          const arr = blocks.map(b => ({
+            title_ar: b.titleAr, title_en: b.titleEn,
+            guest_ar: b.authorAr, guest_en: b.authorEn,
+            episode: b.numericValue,
+            duration: b.durationSec ? Math.floor(b.durationSec/60) + ':' + String(b.durationSec%60).padStart(2,'0') : '',
+            audio: b.audioUrl, video: b.videoUrl,
+            thumb: b.thumbnailUrl,
+            desc_ar: b.descAr, desc_en: b.descEn,
+            date: b.publishedAt ? new Date(b.publishedAt).toLocaleDateString('ar-EG') : ''
+          }));
+          if (typeof PODCAST_EPISODES !== 'undefined') window.PODCAST_EPISODES = arr;
+          if (typeof EPISODES !== 'undefined') window.EPISODES = arr;
+          if (typeof renderPodcast === 'function') renderPodcast();
+        }
+      } catch (e) { console.warn('renderPodcast overlay failed:', e); }
+    }
+    function renderCompetitorFromAPI(blocks) {
+      try {
+        if (typeof COMPETITORS !== 'undefined') {
+          window.COMPETITORS = blocks.map(b => ({
+            name_ar: b.titleAr, name_en: b.titleEn,
+            sector_ar: b.categoryAr, sector_en: b.categoryEn,
+            value: b.numericValue, unit: b.numericLabel || '%',
+            logo: b.imageUrl,
+            desc_ar: b.descAr, desc_en: b.descEn
+          }));
+          if (typeof renderCompetitorIntel === 'function') renderCompetitorIntel();
+          else if (typeof renderCompetitors === 'function') renderCompetitors();
+        }
+      } catch (e) { console.warn('renderCompetitor overlay failed:', e); }
+    }
+    function renderSupplyFromAPI(blocks) {
+      try {
+        if (typeof SUPPLY_CHAIN !== 'undefined' || typeof SUPPLIERS !== 'undefined') {
+          const arr = blocks.map(b => ({
+            title_ar: b.titleAr, title_en: b.titleEn,
+            cat_ar: b.categoryAr, cat_en: b.categoryEn,
+            value: b.numericValue, unit: b.numericLabel,
+            desc_ar: b.descAr, desc_en: b.descEn
+          }));
+          if (typeof SUPPLY_CHAIN !== 'undefined') window.SUPPLY_CHAIN = arr;
+          if (typeof SUPPLIERS !== 'undefined') window.SUPPLIERS = arr;
+          if (typeof renderSupplyChain === 'function') renderSupplyChain();
+        }
+      } catch (e) { console.warn('renderSupply overlay failed:', e); }
+    }
+    function renderWomenFromAPI(blocks) {
+      try {
+        if (typeof WOMEN_NETWORK !== 'undefined' || typeof WOMEN_MEMBERS !== 'undefined') {
+          const arr = blocks.map(b => ({
+            name_ar: b.titleAr, name_en: b.titleEn,
+            position_ar: b.positionAr, position_en: b.positionEn,
+            company_ar: b.newCompanyAr, company_en: b.newCompanyEn,
+            image: b.imageUrl, linkedin: b.linkUrl,
+            bio_ar: b.descAr, bio_en: b.descEn,
+            featured: !!b.isFeatured
+          }));
+          if (typeof WOMEN_NETWORK !== 'undefined') window.WOMEN_NETWORK = arr;
+          if (typeof WOMEN_MEMBERS !== 'undefined') window.WOMEN_MEMBERS = arr;
+          if (typeof renderWomenNetwork === 'function') renderWomenNetwork();
+        }
+      } catch (e) { console.warn('renderWomen overlay failed:', e); }
+    }
+    function renderClubFromAPI(blocks) {
+      try {
+        if (typeof CLUB_TIERS !== 'undefined' || typeof PRICING_TIERS !== 'undefined' || typeof TIERS !== 'undefined') {
+          const arr = blocks.map(b => ({
+            name_ar: b.titleAr, name_en: b.titleEn,
+            tagline_ar: b.subtitleAr, tagline_en: b.subtitleEn,
+            price: b.numericValue,
+            popular: !!b.isFeatured,
+            benefits_ar: (b.descAr || '').split('\n').filter(Boolean),
+            benefits_en: (b.descEn || '').split('\n').filter(Boolean),
+            link: b.linkUrl
+          }));
+          if (typeof CLUB_TIERS !== 'undefined') window.CLUB_TIERS = arr;
+          if (typeof PRICING_TIERS !== 'undefined') window.PRICING_TIERS = arr;
+          if (typeof TIERS !== 'undefined') window.TIERS = arr;
+          if (typeof renderPricing === 'function') renderPricing();
+          else if (typeof renderClub === 'function') renderClub();
+        }
+      } catch (e) { console.warn('renderClub overlay failed:', e); }
+    }
 
     /* ───────── Fetch Hero singleton from CMS API ─────────
        Overrides the hard-coded hero text, search placeholder, chips, and stat counters. */
