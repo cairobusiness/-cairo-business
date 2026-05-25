@@ -544,10 +544,10 @@ const ENTITIES = {
       { id: 'sortOrder', label: 'ترتيب العرض', type: 'number', default: 0 },
       { id: 'isFree', label: '✅ مجاني للتحميل (بدون اشتراك)', type: 'checkbox', full: true, default: true },
       { id: 'isFeatured', label: '⭐ مميّز', type: 'checkbox', full: true },
-      { id: 'descAr', label: 'الوصف بالعربية', type: 'textarea', full: true, nullable: true },
-      { id: 'descEn', label: 'Description EN', type: 'textarea', full: true, nullable: true, dir: 'ltr' }
+      { id: 'descAr', label: 'الوصف بالعربية ✨', type: 'richtext', full: true, nullable: true },
+      { id: 'descEn', label: 'Description EN ✨', type: 'richtext', full: true, nullable: true, dir: 'ltr' }
     ],
-    list: { title: r => r.titleAr, excerpt: r => (r.descAr||'').slice(0,140), thumb: r => r.thumbnailUrl, emoji: '📊', badges: r => [...(r.isFeatured?[{text:'⭐ مميّز',kind:'gold'}]:[]), ...(r.isFree?[{text:'🟢 مجاني',kind:'green'}]:[{text:'🔒 مدفوع',kind:'gold'}]), ...(r.categoryAr?[{text:r.categoryAr,kind:'blue'}]:[])], meta: r => [...(r.pages?[r.pages+' صفحة']:[]), formatDate(r.publishedAt)] },
+    list: { title: r => r.titleAr, excerpt: r => (r.descAr||'').replace(/<[^>]+>/g,'').slice(0,140), thumb: r => r.thumbnailUrl, emoji: '📊', badges: r => [...(r.isFeatured?[{text:'⭐ مميّز',kind:'gold'}]:[]), ...(r.isFree?[{text:'🟢 مجاني',kind:'green'}]:[{text:'🔒 مدفوع',kind:'gold'}]), ...(r.categoryAr?[{text:r.categoryAr,kind:'blue'}]:[])], meta: r => [...(r.pages?[r.pages+' صفحة']:[]), formatDate(r.publishedAt)] },
     stats: items => ({ 'إجمالي التقارير': items.length, 'مجاني': items.filter(r=>r.isFree).length, 'مميّز': items.filter(r=>r.isFeatured).length })
   },
   insights: {
@@ -566,10 +566,10 @@ const ENTITIES = {
       { id: 'publishedAt', label: 'تاريخ النشر', type: 'datetime-local', default: () => nowLocalISO() },
       { id: 'sortOrder', label: 'ترتيب العرض', type: 'number', default: 0 },
       { id: 'isFeatured', label: '⭐ مميّز', type: 'checkbox', full: true },
-      { id: 'descAr', label: 'مقدمة المقال بالعربية', type: 'textarea', full: true, nullable: true },
-      { id: 'descEn', label: 'Excerpt EN', type: 'textarea', full: true, nullable: true, dir: 'ltr' }
+      { id: 'descAr', label: 'مقدمة المقال بالعربية ✨', type: 'richtext', full: true, nullable: true },
+      { id: 'descEn', label: 'Excerpt EN ✨', type: 'richtext', full: true, nullable: true, dir: 'ltr' }
     ],
-    list: { title: i => i.titleAr, excerpt: i => (i.descAr||'').slice(0,140), thumb: i => i.imageUrl, emoji: '💡', badges: i => [...(i.isFeatured?[{text:'⭐',kind:'gold'}]:[]), ...(i.categoryAr?[{text:i.categoryAr,kind:'blue'}]:[])], meta: i => [i.authorAr || '—', formatDate(i.publishedAt)] },
+    list: { title: i => i.titleAr, excerpt: i => (i.descAr||'').replace(/<[^>]+>/g,'').slice(0,140), thumb: i => i.imageUrl, emoji: '💡', badges: i => [...(i.isFeatured?[{text:'⭐',kind:'gold'}]:[]), ...(i.categoryAr?[{text:i.categoryAr,kind:'blue'}]:[])], meta: i => [i.authorAr || '—', formatDate(i.publishedAt)] },
     stats: items => ({ 'إجمالي التحليلات': items.length, 'مميّز': items.filter(i=>i.isFeatured).length })
   },
   podcast: {
@@ -588,10 +588,10 @@ const ENTITIES = {
       { id: 'publishedAt', label: 'تاريخ النشر', type: 'datetime-local', default: () => nowLocalISO() },
       { id: 'sortOrder', label: 'ترتيب العرض', type: 'number', default: 0 },
       { id: 'isFeatured', label: '⭐ مميّزة', type: 'checkbox', full: true },
-      { id: 'descAr', label: 'وصف الحلقة', type: 'textarea', full: true, nullable: true },
-      { id: 'descEn', label: 'Description EN', type: 'textarea', full: true, nullable: true, dir: 'ltr' }
+      { id: 'descAr', label: 'وصف الحلقة ✨', type: 'richtext', full: true, nullable: true },
+      { id: 'descEn', label: 'Description EN ✨', type: 'richtext', full: true, nullable: true, dir: 'ltr' }
     ],
-    list: { title: p => p.titleAr, excerpt: p => (p.descAr||'').slice(0,140), thumb: p => p.thumbnailUrl, emoji: '🎙️', badges: p => [...(p.isFeatured?[{text:'⭐',kind:'gold'}]:[]), ...(p.numericValue?[{text:'#'+p.numericValue,kind:'blue'}]:[])], meta: p => [p.authorAr || '—', ...(p.durationSec?[Math.floor(p.durationSec/60)+' دقيقة']:[]), formatDate(p.publishedAt)] },
+    list: { title: p => p.titleAr, excerpt: p => (p.descAr||'').replace(/<[^>]+>/g,'').slice(0,140), thumb: p => p.thumbnailUrl, emoji: '🎙️', badges: p => [...(p.isFeatured?[{text:'⭐',kind:'gold'}]:[]), ...(p.numericValue?[{text:'#'+p.numericValue,kind:'blue'}]:[])], meta: p => [p.authorAr || '—', ...(p.durationSec?[Math.floor(p.durationSec/60)+' دقيقة']:[]), formatDate(p.publishedAt)] },
     stats: items => ({ 'إجمالي الحلقات': items.length, 'مميّز': items.filter(p=>p.isFeatured).length })
   },
   competitor: {
@@ -648,6 +648,27 @@ const ENTITIES = {
     ],
     list: { title: w => w.titleAr, excerpt: w => (w.descAr||'').slice(0,140), thumb: w => w.imageUrl, emoji: '👩', badges: w => [...(w.isFeatured?[{text:'⭐',kind:'gold'}]:[]), ...(w.newCompanyAr?[{text:w.newCompanyAr,kind:'blue'}]:[])], meta: w => [w.positionAr || '—'] },
     stats: items => ({ 'إجمالي العضوات': items.length, 'مميّزات': items.filter(w=>w.isFeatured).length })
+  },
+  sectorpulse: {
+    key: 'sectorpulse', icon: '📈', nameAr: 'نبض القطاعات', singularAr: 'قطاع',
+    endpoint: '/api/admin/content-blocks', sectionFilter: 'sector-pulse',
+    fields: [
+      { id: 'titleAr', label: 'اسم القطاع بالعربية *', type: 'text', required: true, placeholder: 'العقارات / البنوك / التكنولوجيا' },
+      { id: 'titleEn', label: 'Sector Name EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'subtitleAr', label: 'وصف موجز بالعربية', type: 'text', nullable: true, placeholder: 'ارتفاع الطلب مع استقرار الأسعار' },
+      { id: 'subtitleEn', label: 'Short Description EN', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'numericValue', label: 'مؤشر الصحة (0-100)', type: 'number', nullable: true, min: 0, max: 100, placeholder: '78' },
+      { id: 'numericLabel', label: 'مفتاح القطاع (slug للفرونت)', type: 'text', nullable: true, default: 'general', placeholder: 'realEstate, banking, tech, industry, energy' },
+      { id: 'categoryAr', label: 'أبرز اللاعبين بالعربية (مفصول بفاصلة)', type: 'text', nullable: true, placeholder: 'إعمار, طلعت مصطفى, بالم هيلز' },
+      { id: 'categoryEn', label: 'Top Players EN (comma-separated)', type: 'text', nullable: true, dir: 'ltr', placeholder: 'Emaar, TMG, Palm Hills' },
+      { id: 'descAr', label: 'ملاحظات تحليلية بالعربية (سطر لكل ملاحظة)', type: 'textarea', full: true, nullable: true, placeholder: 'الطلب على الفيلات ارتفع 22%\nأسعار الشقق استقرت في الأحياء الراقية' },
+      { id: 'descEn', label: 'Analytical Insights EN (one per line)', type: 'textarea', full: true, nullable: true, dir: 'ltr' },
+      { id: 'meta', label: 'مقاييس JSON (متقدّم)', type: 'textarea', full: true, nullable: true, placeholder: '[{"label_ar":"نمو الإيراد","label_en":"Revenue Growth","value":"+18%"},{"label_ar":"حجم السوق","label_en":"Market Size","value":"$250B"}]' },
+      { id: 'sortOrder', label: 'ترتيب العرض', type: 'number', default: 0 },
+      { id: 'isFeatured', label: '⭐ يظهر كتاب افتراضي', type: 'checkbox', full: true }
+    ],
+    list: { title: s => s.titleAr, excerpt: s => (s.descAr||'').split('\n')[0], emoji: '📈', badges: s => [...(s.isFeatured?[{text:'⭐ افتراضي',kind:'gold'}]:[]), ...(s.numericValue!=null?[{text:'صحة '+s.numericValue,kind: s.numericValue>=75?'green':(s.numericValue>=50?'gold':'red')}]:[]), ...(s.numericLabel?[{text:s.numericLabel,kind:'blue'}]:[])], meta: s => [s.subtitleAr || '—'] },
+    stats: items => ({ 'إجمالي القطاعات': items.length, 'متوسط الصحة': items.length ? Math.round(items.reduce((sm,s)=>sm+(s.numericValue||0),0)/items.length) : 0 })
   },
   club: {
     key: 'club', icon: '🏆', nameAr: 'باقات النادي', singularAr: 'باقة',
@@ -1065,19 +1086,89 @@ function downloadCsv(filename, rows) {
 }
 
 async function switchToNewsletter() {
-  setupListView({ key: '__newsletter__', label: '📨 مشتركي النشرة البريدية' });
+  setupListView({ key: '__newsletter__', label: '📨 النشرة البريدية' });
   const r = await api('/api/admin/newsletter?limit=500');
   if (!r.ok) { document.getElementById('list-container').innerHTML = '<div class="msg msg-error">تعذّر التحميل</div>'; return; }
   const items = r.data.data || [];
   const csvRows = items.map(s => ({ email: s.email, name: s.name || '', subscribedAt: s.createdAt }));
-  const exportBtn = '<button class="btn btn-primary" onclick=\'downloadCsv("newsletter-subscribers.csv", ' + JSON.stringify(csvRows).replace(/'/g, '&#39;') + ')\'>📥 تصدير CSV</button>';
-  if (!items.length) { document.getElementById('list-container').innerHTML = '<div class="empty-state"><div class="icon">📨</div><div class="title">مفيش مشتركين</div></div>'; return; }
-  const rows = items.map(s => '<div class="item-row"><div class="item-thumb">📧</div><div>' +
-    '<div class="item-meta"><span>' + formatDate(s.createdAt) + '</span></div>' +
-    '<div class="item-title">' + escapeHtml(s.email) + '</div>' +
-    (s.name ? '<div class="item-excerpt">' + escapeHtml(s.name) + '</div>' : '') +
-    '</div></div>').join('');
-  document.getElementById('list-container').innerHTML = '<div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;"><span class="pill">إجمالي ' + items.length + ' مشترك</span>' + exportBtn + '</div><div class="item-grid">' + rows + '</div>';
+  const exportBtn = '<button class="btn btn-ghost btn-sm" onclick=\'downloadCsv("newsletter-subscribers.csv", ' + JSON.stringify(csvRows).replace(/'/g, '&#39;') + ')\'>📥 تصدير CSV</button>';
+
+  /* Compose card — send to all subscribers */
+  let compose = '';
+  compose += '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:18px;margin-bottom:18px;">';
+  compose += '  <div style="font-size:15px;font-weight:700;color:#F4D03F;margin-bottom:10px;">✉️ إرسال نشرة بريدية لكل المشتركين</div>';
+  compose += '  <div style="font-size:12px;opacity:0.7;margin-bottom:14px;line-height:1.6;">سيتم الإرسال لـ <strong>' + items.length + '</strong> مشترك نشط. اكتب العنوان والمحتوى، استخدم زر «اختبار» للتجربة قبل الإرسال للكل.</div>';
+  compose += '  <div style="margin-bottom:10px;"><label style="font-size:12px;opacity:0.7">العنوان</label>';
+  compose += '    <input id="nl-subject" type="text" dir="auto" style="width:100%;padding:10px;background:rgba(0,0,0,0.2);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;" placeholder="ملخص أخبار الأسبوع — 25 مايو 2026" /></div>';
+  compose += '  <div style="margin-bottom:10px;"><label style="font-size:12px;opacity:0.7">محتوى البريد (HTML)</label>';
+  compose += '    <div id="nl-body-editor" style="background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;min-height:240px;"></div>';
+  compose += '    <input type="hidden" id="nl-body" /></div>';
+  compose += '  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">';
+  compose += '    <input id="nl-test-email" type="email" placeholder="ابعت اختبار لإيميل واحد" style="flex:1;min-width:200px;padding:10px;background:rgba(0,0,0,0.2);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;font-size:13px;" />';
+  compose += '    <button class="btn btn-ghost btn-sm" onclick="sendNewsletterTest()">🧪 اختبار</button>';
+  compose += '    <button class="btn btn-primary" onclick="sendNewsletterAll()" style="padding:10px 24px;">📨 ابعت للكل (' + items.length + ')</button>';
+  compose += '  </div>';
+  compose += '  <div id="nl-status" style="margin-top:12px;font-size:13px;display:none;"></div>';
+  compose += '</div>';
+
+  /* Subscribers list */
+  let listHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span class="pill">إجمالي ' + items.length + ' مشترك</span>' + exportBtn + '</div>';
+  if (!items.length) {
+    listHtml += '<div class="empty-state"><div class="icon">📨</div><div class="title">مفيش مشتركين</div></div>';
+  } else {
+    const rows = items.map(s => '<div class="item-row"><div class="item-thumb">📧</div><div>' +
+      '<div class="item-meta"><span>' + formatDate(s.createdAt) + '</span></div>' +
+      '<div class="item-title">' + escapeHtml(s.email) + '</div>' +
+      (s.name ? '<div class="item-excerpt">' + escapeHtml(s.name) + '</div>' : '') +
+      '</div></div>').join('');
+    listHtml += '<div class="item-grid">' + rows + '</div>';
+  }
+
+  document.getElementById('list-container').innerHTML = compose + listHtml;
+
+  /* Init Quill on the body editor */
+  if (typeof Quill !== 'undefined') {
+    try {
+      const editor = new Quill('#nl-body-editor', {
+        theme: 'snow', placeholder: 'اكتب محتوى النشرة هنا...',
+        modules: { toolbar: [[{ header: [1, 2, 3, false] }], ['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }], ['link', 'blockquote'], ['clean']] }
+      });
+      editor.on('text-change', () => { document.getElementById('nl-body').value = editor.root.innerHTML; });
+      window.__newsletterEditor = editor;
+    } catch (e) { console.warn('Quill init failed for newsletter:', e); }
+  }
+}
+
+async function sendNewsletterTest() {
+  const subject = (document.getElementById('nl-subject')||{}).value || '';
+  const body = (window.__newsletterEditor ? window.__newsletterEditor.root.innerHTML : ((document.getElementById('nl-body')||{}).value || ''));
+  const testEmail = (document.getElementById('nl-test-email')||{}).value || '';
+  const status = document.getElementById('nl-status');
+  if (!testEmail) { if (status) { status.style.display = 'block'; status.innerHTML = '<span style="color:#ef4444">✋ اكتب إيميل اختبار الأول</span>'; } return; }
+  if (!subject.trim() || !body.trim()) { if (status) { status.style.display = 'block'; status.innerHTML = '<span style="color:#ef4444">✋ العنوان والمحتوى مطلوبان</span>'; } return; }
+  if (status) { status.style.display = 'block'; status.innerHTML = '<span style="color:#F4D03F">⏳ إرسال اختبار لـ ' + testEmail + '...</span>'; }
+  const r = await api('/api/admin/newsletter/send', { method: 'POST', body: JSON.stringify({ subject, html: body, test: true, testEmail }) });
+  if (r.ok && r.data?.success) {
+    status.innerHTML = '<span style="color:#22c55e">✅ تم إرسال الاختبار. اتحقق من إنبوكسك (وspam folder).</span>';
+  } else {
+    status.innerHTML = '<span style="color:#ef4444">❌ ' + escapeHtml(r.data?.error || 'فشل الإرسال') + (r.data?.configHelp ? ' — محتاج إعداد Resend في Vercel env (RESEND_API_KEY + NEWSLETTER_FROM)' : '') + '</span>';
+  }
+}
+
+async function sendNewsletterAll() {
+  const subject = (document.getElementById('nl-subject')||{}).value || '';
+  const body = (window.__newsletterEditor ? window.__newsletterEditor.root.innerHTML : ((document.getElementById('nl-body')||{}).value || ''));
+  const status = document.getElementById('nl-status');
+  if (!subject.trim() || !body.trim()) { if (status) { status.style.display = 'block'; status.innerHTML = '<span style="color:#ef4444">✋ العنوان والمحتوى مطلوبان</span>'; } return; }
+  if (!confirm('متأكد إنك عايز تبعت النشرة لكل المشتركين دلوقتي؟ ده فعل لا يمكن التراجع عنه.')) return;
+  if (status) { status.style.display = 'block'; status.innerHTML = '<span style="color:#F4D03F">⏳ جاري الإرسال للكل... (قد يأخد دقيقة)</span>'; }
+  const r = await api('/api/admin/newsletter/send', { method: 'POST', body: JSON.stringify({ subject, html: body }) });
+  if (r.ok && r.data?.success) {
+    status.innerHTML = '<span style="color:#22c55e">✅ تم الإرسال لـ ' + r.data.sent + ' مشترك بنجاح.' + (r.data.failed ? ' فشل ' + r.data.failed + ' (شوف الـ console).' : '') + '</span>';
+    if (r.data.failures?.length) console.warn('Newsletter failures:', r.data.failures);
+  } else {
+    status.innerHTML = '<span style="color:#ef4444">❌ ' + escapeHtml(r.data?.error || 'فشل الإرسال') + (r.data?.configHelp ? ' — محتاج إعداد Resend (RESEND_API_KEY + NEWSLETTER_FROM)' : '') + '</span>';
+  }
 }
 
 async function switchToRegs() {
@@ -1519,9 +1610,24 @@ function renderForm(item) {
     let input = '';
     const defaultVal = (typeof f.default === 'function' ? f.default() : f.default) || '';
     if (f.type === 'textarea') input = '<textarea id="f_' + f.id + '"' + dir + '>' + escapeHtml(v != null ? v : defaultVal) + '</textarea>';
+    else if (f.type === 'richtext') {
+      /* Quill rich text editor — wrap in placeholder div, instance attached after innerHTML below */
+      const initial = escapeHtml(v != null ? v : defaultVal);
+      input = '<div id="qe_' + f.id + '" data-richtext-field="' + f.id + '" data-richtext-initial="' + initial.replace(/"/g, '&#34;') + '" style="background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;min-height:200px;"></div><input type="hidden" id="f_' + f.id + '" value="' + initial + '" />';
+    }
     else if (f.type === 'select') input = '<select id="f_' + f.id + '">' + (f.options || []).map(o => '<option value="' + o[0] + '"' + (v === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>';
     else if (f.type === 'checkbox') input = '<div class="checkbox-row"><input id="f_' + f.id + '" type="checkbox"' + (v ? ' checked' : '') + ' /><label for="f_' + f.id + '">' + f.label + '</label></div>';
-    else input = '<input id="f_' + f.id + '" type="' + f.type + '"' + dir + ' value="' + escapeHtml(v != null ? v : defaultVal) + '" />';
+    else {
+      input = '<input id="f_' + f.id + '" type="' + f.type + '"' + dir + ' value="' + escapeHtml(v != null ? v : defaultVal) + '" />';
+      /* Auto-add upload widget for any URL field — convenient for image/thumb/audio fields */
+      if (f.type === 'url' && f.upload !== false) {
+        input += '<div class="upload-widget" style="display:flex;gap:6px;align-items:center;margin-top:6px;font-size:11px;">'
+          + '<input type="file" id="up_' + f.id + '" accept="image/*" style="display:none" onchange="uploadFileFor(\'' + f.id + '\', this)" />'
+          + '<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'up_' + f.id + '\').click()">📤 رفع صورة من جهازك</button>'
+          + '<span id="upstatus_' + f.id + '" style="font-size:11px;opacity:0.7;"></span>'
+          + '</div>';
+      }
+    }
     if (f.type === 'checkbox') return '<div class="field ' + full + '">' + input + '</div>';
     return '<div class="field ' + full + '"><label>' + f.label + '</label>' + input + '</div>';
   }).join('');
@@ -1554,6 +1660,39 @@ function renderForm(item) {
   }
 
   grid.innerHTML = html;
+  /* Initialize Quill on every richtext placeholder. Persist HTML into hidden input on text-change. */
+  if (typeof Quill !== 'undefined') {
+    grid.querySelectorAll('[data-richtext-field]').forEach(div => {
+      const fieldId = div.dataset.richtextField;
+      const initial = div.dataset.richtextInitial || '';
+      const hidden = document.getElementById('f_' + fieldId);
+      try {
+        const quill = new Quill(div, {
+          theme: 'snow',
+          placeholder: 'اكتب هنا...',
+          modules: { toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ align: [] }],
+            ['link', 'blockquote', 'code-block'],
+            ['clean']
+          ]}
+        });
+        if (initial) {
+          /* Detect plain text vs HTML */
+          if (/^\s*</.test(initial)) quill.clipboard.dangerouslyPasteHTML(initial);
+          else quill.setText(initial);
+        }
+        /* Sync to hidden input on every change */
+        quill.on('text-change', () => {
+          if (hidden) hidden.value = quill.root.innerHTML;
+        });
+        /* Set initial value too */
+        if (hidden) hidden.value = quill.root.innerHTML;
+      } catch (e) { console.warn('Quill init failed for', fieldId, e); }
+    });
+  }
   if (ent.key === 'news') setTimeout(updateSEOScore, 100);
   // Add Preview button
   setTimeout(() => {
@@ -2694,6 +2833,41 @@ async function saveSiteContent() {
     return;
   }
   if (status) status.innerHTML = '<span style="color:#22c55e">✅ تم حفظ ' + r.data.saved + ' نص بنجاح — التغيير ينعكس خلال دقيقة.</span>';
+}
+
+/* ═════════════════════════════════════════════════════════════
+   File upload helper — uploads to /api/admin/upload (Supabase Storage)
+   and fills the target URL input with the public URL on success.
+   ═════════════════════════════════════════════════════════════ */
+async function uploadFileFor(fieldId, fileInput) {
+  if (!fileInput.files || !fileInput.files.length) return;
+  const file = fileInput.files[0];
+  const status = document.getElementById('upstatus_' + fieldId);
+  const urlInput = document.getElementById('f_' + fieldId);
+  if (status) status.innerHTML = '<span style="color:#F4D03F">⏳ جاري الرفع (' + Math.round(file.size/1024) + ' كيلوبايت)...</span>';
+
+  const fd = new FormData();
+  fd.append('file', file);
+  const token = localStorage.getItem('cb_auth_token') || '';
+  try {
+    const res = await fetch((typeof CB_API !== 'undefined' && CB_API.baseUrl ? CB_API.baseUrl : 'https://cairo-business-backend.vercel.app') + '/api/admin/upload', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: fd
+    });
+    const j = await res.json();
+    if (!res.ok || !j.success) {
+      if (status) status.innerHTML = '<span style="color:#ef4444">❌ ' + escapeHtml(j.error || 'فشل الرفع') + (j.configHelp ? ' — ' + 'محتاج إعداد Supabase Storage. شوف Vercel env vars.' : '') + '</span>';
+      return;
+    }
+    if (urlInput) {
+      urlInput.value = j.url;
+      urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    if (status) status.innerHTML = '<span style="color:#22c55e">✅ تم الرفع. الرابط: <a href="' + j.url + '" target="_blank" style="color:#F4D03F">' + j.url.slice(j.url.lastIndexOf('/') + 1) + '</a></span>';
+  } catch (e) {
+    if (status) status.innerHTML = '<span style="color:#ef4444">❌ خطأ شبكة: ' + escapeHtml(e?.message || 'unknown') + '</span>';
+  }
 }
 
 const _lp = document.getElementById('login-password');
