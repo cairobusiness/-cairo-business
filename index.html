@@ -78,6 +78,46 @@
     gtag('config', 'G-1EFX4P5CW9', { anonymize_ip: true });
   </script>
 
+  <!-- ========================================================
+       SELF-HEAL — auto-unregister old Workbox SW + clear stale caches.
+       Runs on every page load. Once per browser, after cleanup, it forces
+       a single reload so users see the fresh HTML instead of cached junk.
+       Safe to remove after a few weeks (April–May 2026 build switched to
+       network-first sw.js v3).
+       ======================================================== -->
+  <script>
+  (function () {
+    if (!('serviceWorker' in navigator) || !('caches' in window)) return;
+    /* Guard so we only run the full cleanup once per browser */
+    const HEAL_KEY = 'cb-sw-healed-v3';
+    if (localStorage.getItem(HEAL_KEY) === '1') return;
+    /* Run async — never block initial render */
+    (async function heal() {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        const cacheNames = await caches.keys();
+        const hasOldWorkbox = cacheNames.some(n => n.toLowerCase().includes('workbox') || n === 'static-resources' || n === 'images-fonts' || n === 'google-fonts-webfonts');
+        if (hasOldWorkbox || regs.length > 0) {
+          /* Nuke everything from the old SW era */
+          for (const r of regs) { try { await r.unregister(); } catch (_) {} }
+          for (const n of cacheNames) { try { await caches.delete(n); } catch (_) {} }
+          localStorage.setItem(HEAL_KEY, '1');
+          /* Only force a reload if old workbox caches were present —
+             otherwise we'd cause an infinite reload loop on every visit. */
+          if (hasOldWorkbox) {
+            location.reload();
+            return;
+          }
+        }
+        localStorage.setItem(HEAL_KEY, '1');
+      } catch (_) {
+        /* Don't crash the page — still mark healed so we don't retry forever */
+        try { localStorage.setItem(HEAL_KEY, '1'); } catch (_) {}
+      }
+    })();
+  })();
+  </script>
+
   <!-- Favicons -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a0e27'/%3E%3Cpath d='M22 18h20l-6 14h6L26 50V34h-4z' fill='%23D4AF37'/%3E%3C/svg%3E" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a0e27'/%3E%3Cpath d='M22 18h20l-6 14h6L26 50V34h-4z' fill='%23D4AF37'/%3E%3C/svg%3E" />
