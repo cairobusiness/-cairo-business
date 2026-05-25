@@ -14108,6 +14108,86 @@
     fetchStartupsFromAPI();
     /* Videos fetcher — added late so renderVideos exists; defers via setTimeout */
     setTimeout(() => { try { if (typeof fetchVideosFromAPI === 'function') fetchVideosFromAPI(); } catch (_) {} }, 500);
+    /* Hero fetcher — runs after the i18n system finishes its initial pass */
+    setTimeout(() => { try { if (typeof fetchHeroFromAPI === 'function') fetchHeroFromAPI(); } catch (_) {} }, 600);
+
+    /* ───────── Fetch Hero singleton from CMS API ─────────
+       Overrides the hard-coded hero text, search placeholder, chips, and stat counters. */
+    async function fetchHeroFromAPI() {
+      try {
+        const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND)
+          || 'https://cairo-business-backend.vercel.app';
+        const res = await fetch(backend + '/api/hero', { cache: 'default' });
+        if (!res.ok) return;
+        const j = await res.json();
+        if (!j || !j.success || !j.data) return;
+        const h = j.data;
+        const isAr = (typeof currentLang === 'undefined' || currentLang === 'ar');
+        const pick = (ar, en) => isAr ? (ar || '') : (en || ar || '');
+
+        /* Helper: set text of every element matching a data-i18n key */
+        const setI18n = (key, val) => {
+          document.querySelectorAll('[data-i18n="' + key + '"]').forEach(el => {
+            if (val) el.textContent = val;
+          });
+        };
+
+        setI18n('hero.eyebrow',  pick(h.eyebrowAr, h.eyebrowEn));
+        setI18n('hero.titleTop', pick(h.titleTopAr, h.titleTopEn));
+        setI18n('hero.titleMid', pick(h.titleMidAr, h.titleMidEn));
+        setI18n('hero.subtitle', pick(h.subtitleAr, h.subtitleEn));
+        setI18n('hero.ask',      pick(h.ctaLabelAr, h.ctaLabelEn));
+        setI18n('hero.chip.1',   pick(h.chip1Ar, h.chip1En));
+        setI18n('hero.chip.2',   pick(h.chip2Ar, h.chip2En));
+        setI18n('hero.chip.3',   pick(h.chip3Ar, h.chip3En));
+        setI18n('hero.chip.4',   pick(h.chip4Ar, h.chip4En));
+        setI18n('hero.stat.users',      pick(h.stat1LabelAr, h.stat1LabelEn));
+        setI18n('hero.stat.units',      pick(h.stat2LabelAr, h.stat2LabelEn));
+        setI18n('hero.stat.developers', pick(h.stat3LabelAr, h.stat3LabelEn));
+        setI18n('hero.stat.ai',         pick(h.stat4LabelAr, h.stat4LabelEn));
+
+        /* Update search placeholder */
+        const ai = document.getElementById('ai-search-input');
+        if (ai) ai.placeholder = pick(h.searchPlaceholderAr, h.searchPlaceholderEn);
+
+        /* Update stat counters — find them in order */
+        const counters = document.querySelectorAll('#home .counter, #home .num');
+        /* The 4 stat blocks: try to find counter elements with data-target */
+        const targetEls = document.querySelectorAll('#home [data-target]');
+        const targets = [h.stat1Value, h.stat2Value, h.stat3Value, h.stat4Value];
+        const suffixes = [h.stat1Suffix || '', h.stat2Suffix || '', h.stat3Suffix || '', h.stat4Suffix || ''];
+        targetEls.forEach((el, i) => {
+          if (i >= 4) return;
+          const v = String(targets[i] || '');
+          /* If it's a pure number, set data-target so counter animation works */
+          if (/^\d+(\.\d+)?$/.test(v)) {
+            el.setAttribute('data-target', v);
+            el.setAttribute('data-suffix', suffixes[i] || '');
+            el.textContent = '0';
+          } else {
+            /* Non-numeric like "24/7" — just set text directly */
+            el.removeAttribute('data-target');
+            el.textContent = v + (suffixes[i] || '');
+          }
+        });
+        /* Handle the 4th stat which doesn't use data-target (24/7) — find by data-i18n parent */
+        const aiStatLabel = document.querySelector('[data-i18n="hero.stat.ai"]');
+        if (aiStatLabel) {
+          const valEl = aiStatLabel.parentElement.querySelector('.num:not(.counter)') || aiStatLabel.parentElement.querySelector('.num');
+          if (valEl && !valEl.hasAttribute('data-target')) {
+            valEl.textContent = h.stat4Value + (h.stat4Suffix || '');
+          }
+        }
+
+        /* Re-trigger counter animation by calling the page's counter init, if available */
+        try {
+          if (typeof animateCounters === 'function') animateCounters();
+          else if (typeof initCounters === 'function') initCounters();
+        } catch (_) {}
+      } catch (e) {
+        console.warn('fetchHeroFromAPI failed:', e);
+      }
+    }
 
     function renderStartupFilters() {
       const wrap = document.getElementById('startup-filters');

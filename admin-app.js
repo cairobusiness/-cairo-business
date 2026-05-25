@@ -595,6 +595,8 @@ function renderTabs() {
   const cbiTab = (isAdmin || isEditor) ? mk('__cbi__', '📊', 'مؤشرات CBI', 'switchToCBI') : '';
   // Section Layout (CMS homepage controller) — Admin only
   const layoutTab = isAdmin ? mk('__layout__', '🎛️', 'تخطيط الصفحة', 'switchToLayout') : '';
+  // Hero (waterhole CMS) — Admin + Editor
+  const heroTab = (isAdmin || isEditor) ? mk('__hero__', '🎯', 'الواجهة (Hero)', 'switchToHero') : '';
   /* News Drafts tab removed per user request — drafts feature deprecated.
    * The switchToDrafts/loadDraftsUI/generateDraftsNow functions remain in code
    * but are unreachable from the UI. */
@@ -610,7 +612,7 @@ function renderTabs() {
   ) : '';
   // Moderator gets messages
   const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + layoutTab + adminOnlyTabs + modOnlyTabs;
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + layoutTab + adminOnlyTabs + modOnlyTabs;
 }
 
 /* Drafts counter kept for backward compat (no longer displayed) */
@@ -2286,6 +2288,140 @@ async function saveLayoutOrder() {
     return;
   }
   status.innerHTML = '<span style="color:#22c55e">✅ تم حفظ ترتيب ' + (r.data.updated || 0) + ' قسم. التغيير ينعكس على الموقع خلال دقيقة.</span>';
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Hero (singleton) — CMS form for the homepage hero section
+   ═════════════════════════════════════════════════════════════ */
+let _heroData = null;
+
+async function switchToHero() {
+  currentEntityKey = '__hero__';
+  renderTabs();
+  document.getElementById('page-title').textContent = '🎯 تحرير الواجهة (Hero)';
+  document.getElementById('search-input').style.display = 'none';
+  const addBtn = document.querySelector('.actions button.btn-primary');
+  if (addBtn) addBtn.style.display = 'none';
+  document.getElementById('stats-section').innerHTML = '';
+  await loadHeroUI();
+}
+
+async function loadHeroUI() {
+  const container = document.getElementById('list-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const r = await api('/api/admin/hero');
+  if (!r.ok || !r.data?.data) {
+    container.innerHTML =
+      '<div class="msg msg-error">لم يتم تحميل بيانات الواجهة. شغّل الـ migration أولاً: '
+      + '<a href="https://cairo-business-backend.vercel.app/api/admin/migrate-hero" target="_blank">/api/admin/migrate-hero</a>'
+      + '</div>';
+    return;
+  }
+  _heroData = r.data.data;
+  renderHeroForm();
+}
+
+function renderHeroForm() {
+  const h = _heroData || {};
+  const fld = (key, label, type) => {
+    const v = (h[key] || '').replace(/"/g, '&quot;');
+    const dir = key.endsWith('En') ? 'ltr' : 'rtl';
+    if (type === 'textarea') {
+      return '<div class="hero-field"><label>' + label + '</label>'
+        + '<textarea data-hero-key="' + key + '" dir="' + dir + '" rows="3" style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;resize:vertical;">' + v + '</textarea></div>';
+    }
+    return '<div class="hero-field"><label>' + label + '</label>'
+      + '<input data-hero-key="' + key + '" dir="' + dir + '" type="text" value="' + v + '" style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;" /></div>';
+  };
+
+  let html = '';
+  html += '<style>.hero-field{margin-bottom:14px}.hero-field label{display:block;font-size:12px;opacity:0.7;margin-bottom:6px;font-weight:600}.hero-section{background:rgba(255,255,255,0.03);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:12px;padding:18px;margin-bottom:18px}.hero-section h3{font-size:14px;color:#F4D03F;margin-bottom:14px;font-weight:700}</style>';
+
+  /* Top action bar */
+  html += '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">';
+  html += '  <div><div style="font-size:15px;font-weight:700;color:#F4D03F">🎯 تحرير قسم الواجهة (Hero)</div><div style="font-size:12px;opacity:0.7;margin-top:2px;">عدّل أي نص واضغط حفظ — التغييرات تنعكس على الموقع خلال دقيقة.</div></div>';
+  html += '  <button class="btn btn-primary" id="hero-save-btn" onclick="saveHero()" style="font-size:14px;padding:10px 24px;">💾 حفظ التغييرات</button>';
+  html += '</div>';
+  html += '<div id="hero-save-status" style="margin-bottom:14px;font-size:13px;display:none;"></div>';
+
+  /* Section: Headers */
+  html += '<div class="hero-section"><h3>📢 الترويسة (Eyebrow + العنوان الرئيسي)</h3>';
+  html += fld('eyebrowAr', 'الترويسة بالعربية (Eyebrow AR)', 'text');
+  html += fld('eyebrowEn', 'Eyebrow EN', 'text');
+  html += fld('titleTopAr', 'العنوان السطر الأول بالعربية', 'text');
+  html += fld('titleTopEn', 'Title — top line EN', 'text');
+  html += fld('titleMidAr', 'العنوان السطر الثاني بالعربية', 'text');
+  html += fld('titleMidEn', 'Title — middle line EN', 'text');
+  html += fld('subtitleAr', 'الوصف بالعربية', 'textarea');
+  html += fld('subtitleEn', 'Subtitle EN', 'textarea');
+  html += '</div>';
+
+  /* Section: AI Search */
+  html += '<div class="hero-section"><h3>🔍 شريط البحث (AI Search)</h3>';
+  html += fld('searchPlaceholderAr', 'نص داخل الـ input بالعربية', 'text');
+  html += fld('searchPlaceholderEn', 'Search placeholder EN', 'text');
+  html += fld('ctaLabelAr', 'نص زر اسأل بالعربية', 'text');
+  html += fld('ctaLabelEn', 'CTA button label EN', 'text');
+  html += '</div>';
+
+  /* Section: Chips */
+  html += '<div class="hero-section"><h3>💬 اقتراحات تظهر تحت البحث (4 أزرار)</h3>';
+  for (let i = 1; i <= 4; i++) {
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+    html += fld('chip' + i + 'Ar', 'الاقتراح ' + i + ' بالعربية', 'text');
+    html += fld('chip' + i + 'En', 'Chip ' + i + ' EN', 'text');
+    html += '</div>';
+  }
+  html += '</div>';
+
+  /* Section: Stats */
+  html += '<div class="hero-section"><h3>📊 الإحصائيات (4 أرقام تحت البحث)</h3>';
+  for (let i = 1; i <= 4; i++) {
+    html += '<div style="background:rgba(0,0,0,0.15);border-radius:10px;padding:14px;margin-bottom:12px;">';
+    html += '<div style="font-size:13px;color:#F4D03F;font-weight:700;margin-bottom:10px;">الرقم ' + i + '</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 100px;gap:12px;">';
+    html += fld('stat' + i + 'Value', 'القيمة (رقم أو نص مثل 24/7)', 'text');
+    html += fld('stat' + i + 'Suffix', 'لاحقة (+, K, M)', 'text');
+    html += '</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+    html += fld('stat' + i + 'LabelAr', 'الوصف بالعربية', 'text');
+    html += fld('stat' + i + 'LabelEn', 'Label EN', 'text');
+    html += '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  /* Bottom save button (sticky) */
+  html += '<div style="position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--bg,#0A0E27) 30%);padding:18px 0;text-align:center;">';
+  html += '<button class="btn btn-primary" onclick="saveHero()" style="font-size:15px;padding:12px 32px;">💾 حفظ كل التغييرات</button>';
+  html += '</div>';
+
+  document.getElementById('list-container').innerHTML = html;
+}
+
+async function saveHero() {
+  const btn = document.getElementById('hero-save-btn');
+  const status = document.getElementById('hero-save-status');
+  if (status) {
+    status.style.display = 'block';
+    status.innerHTML = '<span style="color:#F4D03F">⏳ جاري الحفظ...</span>';
+  }
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+
+  /* Collect all field values */
+  const updates = {};
+  document.querySelectorAll('[data-hero-key]').forEach(el => {
+    updates[el.dataset.heroKey] = el.value;
+  });
+
+  const r = await api('/api/admin/hero', { method: 'PATCH', body: JSON.stringify(updates) });
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  if (!r.ok || !r.data?.success) {
+    if (status) status.innerHTML = '<span style="color:#ef4444">❌ فشل الحفظ: ' + escapeHtml(r.data?.error || 'unknown') + '</span>';
+    return;
+  }
+  _heroData = r.data.data;
+  if (status) status.innerHTML = '<span style="color:#22c55e">✅ تم الحفظ بنجاح — التغيير ينعكس على الموقع خلال دقيقة.</span>';
 }
 
 const _lp = document.getElementById('login-password');
