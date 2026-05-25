@@ -541,9 +541,9 @@ function renderTabs() {
   const briefingTab = (isAdmin || isEditor || isModerator) ? mk('__briefing__', '🌅', 'النشرة الصباحية', 'switchToBriefing') : '';
   // CBI Indices for Admin + Editor
   const cbiTab = (isAdmin || isEditor) ? mk('__cbi__', '📊', 'مؤشرات CBI', 'switchToCBI') : '';
-  // News Drafts (AI-generated, awaiting approval) for Admin + Editor + Moderator
-  const draftsLabel = (typeof draftsCount === 'number' && draftsCount > 0) ? ('مسودات الأخبار (' + draftsCount + ')') : 'مسودات الأخبار';
-  const draftsTab = (isAdmin || isEditor || isModerator) ? mk('__drafts__', '📝', draftsLabel, 'switchToDrafts') : '';
+  /* News Drafts tab removed per user request — drafts feature deprecated.
+   * The switchToDrafts/loadDraftsUI/generateDraftsNow functions remain in code
+   * but are unreachable from the UI. */
   // Admin-only tabs
   const adminOnlyTabs = isAdmin ? (
     mk('__users__', '👥', 'المستخدمين', 'switchToUsers') +
@@ -556,10 +556,10 @@ function renderTabs() {
   ) : '';
   // Moderator gets messages
   const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + draftsTab + cbiTab + adminOnlyTabs + modOnlyTabs;
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + adminOnlyTabs + modOnlyTabs;
 }
 
-/* Cached count of pending drafts for tab badge — refreshed when drafts tab loads */
+/* Drafts counter kept for backward compat (no longer displayed) */
 let draftsCount = 0;
 
 // ═════════════════════════════════════════════════════════════
