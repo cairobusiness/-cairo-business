@@ -1576,7 +1576,7 @@ async function loadCBIUI() {
   html += '  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
   html += '    <div style="flex:1;min-width:240px;">';
   html += '      <div style="font-size:16px;font-weight:700;color:#F4D03F;margin-bottom:4px;">🤖 تحديث المؤشرات بالذكاء الاصطناعي</div>';
-  html += '      <div style="font-size:13px;opacity:0.75;line-height:1.6;">يتم تلقائياً كل يوم الساعة 6 صباحاً. اضغط الزر لتشغيله الآن — هيقرأ آخر أخبار MENA من Tavily ويستخدم Groq AI لتحديث قيمة كل مؤشر.</div>';
+  html += '      <div style="font-size:13px;opacity:0.75;line-height:1.6;">يتم تلقائياً <strong>مرة كل شهر</strong> (أول كل شهر، 6 صباحاً). اضغط الزر لتشغيله يدوياً في أي وقت — هيقرأ آخر أخبار MENA من Tavily ويستخدم Groq AI لتحديث قيمة كل مؤشر.</div>';
   html += '    </div>';
   html += '    <button class="btn btn-primary" id="cbi-refresh-btn" onclick="refreshCBINow()" style="font-size:14px;padding:12px 22px;">🤖 حدّث الآن</button>';
   html += '  </div>';
@@ -1625,7 +1625,8 @@ async function refreshCBINow() {
   status.style.display = 'block';
   status.innerHTML = '<span style="color:#F4D03F">⏳ Groq + Tavily شغالين على 7 مؤشرات (قد يستغرق ~30 ثانية)...</span>';
   try {
-    const res = await fetch('https://cairo-business-backend.vercel.app/api/cron/refresh-cbi', { cache: 'no-store' });
+    /* Manual override — force=true bypasses the monthly interval guard */
+    const res = await fetch('https://cairo-business-backend.vercel.app/api/cron/refresh-cbi?force=true', { cache: 'no-store' });
     const j = await res.json();
     if (!j.success) {
       status.innerHTML = '<span style="color:#ef4444">❌ فشل: ' + (j.error || 'unknown') + '</span>';
