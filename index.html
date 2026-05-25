@@ -14296,6 +14296,103 @@
     setTimeout(() => { try { if (typeof fetchSiteContent === 'function') fetchSiteContent(); } catch (_) {} }, 700);
     /* Brand applier — applies admin-set logo + colors + social links */
     setTimeout(() => { try { if (typeof fetchBrandSettings === 'function') fetchBrandSettings(); } catch (_) {} }, 750);
+    /* Register Service Worker for Push Notifications */
+    setTimeout(() => { try { if (typeof registerCBServiceWorker === 'function') registerCBServiceWorker(); } catch (_) {} }, 2000);
+
+    /* ───────── Web Push subscription flow ───────── */
+    function urlBase64ToUint8Array(b64) {
+      const padding = '='.repeat((4 - b64.length % 4) % 4);
+      const base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const raw = atob(base64);
+      const arr = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+      return arr;
+    }
+    async function registerCBServiceWorker() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      try {
+        const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        /* Show prompt after 30 seconds if user hasn't subscribed yet */
+        setTimeout(() => maybeShowPushPrompt(reg), 30000);
+      } catch (e) { console.warn('SW registration failed:', e); }
+    }
+    function maybeShowPushPrompt(reg) {
+      if (Notification.permission !== 'default') return;
+      if (localStorage.getItem('cb-push-prompted-at') && Date.now() - Number(localStorage.getItem('cb-push-prompted-at')) < 7 * 24 * 3600 * 1000) return;
+      /* Build a small floating prompt */
+      const bar = document.createElement('div');
+      bar.id = 'cb-push-prompt';
+      bar.style.cssText = 'position:fixed;bottom:24px;left:24px;right:24px;max-width:480px;margin:0 auto;background:linear-gradient(135deg,#0f1a3d,#0a0e27);border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,.5);';
+      bar.innerHTML = '<div style="font-size:24px;">🔔</div><div style="flex:1"><div style="font-weight:700;font-size:14px;color:#F4D03F;margin-bottom:2px;">تابع الأخبار الحصرية</div><div style="font-size:12px;opacity:0.75;">فعّل الإشعارات لتوصلك أهم أخبار الأعمال فور حدوثها.</div></div><button id="cb-push-yes" style="background:linear-gradient(135deg,#F4D03F,#c9a227);color:#0A0E27;font-weight:700;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;">فعّل</button><button id="cb-push-no" style="background:transparent;color:rgba(255,255,255,0.4);border:none;padding:8px;cursor:pointer;font-size:18px;">×</button>';
+      document.body.appendChild(bar);
+      localStorage.setItem('cb-push-prompted-at', String(Date.now()));
+      document.getElementById('cb-push-no').onclick = () => bar.remove();
+      document.getElementById('cb-push-yes').onclick = async () => {
+        bar.remove();
+        try {
+          const perm = await Notification.requestPermission();
+          if (perm !== 'granted') return;
+          const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND) || 'https://cairo-business-backend.vercel.app';
+          /* Get VAPID public key */
+          const keyRes = await fetch(backend + '/api/push/public-key');
+          const keyJ = await keyRes.json();
+          if (!keyJ.success || !keyJ.publicKey) {
+            console.warn('Push not configured:', keyJ.error);
+            return;
+          }
+          const appKey = urlBase64ToUint8Array(keyJ.publicKey);
+          const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appKey });
+          const subJson = sub.toJSON();
+          await fetch(backend + '/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys, userAgent: navigator.userAgent })
+          });
+          /* Visual feedback */
+          const ok = document.createElement('div');
+          ok.textContent = '✅ تم تفعيل الإشعارات';
+          ok.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#22c55e;color:#000;padding:10px 24px;border-radius:12px;z-index:99999;font-weight:700;';
+          document.body.appendChild(ok);
+          setTimeout(() => ok.remove(), 3000);
+        } catch (e) { console.warn('Push subscribe failed:', e); }
+      };
+    }
+
+    /* ───────── Payment flow — opens Paymob iframe for club tier ───────── */
+    window.startCairoBusinessPayment = async function (tier, amount, currency) {
+      tier = tier || 'premium';
+      amount = Number(amount || 99);
+      currency = currency || 'EGP';
+      const email = prompt('بريدك الإلكتروني للاشتراك:');
+      if (!email || !email.includes('@')) return;
+      try {
+        const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND) || 'https://cairo-business-backend.vercel.app';
+        const res = await fetch(backend + '/api/payments/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, tier, amount, currency })
+        });
+        const j = await res.json();
+        if (j.success && j.iframeUrl) {
+          /* Open Paymob iframe in modal */
+          let modal = document.getElementById('cb-pay-modal');
+          if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'cb-pay-modal';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+            modal.innerHTML = '<div style="position:relative;width:100%;max-width:600px;height:80vh;background:#fff;border-radius:14px;overflow:hidden;"><button onclick="document.getElementById(\'cb-pay-modal\').remove()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);color:#fff;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;z-index:2;">×</button><iframe id="cb-pay-iframe" style="width:100%;height:100%;border:0"></iframe></div>';
+            document.body.appendChild(modal);
+          }
+          document.getElementById('cb-pay-iframe').src = j.iframeUrl;
+        } else if (j.configHelp) {
+          alert('الدفع لم يُفعّل بعد. الأدمن لازم يضيف Paymob keys في Vercel.');
+        } else {
+          alert('خطأ: ' + (j.error || 'unknown'));
+        }
+      } catch (e) {
+        alert('خطأ في الاتصال: ' + (e?.message || 'unknown'));
+      }
+    };
 
     async function fetchBrandSettings() {
       try {

@@ -794,6 +794,10 @@ function renderTabs() {
   const activityTab = isAdmin ? mk('__activity__', '📋', 'سجل النشاط', 'switchToActivity') : '';
   // Backup / Export — Admin only
   const backupTab = isAdmin ? mk('__backup__', '💾', 'نسخة احتياطية', 'switchToBackup') : '';
+  // Subscriptions / Premium — Admin only
+  const subsTab = isAdmin ? mk('__subs__', '💎', 'الاشتراكات', 'switchToSubscriptions') : '';
+  // Push Notifications — Admin only
+  const pushTab = isAdmin ? mk('__push__', '🔔', 'إشعارات Push', 'switchToPush') : '';
   /* News Drafts tab removed per user request — drafts feature deprecated.
    * The switchToDrafts/loadDraftsUI/generateDraftsNow functions remain in code
    * but are unreachable from the UI. */
@@ -809,7 +813,7 @@ function renderTabs() {
   ) : '';
   // Moderator gets messages
   const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + siteContentTab + brandTab + submissionsTab + commentsTab + searchTab + layoutTab + activityTab + backupTab + adminOnlyTabs + modOnlyTabs;
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + siteContentTab + brandTab + submissionsTab + commentsTab + searchTab + layoutTab + activityTab + backupTab + subsTab + pushTab + adminOnlyTabs + modOnlyTabs;
 }
 
 /* Drafts counter kept for backward compat (no longer displayed) */
@@ -3138,6 +3142,127 @@ async function switchToActivity() {
 /* ═════════════════════════════════════════════════════════════
    Brand Settings Applier (frontend hook) — runs in admin too, for live preview
    ═════════════════════════════════════════════════════════════ */
+
+/* ═════════════════════════════════════════════════════════════
+   Subscriptions / Premium admin
+   ═════════════════════════════════════════════════════════════ */
+async function switchToSubscriptions() {
+  setupListView({ key: '__subs__', label: '💎 الاشتراكات و Premium' });
+  const c = document.getElementById('list-container');
+  const r = await api('/api/admin/subscriptions');
+  if (!r.ok) { c.innerHTML = '<div class="msg msg-error">شغّل migration: <a href="https://cairo-business-backend.vercel.app/api/admin/migrate-monetization" target="_blank">/api/admin/migrate-monetization</a></div>'; return; }
+  const items = r.data.data || [];
+  const stats = r.data.stats || [];
+  const active = stats.find(s=>s.status==='active')?.n || 0;
+  const pending = stats.find(s=>s.status==='pending')?.n || 0;
+  const expired = stats.find(s=>s.status==='expired')?.n || 0;
+
+  let html = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">';
+  html += '<span class="pill" style="background:rgba(34,197,94,0.2);color:#22c55e">✅ نشط: ' + active + '</span>';
+  html += '<span class="pill" style="background:rgba(244,208,63,0.2);color:#F4D03F">⏳ معلّق: ' + pending + '</span>';
+  html += '<span class="pill" style="background:rgba(239,68,68,0.2);color:#fca5a5">⏰ منتهي: ' + expired + '</span>';
+  html += '</div>';
+
+  /* Manual grant form */
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:12px;padding:16px;margin-bottom:18px;">';
+  html += '<div style="font-size:14px;font-weight:700;color:#F4D03F;margin-bottom:10px;">➕ منح اشتراك يدوياً</div>';
+  html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end;">';
+  html += '<div><label style="font-size:11px;opacity:.7">User ID *</label><input id="sub-user-id" type="text" dir="ltr" style="width:100%;padding:9px;background:rgba(0,0,0,0.2);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;" /></div>';
+  html += '<div><label style="font-size:11px;opacity:.7">الباقة</label><select id="sub-tier" style="width:100%;padding:9px;background:rgba(0,0,0,0.2);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;"><option value="premium">Premium</option><option value="platinum">Platinum</option><option value="enterprise">Enterprise</option></select></div>';
+  html += '<div><label style="font-size:11px;opacity:.7">المدة (يوم)</label><input id="sub-days" type="number" value="30" style="width:100%;padding:9px;background:rgba(0,0,0,0.2);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;" /></div>';
+  html += '<button class="btn btn-primary" onclick="grantSubscription()">💎 منح</button>';
+  html += '</div>';
+  html += '<div id="sub-grant-status" style="margin-top:10px;font-size:13px;"></div>';
+  html += '</div>';
+
+  if (!items.length) {
+    html += '<div class="empty-state"><div class="icon">💎</div><div class="title">لا توجد اشتراكات بعد</div></div>';
+  } else {
+    html += '<div class="item-grid">';
+    for (const s of items) {
+      const badge = s.status==='active' ? '<span class="pill" style="background:rgba(34,197,94,0.2);color:#22c55e">✅ نشط</span>' :
+                    s.status==='pending' ? '<span class="pill" style="background:rgba(244,208,63,0.2);color:#F4D03F">⏳ معلّق</span>' :
+                    '<span class="pill" style="background:rgba(239,68,68,0.2);color:#fca5a5">⏰ ' + escapeHtml(s.status) + '</span>';
+      const expIn = s.expiresAt ? Math.ceil((new Date(s.expiresAt) - Date.now()) / (1000*60*60*24)) : null;
+      html += '<div class="item-row"><div class="item-thumb">💎</div><div>';
+      html += '<div class="item-meta">' + badge + '<span class="pill">' + escapeHtml(s.tier) + '</span><span class="pill">' + escapeHtml(s.provider) + '</span></div>';
+      html += '<div class="item-title">' + escapeHtml(s.userName || s.userEmail || s.userId) + '</div>';
+      html += '<div class="item-meta" style="margin-top:4px;">';
+      if (s.amountLocal) html += '<span>' + s.amountLocal + ' ' + escapeHtml(s.currency) + '</span><span>•</span>';
+      if (expIn !== null) html += '<span>' + (expIn > 0 ? 'ينتهي خلال ' + expIn + ' يوم' : 'منتهي') + '</span><span>•</span>';
+      html += '<span>' + formatDate(s.createdAt) + '</span>';
+      html += '</div></div>';
+      html += '<div class="item-actions">';
+      if (s.status !== 'active') html += '<button class="btn btn-ghost btn-sm" onclick="updateSub(\'' + s.id + '\', \'active\')">✅ تفعيل</button>';
+      if (s.status !== 'expired') html += '<button class="btn btn-ghost btn-sm" onclick="updateSub(\'' + s.id + '\', \'expired\')">⏰ إنهاء</button>';
+      html += '<button class="btn btn-danger btn-sm" onclick="deleteSub(\'' + s.id + '\')">🗑️</button>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+  }
+  c.innerHTML = html;
+}
+async function grantSubscription() {
+  const userId = (document.getElementById('sub-user-id')||{}).value || '';
+  const tier = (document.getElementById('sub-tier')||{}).value || 'premium';
+  const days = Number((document.getElementById('sub-days')||{}).value || 30);
+  const status = document.getElementById('sub-grant-status');
+  if (!userId) { status.innerHTML = '<span style="color:#ef4444">User ID مطلوب</span>'; return; }
+  status.innerHTML = '<span style="color:#F4D03F">⏳ ...</span>';
+  const r = await api('/api/admin/subscriptions', { method: 'POST', body: JSON.stringify({ userId, tier, durationDays: days, provider: 'manual' }) });
+  if (r.ok && r.data?.success) {
+    status.innerHTML = '<span style="color:#22c55e">✅ تم المنح — ينتهي ' + formatDate(r.data.expiresAt) + '</span>';
+    setTimeout(switchToSubscriptions, 1500);
+  } else {
+    status.innerHTML = '<span style="color:#ef4444">❌ ' + escapeHtml(r.data?.error || 'فشل') + '</span>';
+  }
+}
+async function updateSub(id, status) {
+  const r = await api('/api/admin/subscriptions/' + id, { method: 'PATCH', body: JSON.stringify({ status }) });
+  if (r.ok) switchToSubscriptions();
+}
+async function deleteSub(id) {
+  if (!confirm('حذف الاشتراك نهائياً؟')) return;
+  const r = await api('/api/admin/subscriptions/' + id, { method: 'DELETE' });
+  if (r.ok) switchToSubscriptions();
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Push notifications admin
+   ═════════════════════════════════════════════════════════════ */
+async function switchToPush() {
+  setupListView({ key: '__push__', label: '🔔 إشعارات Push' });
+  const c = document.getElementById('list-container');
+  let html = '';
+  html += '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:18px;margin-bottom:18px;">';
+  html += '<div style="font-size:15px;font-weight:700;color:#F4D03F;margin-bottom:6px;">🔔 إرسال إشعار Push لكل المشتركين</div>';
+  html += '<div style="font-size:12px;opacity:0.7;margin-bottom:12px;line-height:1.7;">الإشعار يظهر على المتصفّحات والتطبيقات المثبّتة (Chrome/Safari/Firefox/Edge). محتاج VAPID keys + bucket في Vercel.</div>';
+  html += '<div style="margin-bottom:10px;"><label style="font-size:12px;opacity:.7">عنوان الإشعار</label>';
+  html += '<input id="push-title" type="text" dir="auto" placeholder="مثل: خبر عاجل من Cairo Business" style="width:100%;padding:10px;background:rgba(0,0,0,0.2);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;" /></div>';
+  html += '<div style="margin-bottom:10px;"><label style="font-size:12px;opacity:.7">النص</label>';
+  html += '<textarea id="push-body" rows="3" placeholder="نص مختصر يظهر تحت العنوان" style="width:100%;padding:10px;background:rgba(0,0,0,0.2);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;resize:vertical;"></textarea></div>';
+  html += '<div style="margin-bottom:10px;"><label style="font-size:12px;opacity:.7">الرابط عند الضغط</label>';
+  html += '<input id="push-url" type="url" dir="ltr" value="https://cairobusiness.net" style="width:100%;padding:10px;background:rgba(0,0,0,0.2);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;" /></div>';
+  html += '<button class="btn btn-primary" onclick="sendPush()" style="padding:10px 24px;">📨 ابعت الآن</button>';
+  html += '<div id="push-status" style="margin-top:12px;font-size:13px;"></div>';
+  html += '</div>';
+  c.innerHTML = html;
+}
+async function sendPush() {
+  const title = (document.getElementById('push-title')||{}).value || '';
+  const body = (document.getElementById('push-body')||{}).value || '';
+  const url = (document.getElementById('push-url')||{}).value || '';
+  const status = document.getElementById('push-status');
+  if (!title.trim()) { status.innerHTML = '<span style="color:#ef4444">العنوان مطلوب</span>'; return; }
+  if (!confirm('متأكد إنك عايز تبعت Push لكل المشتركين؟')) return;
+  status.innerHTML = '<span style="color:#F4D03F">⏳ جاري الإرسال...</span>';
+  const r = await api('/api/admin/push/send', { method: 'POST', body: JSON.stringify({ title, body, url }) });
+  if (r.ok && r.data?.success) {
+    status.innerHTML = '<span style="color:#22c55e">✅ تم لـ ' + r.data.sent + ' مستخدم' + (r.data.failed?' (فشل '+r.data.failed+')':'') + (r.data.expired?' (إخفاء '+r.data.expired+' منتهي)':'') + '</span>';
+  } else {
+    status.innerHTML = '<span style="color:#ef4444">❌ ' + escapeHtml(r.data?.error || 'فشل') + (r.data?.configHelp ? ' — محتاج VAPID keys + web-push' : '') + '</span>';
+  }
+}
 
 /* ═════════════════════════════════════════════════════════════
    Backup / Export — admin downloads full DB as JSON
