@@ -186,5 +186,146 @@
     </div>
   </div>
   <script src="admin-app.js"></script>
+  <!-- ============================================================
+       PATCH v2 — fixes from May 25, 2026
+       1. uploadFileFor: client-side base64 fallback when Supabase
+          Storage env vars aren't configured (returns 503).
+       2. optimizeImage: ensure function exists even if main file
+          is truncated.
+       ============================================================ -->
+  <script>
+  (function () {
+    /* ---------- Client-side image optimization (canvas resize + jpeg) ---------- */
+    async function _optimizeImage(file, maxW, maxH, quality) {
+      maxW = maxW || 1600; maxH = maxH || 900; quality = quality || 0.82;
+      const dataUrl = await new Promise(function (res, rej) {
+        const fr = new FileReader();
+        fr.onload = function () { res(fr.result); };
+        fr.onerror = rej;
+        fr.readAsDataURL(file);
+      });
+      const img = await new Promise(function (res, rej) {
+        const i = new Image();
+        i.onload = function () { res(i); };
+        i.onerror = rej;
+        i.src = dataUrl;
+      });
+      let w = img.width, h = img.height;
+      if (w > maxW || h > maxH) {
+        const r = Math.min(maxW / w, maxH / h);
+        w = Math.round(w * r);
+        h = Math.round(h * r);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0a0e1a';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      const finalDataUrl = canvas.toDataURL('image/jpeg', quality);
+      const sizeKB = Math.round(finalDataUrl.length * 0.75 / 1024);
+      return { dataUrl: finalDataUrl, width: w, height: h, sizeKB: sizeKB };
+    }
+    window.optimizeImage = _optimizeImage;
+
+    /* ---------- Find the URL input next to the file picker ---------- */
+    function _findTargetInput(fieldId) {
+      /* Convention used elsewhere: input id is the field id */
+      let el = document.getElementById(fieldId);
+      if (el) return el;
+      /* Try sibling input near up_<fieldId> */
+      const fileInput = document.getElementById('up_' + fieldId);
+      if (fileInput) {
+        const wrap = fileInput.closest('.field, .form-field, td, div');
+        if (wrap) {
+          const i = wrap.querySelector('input[type="url"], input[type="text"], textarea');
+          if (i) return i;
+        }
+      }
+      return null;
+    }
+
+    /* ---------- The actual upload entry point used by all picker buttons ---------- */
+    async function _uploadFileFor(fieldId, inputEl) {
+      const file = inputEl && inputEl.files && inputEl.files[0];
+      if (!file) return;
+      const targetInput = _findTargetInput(fieldId);
+      if (!targetInput) {
+        alert('لم يتم العثور على حقل URL للحفظ.');
+        return;
+      }
+      /* Find/create status indicator */
+      let status = document.getElementById('up-status-' + fieldId);
+      if (!status) {
+        status = document.createElement('div');
+        status.id = 'up-status-' + fieldId;
+        status.style.cssText = 'font-size:11px;margin-top:4px;color:var(--text-2);';
+        inputEl.parentNode && inputEl.parentNode.appendChild(status);
+      }
+      status.style.color = 'var(--gold)';
+      status.textContent = '⏳ جاري الضغط والمعالجة...';
+
+      try {
+        /* 1) Always compress the image client-side first (saves bandwidth & space) */
+        const opt = await _optimizeImage(file, 1600, 1200, 0.85);
+
+        /* 2) Try uploading to Supabase via /api/admin/upload */
+        let uploaded = null;
+        try {
+          /* Convert dataURL back to Blob for upload */
+          const parts = opt.dataUrl.split(',');
+          const b64 = parts[1] || '';
+          const bin = atob(b64);
+          const arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          const blob = new Blob([arr], { type: 'image/jpeg' });
+
+          const fd = new FormData();
+          fd.append('file', blob, (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg');
+          const token = (typeof getToken === 'function' ? getToken() : null) || localStorage.getItem('cb_auth_token') || '';
+          const headers = {};
+          if (token) headers['Authorization'] = 'Bearer ' + token;
+          const r = await fetch('https://cairo-business-backend.vercel.app/api/admin/upload', {
+            method: 'POST',
+            headers: headers,
+            body: fd
+          });
+          if (r.ok) {
+            const j = await r.json();
+            if (j && j.success && j.url) uploaded = j.url;
+          }
+          /* If 503 (storage not configured) or any failure → fall back to base64 below */
+        } catch (e) { /* fall back to base64 */ }
+
+        /* 3) Use Supabase URL if available, otherwise embed base64 directly */
+        const finalValue = uploaded || opt.dataUrl;
+
+        targetInput.value = finalValue;
+        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+        targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+        status.style.color = 'var(--green)';
+        status.textContent = (uploaded
+          ? '✓ تم رفع الصورة على السحابة'
+          : '✓ تم تخزين الصورة (' + opt.width + '×' + opt.height + ', ' + opt.sizeKB + 'KB)');
+
+        /* Update an adjacent preview if one exists */
+        const prev = document.getElementById(fieldId + '-preview');
+        if (prev) {
+          prev.innerHTML = '<img src="' + finalValue + '" style="max-width:200px;max-height:120px;border-radius:8px;border:1px solid var(--border);margin-top:6px;" />';
+        }
+      } catch (err) {
+        console.error('uploadFileFor failed:', err);
+        status.style.color = 'var(--red)';
+        status.textContent = '✗ فشل المعالجة: ' + (err && err.message || 'unknown');
+      } finally {
+        /* Reset input so the same file can be re-selected later */
+        try { inputEl.value = ''; } catch (_) {}
+      }
+    }
+    /* Expose globally — overrides any earlier definition */
+    window.uploadFileFor = _uploadFileFor;
+  })();
+  </script>
 </body>
 </html>
