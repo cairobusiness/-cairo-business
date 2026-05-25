@@ -14101,11 +14101,13 @@
       } catch (_) { /* keep fallback */ }
     }
 
-    /* Kick off all 4 fetchers — they re-render once data lands. */
+    /* Kick off all fetchers — they re-render once data lands. */
     fetchDealsFromAPI();
     fetchRealEstateFromAPI();
     fetchCompoundsFromAPI();
     fetchStartupsFromAPI();
+    /* Videos fetcher — added late so renderVideos exists; defers via setTimeout */
+    setTimeout(() => { try { if (typeof fetchVideosFromAPI === 'function') fetchVideosFromAPI(); } catch (_) {} }, 500);
 
     function renderStartupFilters() {
       const wrap = document.getElementById('startup-filters');
@@ -15387,6 +15389,9 @@
     /* ============== VIDEO STUDIO DATA ============== */
     let VIDEO_FILTER = 'all';
 
+    /* NOTE: These arrays are populated as fallback defaults. When the admin adds
+       videos via /admin → 🎬 الفيديوهات, the API /api/videos overrides them
+       at runtime via fetchVideosFromAPI(). */
     const VIDEO_CATEGORIES = [
       { key:'all',         ar:'الكل',         en:'All',         icon:'layers' },
       { key:'interview',   ar:'مقابلات',      en:'Interviews',  icon:'mic' },
@@ -15396,7 +15401,7 @@
       { key:'reels',       ar:'ريلز',         en:'Reels',       icon:'zap' },
     ];
 
-    const VIDEO_FEATURED = {
+    let VIDEO_FEATURED = {
       id:'feat1',
       title_ar:'حصرياً: ياسر الرميان يكشف خطة PIF القادمة لـ 2030',
       title_en:'Exclusive: Yasir Al-Rumayyan on PIF\'s 2030 plan',
@@ -15415,7 +15420,7 @@
       vc2:'#0A0E27',
     };
 
-    const VIDEO_TRENDING = [
+    let VIDEO_TRENDING = [
       { id:'t1', title_ar:'كيف يفكر محمد العبّار في صفقة Series A لـ Eagle Hills',  title_en:'How Mohamed Alabbar thinks about Eagle Hills Series A', views:'480K',  age_ar:'منذ 3 أيام',  age_en:'3 days ago' },
       { id:'t2', title_ar:'تحليل: لماذا تستثمر السعودية في FinTech المصرية؟',         title_en:'Analysis: Why Saudi is betting on Egyptian FinTech',     views:'310K',  age_ar:'منذ 5 أيام',  age_en:'5 days ago' },
       { id:'t3', title_ar:'نجيب ساويرس: قواعد بناء إمبراطورية اتصالات',                title_en:'Naguib Sawiris: How to build a telecom empire',          views:'280K',  age_ar:'منذ أسبوع',   age_en:'1 week ago' },
@@ -15423,7 +15428,7 @@
       { id:'t5', title_ar:'داخل Deal Room: كيف يقيّم المستثمرون شركتك الناشئة؟',       title_en:'Inside Deal Room: how investors value your startup',    views:'168K',  age_ar:'منذ 9 أيام',  age_en:'9 days ago' },
     ];
 
-    const VIDEO_REELS = [
+    let VIDEO_REELS = [
       { id:'r1',  title_ar:'BTC يلامس $96K — ماذا يعني للمصريين؟',         title_en:'BTC near $96K — what it means for Egypt',         duration:'0:58', views:'120K', mono:'₿',   vc1:'#F7931A', vc2:'#0A0E27', badge:'CRYPTO' },
       { id:'r2',  title_ar:'الفائدة 27.25% — قرار البنك المركزي',           title_en:'Rate at 27.25% — CBE decision',                  duration:'0:45', views:'85K',  mono:'CBE', vc1:'#3B82F6', vc2:'#0A0E27', badge:'MACRO' },
       { id:'r3',  title_ar:'5 شركات مصرية ستنفجر في 2026',                  title_en:'5 Egyptian companies to watch in 2026',          duration:'1:12', views:'210K', mono:'5x',  vc1:'#EC4899', vc2:'#0A0E27', badge:'TOP 5' },
@@ -15434,7 +15439,7 @@
       { id:'r8',  title_ar:'هل العاصمة الإدارية تستحق الاستثمار في 2026؟',  title_en:'Is the New Capital worth investing in 2026?',    duration:'1:05', views:'175K', mono:'NC',  vc1:'#06B6D4', vc2:'#0A0E27', badge:'REAL ESTATE' },
     ];
 
-    const VIDEO_LATEST = [
+    let VIDEO_LATEST = [
       { id:'v1', cat_ar:'مقابلة',   cat_en:'Interview',  title_ar:'محمد منصور: 75 سنة مع GM — ماذا تعلّمت؟',          title_en:'Mohamed Mansour: 75 years with GM — lessons',           presenter:'MG',  presenter_name_ar:'محمد الغمراوي', presenter_name_en:'M. El-Ghamrawy', duration:'32:15', views:'89K',  age_ar:'منذ يومين',  age_en:'2 days ago',  vc1:'#EF4444', vc2:'#0A0E27', mono:'MM' },
       { id:'v2', cat_ar:'تحليل',    cat_en:'Analysis',   title_ar:'لماذا EGX30 ارتفع +18% هذا العام؟',                 title_en:'Why EGX30 jumped +18% this year',                       presenter:'SA',  presenter_name_ar:'سارة أحمد',      presenter_name_en:'Sarah Ahmed',     duration:'14:42', views:'52K',  age_ar:'منذ 3 أيام', age_en:'3 days ago',  vc1:'#34D399', vc2:'#065F46', mono:'EGX' },
       { id:'v3', cat_ar:'فعالية',   cat_en:'Event',      title_ar:'ملخص LEAP 2026 الرياض — أبرز الإعلانات',            title_en:'LEAP 2026 Riyadh — top announcements summary',          presenter:'AH',  presenter_name_ar:'أحمد حسن',       presenter_name_en:'Ahmed Hassan',    duration:'21:08', views:'124K', age_ar:'منذ 4 أيام', age_en:'4 days ago',  vc1:'#10B981', vc2:'#0A0E27', mono:'L' },
@@ -15445,7 +15450,7 @@
       { id:'v8', cat_ar:'تعليمي',   cat_en:'Education',  title_ar:'دليل المبتدئين: العملات الرقمية في المنطقة العربية',  title_en:'Beginner\'s guide: crypto in the Arab region',          presenter:'NK',  presenter_name_ar:'نور كمال',       presenter_name_en:'Nour Kamal',      duration:'22:40', views:'105K', age_ar:'منذ أسبوعين',age_en:'2 weeks ago', vc1:'#F472B6', vc2:'#0A0E27', mono:'₿' },
     ];
 
-    const VIDEO_SERIES = [
+    let VIDEO_SERIES = [
       { id:'s1', name_ar:'سلسلة CEO',              name_en:'The CEO Series',          desc_ar:'مقابلات حصرية مع رؤساء أكبر شركات المنطقة — كل أسبوع رئيس جديد.',           desc_en:'Exclusive interviews with top regional CEOs — a new chief every week.',         episodes:24, total_hrs:'18:42', vc1:'#F4D03F', vc2:'#7A5F17', mono:'CEO' },
       { id:'s2', name_ar:'وراء الصفقة',            name_en:'Behind the Deal',         desc_ar:'كيف تتم الصفقات الكبرى من الداخل — أسرار التفاوض والتحضير والإغلاق.',       desc_en:'How the biggest deals get done from inside — negotiation, prep, and closing.', episodes:12, total_hrs:'09:18', vc1:'#8B5CF6', vc2:'#3C1361', mono:'D' },
       { id:'s3', name_ar:'الاقتصاد في 10 دقائق',   name_en:'Economy in 10 mins',       desc_ar:'شرح المفاهيم الاقتصادية المعقّدة في عشر دقائق فقط — للمبتدئين والمحترفين.', desc_en:'Complex economic concepts in 10 minutes — for beginners and pros alike.',       episodes:36, total_hrs:'06:00', vc1:'#10B981', vc2:'#064E3B', mono:'10' },
@@ -15621,6 +15626,229 @@
       }
 
       if (window.lucide) lucide.createIcons();
+      attachVideoClickHandlers();
+    }
+
+    /* ───────── Fetch videos from CMS API ─────────
+       Overrides the static defaults above with admin-managed videos. */
+    const VIDEO_PALETTE = [
+      ['#F4D03F','#7A5F17'], ['#8B5CF6','#3C1361'], ['#10B981','#064E3B'],
+      ['#EF4444','#7F1D1D'], ['#06B6D4','#0E7490'], ['#F472B6','#9D174D'],
+      ['#34D399','#065F46'], ['#FFB800','#7A5300'], ['#3B82F6','#1E3A8A']
+    ];
+    function vidPaletteFor(i){ const p = VIDEO_PALETTE[i % VIDEO_PALETTE.length]; return { vc1: p[0], vc2: p[1] }; }
+    function vidInitials(s){
+      const t = String(s||'').trim();
+      if (!t) return 'V';
+      const parts = t.split(/\s+/);
+      if (parts.length >= 2) return (parts[0][0]+parts[1][0]).toUpperCase();
+      return t.slice(0,2).toUpperCase();
+    }
+    function vidDurationFromSec(sec){
+      if (!sec) return '0:00';
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return m + ':' + String(s).padStart(2,'0');
+    }
+    function vidRelativeDate(d){
+      if (!d) return '';
+      const diff = (Date.now() - new Date(d).getTime()) / 1000;
+      const day = 86400;
+      if (diff < day*2) return 'منذ يومين';
+      if (diff < day*7) return 'منذ ' + Math.floor(diff/day) + ' أيام';
+      if (diff < day*14) return 'منذ أسبوع';
+      if (diff < day*30) return 'منذ ' + Math.floor(diff/(day*7)) + ' أسابيع';
+      if (diff < day*365) return 'منذ ' + Math.floor(diff/(day*30)) + ' شهر';
+      return new Date(d).toLocaleDateString('ar-EG');
+    }
+    function vidRelativeDateEn(d){
+      if (!d) return '';
+      const diff = (Date.now() - new Date(d).getTime()) / 1000;
+      const day = 86400;
+      if (diff < day*2) return '2 days ago';
+      if (diff < day*7) return Math.floor(diff/day) + ' days ago';
+      if (diff < day*14) return '1 week ago';
+      if (diff < day*30) return Math.floor(diff/(day*7)) + ' weeks ago';
+      if (diff < day*365) return Math.floor(diff/(day*30)) + ' months ago';
+      return new Date(d).toLocaleDateString('en-US');
+    }
+
+    async function fetchVideosFromAPI(){
+      try {
+        const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND)
+          || 'https://cairo-business-backend.vercel.app';
+        const res = await fetch(backend + '/api/videos', { cache: 'default' });
+        if (!res.ok) return;
+        const j = await res.json();
+        if (!j || !j.success || !j.data) return;
+        const d = j.data;
+
+        /* === Featured (single) === */
+        if (d.featured) {
+          const v = d.featured;
+          const pal = vidPaletteFor(0);
+          VIDEO_FEATURED = {
+            id: v.id,
+            youtubeId: v.youtubeId,
+            youtubeUrl: v.youtubeUrl,
+            title_ar: v.titleAr, title_en: v.titleEn,
+            presenter_ar: v.presenterAr ? 'تقديم: ' + v.presenterAr : '',
+            presenter_en: v.presenterEn ? 'Hosted by: ' + v.presenterEn : '',
+            presenter_role_ar: '', presenter_role_en: '',
+            presenter_mono: vidInitials(v.presenterAr || v.presenterEn || 'CB'),
+            monogram: vidInitials(v.titleAr || v.titleEn),
+            category_ar: v.category || 'فيديو', category_en: v.category || 'Video',
+            duration: vidDurationFromSec(v.durationSec),
+            badge_ar: 'جديد', badge_en: 'NEW',
+            vc1: pal.vc1, vc2: pal.vc2,
+          };
+        }
+
+        /* === Trending === */
+        if (Array.isArray(d.trending) && d.trending.length) {
+          VIDEO_TRENDING = d.trending.map(v => ({
+            id: v.id,
+            youtubeId: v.youtubeId,
+            youtubeUrl: v.youtubeUrl,
+            title_ar: v.titleAr, title_en: v.titleEn,
+            views: v.views || '',
+            age_ar: vidRelativeDate(v.publishedAt),
+            age_en: vidRelativeDateEn(v.publishedAt),
+          }));
+        }
+
+        /* === Reels === */
+        if (Array.isArray(d.reels) && d.reels.length) {
+          VIDEO_REELS = d.reels.map((v, i) => {
+            const pal = vidPaletteFor(i + 1);
+            return {
+              id: v.id,
+              youtubeId: v.youtubeId,
+              youtubeUrl: v.youtubeUrl,
+              title_ar: v.titleAr, title_en: v.titleEn,
+              duration: vidDurationFromSec(v.durationSec),
+              views: v.views || '',
+              mono: vidInitials(v.titleAr || v.titleEn),
+              vc1: pal.vc1, vc2: pal.vc2,
+              badge: (v.category || 'NEW').toUpperCase(),
+            };
+          });
+        }
+
+        /* === Latest grid === */
+        if (Array.isArray(d.latest) && d.latest.length) {
+          /* Map category slug → display labels (match the renderVideos filter map) */
+          const catMap = {
+            interview:  ['مقابلة',  'Interview'],
+            analysis:   ['تحليل',   'Analysis'],
+            events:     ['فعالية',  'Event'],
+            education:  ['تعليمي',  'Education'],
+            reels:      ['ريل',     'Reel'],
+            series:     ['سلسلة',   'Series']
+          };
+          VIDEO_LATEST = d.latest.map((v, i) => {
+            const pal = vidPaletteFor(i + 2);
+            const c = catMap[v.category] || [v.category, v.category];
+            return {
+              id: v.id,
+              youtubeId: v.youtubeId,
+              youtubeUrl: v.youtubeUrl,
+              cat_ar: c[0], cat_en: c[1],
+              title_ar: v.titleAr, title_en: v.titleEn,
+              presenter: vidInitials(v.presenterAr || v.presenterEn || 'CB'),
+              presenter_name_ar: v.presenterAr || 'فريق التحرير',
+              presenter_name_en: v.presenterEn || 'Editorial team',
+              duration: vidDurationFromSec(v.durationSec),
+              views: v.views || '',
+              age_ar: vidRelativeDate(v.publishedAt),
+              age_en: vidRelativeDateEn(v.publishedAt),
+              vc1: pal.vc1, vc2: pal.vc2,
+              mono: vidInitials(v.titleAr || v.titleEn),
+            };
+          });
+        }
+
+        /* === Series === */
+        if (Array.isArray(d.series) && d.series.length) {
+          VIDEO_SERIES = d.series.map((v, i) => {
+            const pal = vidPaletteFor(i + 4);
+            return {
+              id: v.id,
+              youtubeId: v.youtubeId,
+              youtubeUrl: v.youtubeUrl,
+              name_ar: v.titleAr, name_en: v.titleEn,
+              desc_ar: v.descriptionAr || '', desc_en: v.descriptionEn || '',
+              episodes: v.seriesEpisodes || 0,
+              total_hrs: v.seriesTotalHrs || '0:00',
+              vc1: pal.vc1, vc2: pal.vc2,
+              mono: vidInitials(v.titleAr || v.titleEn),
+            };
+          });
+        }
+
+        /* Re-render with new data */
+        try { renderVideos(); } catch (e) { console.warn('renderVideos failed:', e); }
+      } catch (e) {
+        console.warn('fetchVideosFromAPI failed:', e);
+      }
+    }
+
+    /* ───────── YouTube modal player ───────── */
+    function openYouTubeModal(id){
+      if (!id) return;
+      let modal = document.getElementById('cb-yt-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'cb-yt-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.92);backdrop-filter:blur(10px);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;cursor:pointer';
+        modal.innerHTML = '<div style="position:relative;width:100%;max-width:960px;aspect-ratio:16/9;background:#000;border-radius:14px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)" id="cb-yt-modal-inner"></div>';
+        modal.addEventListener('click', closeYouTubeModal);
+        document.body.appendChild(modal);
+      }
+      const inner = document.getElementById('cb-yt-modal-inner');
+      inner.innerHTML = '<iframe width="100%" height="100%" src="https://www.youtube.com/embed/' + id + '?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border:0"></iframe>';
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeYouTubeModal(){
+      const modal = document.getElementById('cb-yt-modal');
+      if (!modal) return;
+      modal.style.display = 'none';
+      const inner = document.getElementById('cb-yt-modal-inner');
+      if (inner) inner.innerHTML = ''; /* stop video */
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeYouTubeModal(); });
+
+    /* Add click-to-play handlers on every render */
+    function attachVideoClickHandlers(){
+      /* Featured */
+      const fw = document.getElementById('vid-featured');
+      if (fw && VIDEO_FEATURED && VIDEO_FEATURED.youtubeId) {
+        fw.style.cursor = 'pointer';
+        fw.onclick = () => openYouTubeModal(VIDEO_FEATURED.youtubeId);
+      }
+      /* Trending items */
+      document.querySelectorAll('.vid-trending-item').forEach((el, i) => {
+        const v = (VIDEO_TRENDING || [])[i];
+        if (v && v.youtubeId) { el.style.cursor = 'pointer'; el.onclick = () => openYouTubeModal(v.youtubeId); }
+      });
+      /* Reels */
+      document.querySelectorAll('.vid-reel').forEach((el, i) => {
+        const v = (VIDEO_REELS || [])[i];
+        if (v && v.youtubeId) { el.style.cursor = 'pointer'; el.onclick = () => openYouTubeModal(v.youtubeId); }
+      });
+      /* Latest cards */
+      document.querySelectorAll('.vid-card').forEach((el, i) => {
+        const pool = (VIDEO_FILTER === 'all') ? VIDEO_LATEST : VIDEO_LATEST; /* same; renderVideos handles filter */
+        const v = pool[i];
+        if (v && v.youtubeId) { el.style.cursor = 'pointer'; el.onclick = () => openYouTubeModal(v.youtubeId); }
+      });
+      /* Series cards */
+      document.querySelectorAll('.vid-series-card').forEach((el, i) => {
+        const v = (VIDEO_SERIES || [])[i];
+        if (v && v.youtubeId) { el.style.cursor = 'pointer'; el.onclick = () => openYouTubeModal(v.youtubeId); }
+      });
     }
 
     /* ============== CRYPTOCURRENCY DATA ============== */
