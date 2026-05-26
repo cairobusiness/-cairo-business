@@ -15085,6 +15085,8 @@
 
     async function fetchStartupsFromAPI() {
       try {
+        /* Skip if AI bridge already filled STARTUPS (id starts with 'ai-') — AI is authoritative for monthly auto-update */
+        if (typeof STARTUPS !== 'undefined' && STARTUPS[0] && String(STARTUPS[0].id).startsWith('ai-')) return;
         const r = await fetch(CB_BACKEND + '/api/startups?limit=20', { cache: 'no-store' });
         if (!r.ok) return;
         const j = await r.json();
