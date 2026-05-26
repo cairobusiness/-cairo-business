@@ -8491,9 +8491,10 @@
       </div>
     </div>
 
-    <!-- Click-to-open detail modal -->
-    <div id="woi-modal" style="position:fixed; inset:0; background:rgba(2,6,23,0.92); backdrop-filter:blur(10px); z-index:9999; display:none; align-items:flex-start; justify-content:center; padding:40px 20px; overflow-y:auto;" onclick="if(event.target===this)closeWoiModal()">
-      <div style="background:linear-gradient(155deg,#0f1a3d,#0a0e27); border:1px solid rgba(244,208,63,0.3); border-radius:24px; max-width:860px; width:100%; max-height:calc(100vh - 80px); overflow-y:auto; overflow-x:hidden; position:relative;">
+    <!-- Click-to-open detail modal — outer is the only scroller, card has natural height -->
+    <div id="woi-modal" style="position:fixed; inset:0; background:rgba(2,6,23,0.92); backdrop-filter:blur(10px); z-index:9999; display:none; overflow-y:auto; overflow-x:hidden;" onclick="if(event.target===this)closeWoiModal()">
+      <div style="min-height:100%; display:flex; align-items:flex-start; justify-content:center; padding:40px 20px;" onclick="if(event.target===this)closeWoiModal()">
+      <div style="background:linear-gradient(155deg,#0f1a3d,#0a0e27); border:1px solid rgba(244,208,63,0.3); border-radius:24px; max-width:860px; width:100%; position:relative; overflow:hidden;">
         <button onclick="closeWoiModal()" style="position:absolute; top:18px; inset-inline-end:18px; z-index:2; width:38px; height:38px; border-radius:50%; background:rgba(10,14,39,0.8); border:1px solid rgba(255,255,255,0.15); color:#fff; cursor:pointer; font-size:22px;">×</button>
         <div id="woi-modal-img" style="height:280px; background:#1a2b4d center/cover no-repeat; background-image:linear-gradient(135deg,#d4af37,#8b6914);"></div>
         <div style="padding:28px 32px; color:#fff;">
@@ -8513,6 +8514,7 @@
           <div id="woi-modal-stats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin-top:24px; padding-top:18px; border-top:1px solid rgba(255,255,255,0.1);"></div>
           <div id="woi-modal-social" style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;"></div>
         </div>
+      </div>
       </div>
     </div>
 
@@ -12231,12 +12233,15 @@
       social.innerHTML = links.map(l => '<a href="' + l.url + '" target="_blank" rel="noopener" style="background:rgba(244,208,63,0.1); color:#F4D03F; border:1px solid rgba(244,208,63,0.3); padding:8px 16px; border-radius:9999px; font-size:13px; text-decoration:none;">' + l.icon + ' ' + l.label + '</a>').join('');
 
       const modalEl = document.getElementById('woi-modal');
-      modalEl.style.display = 'flex';
+      /* Move modal to document.body so position:fixed works correctly
+         (the section it lives in has overflow-hidden which can break fixed positioning) */
+      if (modalEl.parentElement !== document.body) {
+        document.body.appendChild(modalEl);
+      }
+      modalEl.style.display = 'block';
       document.body.style.overflow = 'hidden';
-      /* Reset scroll on both overlay and inner card so the modal opens at the top */
+      /* Reset scroll on the outer scroller so the modal opens at the top */
       modalEl.scrollTop = 0;
-      const card = modalEl.querySelector('div');
-      if (card) card.scrollTop = 0;
     }
     window.openWoiModal = openWoiModal;
     function closeWoiModal() {
