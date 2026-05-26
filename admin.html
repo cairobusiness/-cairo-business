@@ -468,6 +468,115 @@
     }
 
     /* ============================================================
+       BRIEFING-FROM-PROMPT — adds a "🪄 ولّد بواسطة AI" button under
+       the existing "🤖 ولّد الآن" button in the Briefing admin tab.
+       Opens a dialog where the editor types a direction prompt;
+       Groq generates 5 items + deal; user reviews and saves.
+       ============================================================ */
+    function _injectBriefingPromptButton() {
+      const existingRegenBtn = document.getElementById('bf-regen-btn');
+      if (!existingRegenBtn) return;
+      if (document.getElementById('bf-prompt-btn')) return;
+      const btn = document.createElement('button');
+      btn.id = 'bf-prompt-btn';
+      btn.type = 'button';
+      btn.className = 'btn btn-ghost';
+      btn.innerHTML = '🪄 ولّد بواسطة AI (جملة توجيه)';
+      btn.style.cssText = 'font-size:13px;padding:10px 18px;margin-inline-start:8px;border:1px solid rgba(244,208,63,0.4);color:#F4D03F;';
+      btn.onclick = openBriefingPromptDialog;
+      existingRegenBtn.parentNode.insertBefore(btn, existingRegenBtn.nextSibling);
+    }
+
+    function openBriefingPromptDialog() {
+      let overlay = document.getElementById('cb-bfprompt-overlay');
+      if (overlay) { overlay.style.display = 'flex'; return; }
+      overlay = document.createElement('div');
+      overlay.id = 'cb-bfprompt-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.85);backdrop-filter:blur(8px);z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;';
+      overlay.innerHTML = '<div style="background:linear-gradient(155deg,#0f1a3d,#0a0e27);border:1px solid rgba(244,208,63,.35);border-radius:18px;padding:26px 28px;max-width:760px;width:100%;position:relative;color:#fff;">'
+        +   '<button onclick="document.getElementById(\'cb-bfprompt-overlay\').style.display=\'none\'" style="position:absolute;top:14px;inset-inline-end:14px;background:rgba(10,14,39,.7);border:1px solid rgba(255,255,255,.15);color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;">×</button>'
+        +   '<h2 style="font-size:20px;font-weight:800;color:#F4D03F;margin-bottom:6px;">🪄 توليد بريفينج من جملة توجيه</h2>'
+        +   '<p style="font-size:13px;opacity:0.75;margin-bottom:18px;line-height:1.7;">اكتب توجيه قصير وواضح للذكاء الاصطناعي. هيرجعلك 5 أخبار + صفقة اليوم — تقدر تراجعهم وتعدلهم قبل الحفظ.</p>'
+        +   '<div style="margin-bottom:6px;font-size:12px;color:#F4D03F;font-weight:700;">أمثلة سريعة (اضغط لاستخدامها):</div>'
+        +   '<div id="cb-bfprompt-presets" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>'
+        +   '<textarea id="cb-bfprompt-input" placeholder="مثال: موجز اليوم بتركيز على البورصة المصرية، تحركات السعودية في قطاع الطاقة، وأخبار العقارات في دبي" style="width:100%;min-height:110px;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(244,208,63,0.3);border-radius:10px;color:#fff;font-family:inherit;font-size:14px;line-height:1.7;resize:vertical;"></textarea>'
+        +   '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">'
+        +     '<button id="cb-bfprompt-cancel" style="background:transparent;color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.15);padding:10px 18px;border-radius:9px;cursor:pointer;">إلغاء</button>'
+        +     '<button id="cb-bfprompt-preview" style="background:rgba(244,208,63,0.15);color:#F4D03F;border:1px solid rgba(244,208,63,0.4);padding:10px 18px;border-radius:9px;cursor:pointer;font-weight:600;">👁️ معاينة فقط</button>'
+        +     '<button id="cb-bfprompt-generate" style="background:linear-gradient(135deg,#F4D03F,#c9a227);color:#0A0E27;border:none;padding:10px 22px;border-radius:9px;cursor:pointer;font-weight:700;">⚡ ولّد واحفظ</button>'
+        +   '</div>'
+        +   '<div id="cb-bfprompt-status" style="margin-top:14px;font-size:13px;line-height:1.6;min-height:20px;"></div>'
+        +   '<div id="cb-bfprompt-result" style="margin-top:14px;"></div>'
+        + '</div>';
+      document.body.appendChild(overlay);
+
+      const presets = [
+        'موجز اليوم بتركيز على البورصة المصرية وتحركات الجنيه',
+        'موجز عن صفقات الاستحواذ في المنطقة الخليج',
+        'موجز عن قطاع العقارات في مصر ودبي',
+        'موجز عن الطاقة والبتروكيماويات والاستثمارات الخليجية',
+        'موجز عن الشركات الناشئة المصرية والتمويل'
+      ];
+      const pst = document.getElementById('cb-bfprompt-presets');
+      presets.forEach(p => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = p.length > 50 ? p.slice(0, 50) + '...' : p;
+        b.title = p;
+        b.style.cssText = 'background:rgba(255,255,255,0.04);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,0.1);padding:5px 12px;border-radius:9999px;cursor:pointer;font-size:11px;';
+        b.onclick = function () { document.getElementById('cb-bfprompt-input').value = p; };
+        pst.appendChild(b);
+      });
+
+      const status = document.getElementById('cb-bfprompt-status');
+      const result = document.getElementById('cb-bfprompt-result');
+      document.getElementById('cb-bfprompt-cancel').onclick = function () { overlay.style.display = 'none'; };
+      const _run = async function (save) {
+        const promptText = (document.getElementById('cb-bfprompt-input').value || '').trim();
+        if (!promptText) { status.style.color = '#ef4444'; status.textContent = '✗ اكتب التوجيه أولاً'; return; }
+        status.style.color = '#F4D03F';
+        status.textContent = '⏳ جاري التواصل مع الذكاء الاصطناعي...';
+        result.innerHTML = '';
+        try {
+          const token = localStorage.getItem('cb_auth_token');
+          const r = await fetch('https://cairo-business-backend.vercel.app/api/admin/briefing-from-prompt', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: promptText, save: save })
+          });
+          const j = await r.json();
+          if (!j || !j.success) {
+            status.style.color = '#ef4444';
+            status.textContent = '✗ فشل: ' + (j?.error || r.status);
+            return;
+          }
+          status.style.color = '#10b981';
+          status.textContent = save ? '✓ تم التوليد والحفظ — حدّث الصفحة لرؤية البريفينج الجديد' : '✓ تم التوليد (معاينة فقط — لم يحفظ)';
+          /* Render preview */
+          const d = j.data || {};
+          const items = (d.items || []).map((it, i) => '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;"><strong style="color:#F4D03F;">#' + (i+1) + '</strong> · <span style="color:rgba(255,255,255,0.55);font-size:11px;">' + (it.sector_ar || '') + ' · ' + (it.impact === 'positive' ? '📈' : it.impact === 'negative' ? '📉' : '⚪') + '</span><br>' + (it.title_ar || '') + '</div>').join('');
+          const deal = d.dealOfDay || {};
+          result.innerHTML = '<div style="margin-top:8px;font-size:12px;color:#F4D03F;font-weight:700;margin-bottom:8px;">📰 الأخبار:</div>' + items
+            + (deal.name_ar ? '<div style="margin-top:12px;font-size:12px;color:#F4D03F;font-weight:700;margin-bottom:6px;">💎 صفقة اليوم:</div><div style="background:rgba(244,208,63,0.08);border:1px solid rgba(244,208,63,0.25);border-radius:8px;padding:10px 12px;font-size:13px;">' + deal.name_ar + ' · ' + (deal.value || '') + ' · Score ' + (deal.score || 0) + '</div>' : '');
+          if (save && typeof loadBriefingUI === 'function') {
+            setTimeout(loadBriefingUI, 1200);
+          }
+        } catch (e) {
+          status.style.color = '#ef4444';
+          status.textContent = '✗ خطأ: ' + (e.message || 'unknown');
+        }
+      };
+      document.getElementById('cb-bfprompt-preview').onclick = function () { _run(false); };
+      document.getElementById('cb-bfprompt-generate').onclick = function () { _run(true); };
+    }
+    window.openBriefingPromptDialog = openBriefingPromptDialog;
+
+    /* Inject the button whenever the briefing UI loads */
+    const _bfObserver = new MutationObserver(() => { _injectBriefingPromptButton(); });
+    try { _bfObserver.observe(document.body, { childList: true, subtree: true }); } catch (_) {}
+    setTimeout(_injectBriefingPromptButton, 800);
+
+    /* ============================================================
        SET-IMAGEURL HOOK — wraps `api()` so that after a successful
        POST/PUT to /api/admin/{realestate,deals,startups,events}
        we follow up with /api/admin/set-imageurl to persist the
