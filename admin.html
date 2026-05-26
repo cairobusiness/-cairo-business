@@ -604,6 +604,243 @@
       toolbar.insertBefore(btn, toolbar.firstChild);
     }
 
+    /* ============================================================
+       WOMEN OF IMPACT — full admin tab via patch (since admin-app.js
+       doesn't have an entity for this section yet). Adds a top-bar
+       button "👑 Women of Impact" that switches to a custom listing
+       UI with CRUD + AI generation + rich fields.
+       ============================================================ */
+    function _injectWoiTab() {
+      const tabsBar = document.getElementById('tabs');
+      if (!tabsBar) return;
+      if (document.getElementById('woi-tab-btn')) return;
+      const btn = document.createElement('button');
+      btn.id = 'woi-tab-btn';
+      btn.className = 'tab';
+      btn.innerHTML = '👑 Women of Impact';
+      btn.style.cssText = 'border:1px solid rgba(244,208,63,0.4);';
+      btn.onclick = function () { openWoiAdmin(); };
+      tabsBar.appendChild(btn);
+    }
+
+    const WOI_API = 'https://cairo-business-backend.vercel.app/api/admin/content-blocks';
+
+    async function openWoiAdmin() {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('woi-tab-btn').classList.add('active');
+      document.getElementById('page-title').textContent = '👑 Women of Impact — إدارة كاملة';
+      const container = document.getElementById('list-container');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+      /* Toolbar buttons */
+      const toolbar = document.querySelector('.toolbar .actions');
+      if (toolbar) {
+        toolbar.innerHTML = ''
+          + '<button class="btn btn-ghost" onclick="openWoiGenDialog()" style="border:1px solid rgba(244,208,63,0.4); color:#F4D03F;">🪄 ولّد بالذكاء الاصطناعي</button>'
+          + '<button class="btn btn-primary" onclick="openWoiEditor()">+ سيدة جديدة</button>';
+      }
+
+      const token = localStorage.getItem('cb_auth_token');
+      const r = await fetch(WOI_API + '?section=women-of-impact&limit=100', { headers: { Authorization: 'Bearer ' + token } });
+      const j = await r.json();
+      const items = (j.data || []);
+
+      if (!items.length) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">👑</div><div class="title">لا توجد سيدات بعد</div><div class="subtitle">ابدأ بإضافة أول سيدة، أو استخدم "🪄 ولّد بالذكاء الاصطناعي".</div></div>';
+        return;
+      }
+
+      /* Stats */
+      const statsHtml = '<div class="stats">'
+        + '<div class="stat"><div class="stat-label">إجمالي السيدات</div><div class="stat-value">' + items.length + '</div></div>'
+        + '<div class="stat"><div class="stat-label">القطاعات</div><div class="stat-value">' + new Set(items.map(i => i.categoryEn).filter(Boolean)).size + '</div></div>'
+        + '<div class="stat"><div class="stat-label">الدول</div><div class="stat-value">' + new Set(items.map(i => i.authorAr).filter(Boolean)).size + '</div></div>'
+        + '</div>';
+
+      const listHtml = items.map((it, idx) => ''
+        + '<div class="item-row">'
+        +   '<div class="item-thumb">' + (it.imageUrl ? '<img src="' + it.imageUrl + '" />' : '👩') + '</div>'
+        +   '<div>'
+        +     '<div class="item-meta"><span class="pill">#' + (idx + 1) + '</span><span class="pill pill-blue">' + (it.categoryAr || '—') + '</span><span style="font-size:14px;">' + (it.numericLabel || '🌍') + ' ' + (it.authorAr || '') + '</span>' + (it.numericValue ? '<span class="pill pill-green">$' + (it.numericValue >= 1000 ? (it.numericValue/1000).toFixed(1) + 'B' : it.numericValue + 'M') + '</span>' : '') + '</div>'
+        +     '<div class="item-title">' + (it.titleAr || it.titleEn) + '</div>'
+        +     '<div class="item-excerpt">' + (it.positionAr || '') + (it.newCompanyAr ? ' · ' + it.newCompanyAr : '') + '</div>'
+        +   '</div>'
+        +   '<div class="item-actions">'
+        +     '<button class="btn btn-ghost btn-sm" onclick="openWoiEditor(\'' + it.id + '\')">✏️ تعديل</button>'
+        +     '<button class="btn btn-danger btn-sm" onclick="deleteWoi(\'' + it.id + '\')">🗑️ حذف</button>'
+        +   '</div>'
+        + '</div>').join('');
+
+      container.innerHTML = '<div class="info" style="background:rgba(244,208,63,0.06); border:1px solid rgba(244,208,63,0.2); border-radius:12px; padding:14px 18px; margin-bottom:18px; font-size:13px; color:rgba(255,255,255,0.7);">💡 الترتيب على الفرونت بحسب القائمة أدناه. الأولى = البطلة المميزة في القسم. اسحب الأسهم للتعديل.</div>'
+        + statsHtml + '<div class="item-grid">' + listHtml + '</div>';
+    }
+    window.openWoiAdmin = openWoiAdmin;
+
+    async function openWoiEditor(id) {
+      const isEdit = !!id;
+      let item = { titleAr:'', titleEn:'', positionAr:'', positionEn:'', newCompanyAr:'', newCompanyEn:'', authorAr:'', numericLabel:'🇪🇬', categoryAr:'', categoryEn:'', subtitleAr:'', subtitleEn:'', descAr:'', descEn:'', imageUrl:'', linkUrl:'', numericValue:'', sortOrder: 100 };
+      if (isEdit) {
+        const token = localStorage.getItem('cb_auth_token');
+        const r = await fetch(WOI_API + '/' + id, { headers: { Authorization: 'Bearer ' + token } });
+        const j = await r.json();
+        if (j && j.data) item = Object.assign(item, j.data);
+      }
+      window.__currentItem = item;
+
+      const modal = document.getElementById('item-modal');
+      document.getElementById('modal-title').textContent = (isEdit ? 'تعديل: ' : 'سيدة جديدة: ') + (item.titleAr || '');
+
+      const formFields = document.getElementById('form-fields');
+      formFields.innerHTML = ''
+        + '<div class="field field-full"><label>🖼️ الصورة الشخصية</label><input id="f_imageUrl" type="url" dir="ltr" value="' + (item.imageUrl || '').replace(/"/g,'&quot;') + '" placeholder="https://..." />'
+        +   '<div class="upload-widget" style="display:flex;gap:6px;align-items:center;margin-top:6px;font-size:11px;">'
+        +     '<input type="file" id="up_imageUrl" accept="image/*" style="display:none" onchange="uploadFileFor(\'imageUrl\', this)" />'
+        +     '<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'up_imageUrl\').click()">📤 رفع صورة من جهازك</button>'
+        +     '<span id="upstatus_imageUrl" style="font-size:11px;opacity:0.7;"></span>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="field"><label>الاسم بالعربية *</label><input id="f_titleAr" type="text" value="' + (item.titleAr || '').replace(/"/g,'&quot;') + '" /></div>'
+        + '<div class="field"><label>Name in English *</label><input id="f_titleEn" type="text" dir="ltr" value="' + (item.titleEn || '').replace(/"/g,'&quot;') + '" /></div>'
+        + '<div class="field"><label>المنصب بالعربية</label><input id="f_positionAr" type="text" value="' + (item.positionAr || '').replace(/"/g,'&quot;') + '" placeholder="الرئيس التنفيذي" /></div>'
+        + '<div class="field"><label>Position EN</label><input id="f_positionEn" type="text" dir="ltr" value="' + (item.positionEn || '').replace(/"/g,'&quot;') + '" /></div>'
+        + '<div class="field"><label>الشركة بالعربية</label><input id="f_newCompanyAr" type="text" value="' + (item.newCompanyAr || '').replace(/"/g,'&quot;') + '" /></div>'
+        + '<div class="field"><label>Company EN</label><input id="f_newCompanyEn" type="text" dir="ltr" value="' + (item.newCompanyEn || '').replace(/"/g,'&quot;') + '" /></div>'
+        + '<div class="field"><label>الدولة</label><input id="f_authorAr" type="text" value="' + (item.authorAr || '').replace(/"/g,'&quot;') + '" placeholder="مصر / الإمارات / السعودية..." /></div>'
+        + '<div class="field"><label>علم الدولة (Emoji)</label><input id="f_numericLabel" type="text" value="' + (item.numericLabel || '🇪🇬').replace(/"/g,'&quot;') + '" placeholder="🇪🇬 🇸🇦 🇦🇪 🇰🇼 🇶🇦" /></div>'
+        + '<div class="field"><label>القطاع بالعربية</label><input id="f_categoryAr" type="text" value="' + (item.categoryAr || '').replace(/"/g,'&quot;') + '" placeholder="بنوك / عقارات / تكنولوجيا" /></div>'
+        + '<div class="field"><label>Sector key (EN)</label><select id="f_categoryEn"><option value="">— اختر —</option>'
+        +   ['banking','realestate','tech','telecom','energy','fmcg','media','education','healthcare','retail','other'].map(s => '<option value="' + s + '"' + (item.categoryEn === s ? ' selected' : '') + '>' + s + '</option>').join('')
+        + '</select></div>'
+        + '<div class="field field-full"><label>اقتباس مميز (يظهر في الـ Hero)</label><textarea id="f_subtitleAr" placeholder="جملة قصيرة جذابة...">' + (item.subtitleAr || '').replace(/</g,'&lt;') + '</textarea></div>'
+        + '<div class="field field-full"><label>Featured Quote EN</label><textarea id="f_subtitleEn" dir="ltr">' + (item.subtitleEn || '').replace(/</g,'&lt;') + '</textarea></div>'
+        + '<div class="field field-full"><label>📝 السيرة الذاتية بالعربية (3-5 جمل)</label><textarea id="f_descAr" style="min-height:120px;">' + (item.descAr || '').replace(/</g,'&lt;') + '</textarea></div>'
+        + '<div class="field field-full"><label>Biography EN</label><textarea id="f_descEn" dir="ltr" style="min-height:120px;">' + (item.descEn || '').replace(/</g,'&lt;') + '</textarea></div>'
+        + '<div class="field"><label>💰 الإيرادات (مليون دولار)</label><input id="f_numericValue" type="number" step="0.1" value="' + (item.numericValue || '') + '" placeholder="3200" /></div>'
+        + '<div class="field"><label>🔗 LinkedIn URL</label><input id="f_linkUrl" type="url" dir="ltr" value="' + (item.linkUrl || '').replace(/"/g,'&quot;') + '" placeholder="https://linkedin.com/in/..." /></div>'
+        + '<div class="field field-full"><label>ترتيب القائمة (الأصغر = الأعلى ظهوراً، 0 = البطلة المميزة)</label><input id="f_sortOrder" type="number" value="' + (item.sortOrder ?? 100) + '" /></div>';
+
+      /* Save button wired to woi-specific save */
+      document.getElementById('save-btn').onclick = function () { saveWoi(id); };
+      modal.classList.add('open');
+    }
+    window.openWoiEditor = openWoiEditor;
+
+    async function saveWoi(id) {
+      const data = {
+        section: 'women-of-impact',
+        titleAr: document.getElementById('f_titleAr').value,
+        titleEn: document.getElementById('f_titleEn').value,
+        positionAr: document.getElementById('f_positionAr').value,
+        positionEn: document.getElementById('f_positionEn').value,
+        newCompanyAr: document.getElementById('f_newCompanyAr').value,
+        newCompanyEn: document.getElementById('f_newCompanyEn').value,
+        authorAr: document.getElementById('f_authorAr').value,
+        authorEn: document.getElementById('f_authorAr').value,
+        numericLabel: document.getElementById('f_numericLabel').value,
+        categoryAr: document.getElementById('f_categoryAr').value,
+        categoryEn: document.getElementById('f_categoryEn').value,
+        subtitleAr: document.getElementById('f_subtitleAr').value,
+        subtitleEn: document.getElementById('f_subtitleEn').value,
+        descAr: document.getElementById('f_descAr').value,
+        descEn: document.getElementById('f_descEn').value,
+        imageUrl: document.getElementById('f_imageUrl').value,
+        linkUrl: document.getElementById('f_linkUrl').value,
+        numericValue: Number(document.getElementById('f_numericValue').value || 0),
+        sortOrder: Number(document.getElementById('f_sortOrder').value || 100),
+        isActive: true
+      };
+      if (!data.titleAr || !data.titleEn) { alert('الاسم بالعربية والإنجليزية مطلوبين'); return; }
+      const token = localStorage.getItem('cb_auth_token');
+      const url = id ? (WOI_API + '/' + id) : WOI_API;
+      const method = id ? 'PUT' : 'POST';
+      try {
+        const r = await fetch(url, { method, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        const j = await r.json();
+        if (!j.success) { alert('فشل الحفظ: ' + (j.error || r.status)); return; }
+        document.getElementById('item-modal').classList.remove('open');
+        openWoiAdmin();
+      } catch (e) { alert('خطأ: ' + e.message); }
+    }
+    window.saveWoi = saveWoi;
+
+    async function deleteWoi(id) {
+      if (!confirm('متأكد من الحذف؟')) return;
+      const token = localStorage.getItem('cb_auth_token');
+      const r = await fetch(WOI_API + '/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+      const j = await r.json();
+      if (j.success) openWoiAdmin();
+      else alert('فشل الحذف: ' + (j.error || r.status));
+    }
+    window.deleteWoi = deleteWoi;
+
+    function openWoiGenDialog() {
+      let overlay = document.getElementById('cb-woi-overlay');
+      if (overlay) { overlay.style.display = 'flex'; return; }
+      overlay = document.createElement('div');
+      overlay.id = 'cb-woi-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.85);backdrop-filter:blur(8px);z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;';
+      overlay.innerHTML = '<div style="background:linear-gradient(155deg,#0f1a3d,#0a0e27);border:1px solid rgba(244,208,63,.35);border-radius:18px;padding:26px 28px;max-width:780px;width:100%;position:relative;color:#fff;">'
+        +   '<button onclick="document.getElementById(\'cb-woi-overlay\').style.display=\'none\'" style="position:absolute;top:14px;inset-inline-end:14px;background:rgba(10,14,39,.7);border:1px solid rgba(255,255,255,.15);color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;">×</button>'
+        +   '<h2 style="font-size:20px;font-weight:800;color:#F4D03F;margin-bottom:6px;">🪄 توليد سيدات تأثير بالذكاء الاصطناعي</h2>'
+        +   '<p style="font-size:13px;opacity:0.75;margin-bottom:18px;line-height:1.7;">الـ AI يولّد سيدات أعمال بأسماء واقعية، شركات معروفة في المنطقة، سيرة ذاتية كاملة، واقتباس مميز.</p>'
+        +   '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="cb-woi-presets"></div>'
+        +   '<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">'
+        +     '<label style="font-size:12px;opacity:0.7;">العدد:</label>'
+        +     '<input id="cb-woi-count" type="number" min="1" max="10" value="5" style="width:80px;padding:6px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;" />'
+        +   '</div>'
+        +   '<textarea id="cb-woi-input" placeholder="مثال: سيدات أعمال في قطاع البنوك والتكنولوجيا المصرية" style="width:100%;min-height:100px;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(244,208,63,0.3);border-radius:10px;color:#fff;font-family:inherit;font-size:14px;line-height:1.7;resize:vertical;"></textarea>'
+        +   '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">'
+        +     '<button onclick="document.getElementById(\'cb-woi-overlay\').style.display=\'none\'" style="background:transparent;color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.15);padding:10px 18px;border-radius:9px;cursor:pointer;">إلغاء</button>'
+        +     '<button id="cb-woi-generate" style="background:linear-gradient(135deg,#F4D03F,#c9a227);color:#0A0E27;border:none;padding:10px 22px;border-radius:9px;cursor:pointer;font-weight:700;">⚡ ولّد وأضف للقائمة</button>'
+        +   '</div>'
+        +   '<div id="cb-woi-status" style="margin-top:14px;font-size:13px;line-height:1.6;min-height:20px;"></div>'
+        + '</div>';
+      document.body.appendChild(overlay);
+      const presets = [
+        'سيدات أعمال قياديات في البنوك المصرية والخليجية',
+        'مؤسسات شركات ناشئة في التكنولوجيا والفينتك',
+        'قيادات في قطاع العقارات والاستثمار',
+        'سيدات في الإعلام والإنتاج بالإمارات والسعودية',
+        'سيدات في الصحة والتعليم بالمنطقة'
+      ];
+      const pst = document.getElementById('cb-woi-presets');
+      presets.forEach(p => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = p;
+        b.style.cssText = 'background:rgba(255,255,255,0.04);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,0.1);padding:5px 12px;border-radius:9999px;cursor:pointer;font-size:11px;';
+        b.onclick = function () { document.getElementById('cb-woi-input').value = p; };
+        pst.appendChild(b);
+      });
+      document.getElementById('cb-woi-generate').onclick = async function () {
+        const status = document.getElementById('cb-woi-status');
+        const p = (document.getElementById('cb-woi-input').value || '').trim();
+        const count = Number(document.getElementById('cb-woi-count').value || 5);
+        status.style.color = '#F4D03F';
+        status.textContent = '⏳ جاري التوليد...';
+        try {
+          const token = localStorage.getItem('cb_auth_token');
+          const r = await fetch('https://cairo-business-backend.vercel.app/api/admin/generate-women', {
+            method: 'POST',
+            headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: p, count, save: true })
+          });
+          const j = await r.json();
+          if (!j.success) { status.style.color = '#ef4444'; status.textContent = '✗ ' + (j.error || r.status); return; }
+          status.style.color = '#10b981';
+          status.textContent = '✓ تمت إضافة ' + (j.saved || 0) + ' سيدة — يتم التحديث...';
+          setTimeout(function () { overlay.style.display = 'none'; openWoiAdmin(); }, 1500);
+        } catch (e) {
+          status.style.color = '#ef4444';
+          status.textContent = '✗ ' + e.message;
+        }
+      };
+    }
+    window.openWoiGenDialog = openWoiGenDialog;
+
+    setTimeout(_injectWoiTab, 1000);
+    setInterval(_injectWoiTab, 3000); /* re-inject if tabs reload */
+
     function openWhosMovingGenDialog() {
       let overlay = document.getElementById('cb-wm-overlay');
       if (overlay) { overlay.style.display = 'flex'; return; }

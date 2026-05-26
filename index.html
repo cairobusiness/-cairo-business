@@ -8424,6 +8424,112 @@
   </section>
 
   <!-- =========================================================== -->
+  <!--                    WOMEN OF IMPACT                           -->
+  <!-- Magazine hero + Trophy podium + Grid list                    -->
+  <!-- Data-driven from /api/content-blocks?section=women-of-impact -->
+  <!-- =========================================================== -->
+  <section id="women-of-impact" class="py-20 lg:py-28 bg-gradient-to-b from-navy-900 to-navy-800 relative overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none opacity-40" style="background:radial-gradient(ellipse 70% 50% at 50% 0%, rgba(212,175,55,.22), transparent 60%);"></div>
+
+    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
+
+      <!-- Magazine masthead header -->
+      <div class="text-center mb-12 reveal" style="border-top:2px solid rgba(244,208,63,0.4); border-bottom:2px solid rgba(244,208,63,0.4); padding:22px 0;">
+        <div style="font-size:11px; letter-spacing:6px; color:#F4D03F; font-weight:700; margin-bottom:8px;">VOLUME 01 · 2026 EDITION</div>
+        <h2 style="font-family:'Playfair Display', serif; font-size:48px; font-weight:900; line-height:1; margin-bottom:8px; color:#fff;" data-i18n="woi.title">Women of Impact</h2>
+        <div style="font-size:14px; color:rgba(255,255,255,0.6); font-style:italic;" data-i18n="woi.subtitle">— نساء يعدن صياغة الاقتصاد العربي —</div>
+      </div>
+
+      <!-- Magazine-style HERO (featured woman) -->
+      <div id="woi-hero" class="reveal" style="display:none; margin-bottom:48px;">
+        <div style="display:grid; grid-template-columns:1fr 1.3fr; gap:32px; align-items:stretch;">
+          <div style="position:relative;">
+            <div id="woi-hero-img" style="background:linear-gradient(135deg,#2c1810,#4a2c1a); aspect-ratio:3/4; border-radius:8px; position:relative; overflow:hidden; background-size:cover; background-position:center;">
+              <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(to top, rgba(0,0,0,0.85), transparent); padding:24px 20px 16px;">
+                <div style="font-size:10px; letter-spacing:4px; color:#d4af37; font-weight:700; margin-bottom:6px;">FEATURED · #01</div>
+                <h3 id="woi-hero-name" style="font-family:'Playfair Display', serif; color:#fff; font-size:26px; font-weight:900; line-height:1.1;">—</h3>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; justify-content:center;">
+            <div style="font-size:11px; letter-spacing:3px; color:#F4D03F; font-weight:700; margin-bottom:12px;" data-i18n="woi.interview">— THE INTERVIEW —</div>
+            <h3 id="woi-hero-quote" style="font-family:'Playfair Display', serif; font-size:28px; font-weight:900; line-height:1.2; margin-bottom:18px; color:#fff;">—</h3>
+            <p id="woi-hero-bio" style="font-size:14px; line-height:1.9; color:rgba(255,255,255,0.75); margin-bottom:18px;">—</p>
+            <div style="display:flex; gap:14px; font-size:12px; padding-top:14px; border-top:1px solid rgba(244,208,63,0.3); flex-wrap:wrap;">
+              <span><strong style="color:#F4D03F;" data-i18n="woi.position">المنصب</strong> · <span id="woi-hero-position" style="color:rgba(255,255,255,0.85);">—</span></span>
+              <span><strong style="color:#F4D03F;" data-i18n="woi.country">الدولة</strong> · <span id="woi-hero-country" style="color:rgba(255,255,255,0.85);">—</span></span>
+            </div>
+            <button id="woi-hero-readmore" style="margin-top:18px; align-self:flex-start; background:linear-gradient(135deg,#F4D03F,#c9a227); color:#0a0e27; border:none; padding:10px 22px; border-radius:999px; font-weight:700; font-size:13px; cursor:pointer; font-family:inherit;" data-i18n="woi.readFull">اقرأ القصة الكاملة ←</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trophy PODIUM (Top 3) -->
+      <div id="woi-podium-wrap" class="reveal" style="display:none; margin-bottom:48px;">
+        <div style="text-align:center; margin-bottom:28px;">
+          <div style="display:inline-flex; align-items:center; gap:10px;">
+            <span style="font-size:22px;">👑</span>
+            <span style="font-size:11px; letter-spacing:5px; color:#F4D03F; font-weight:700;" data-i18n="woi.podium">POWER LIST · TOP 3</span>
+            <span style="font-size:22px;">👑</span>
+          </div>
+        </div>
+        <div id="woi-podium" style="display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:18px; align-items:end;"></div>
+      </div>
+
+      <!-- LIST grid (positions 4-10) -->
+      <div id="woi-list-head" class="reveal" style="display:none; margin-bottom:20px;">
+        <div style="border-top:1px solid rgba(244,208,63,0.3); padding-top:24px; text-align:center;">
+          <div style="font-size:11px; letter-spacing:4px; color:#F4D03F; font-weight:700;" data-i18n="woi.theList">— THE LIST · 4–10 —</div>
+        </div>
+      </div>
+      <div id="woi-list" class="reveal" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:18px;"></div>
+
+      <!-- Empty state -->
+      <div id="woi-empty" style="display:none; text-align:center; padding:60px 20px; color:rgba(255,255,255,0.5);">
+        <div style="font-size:48px; margin-bottom:12px;">👩‍💼</div>
+        <p style="font-size:14px;">القائمة لسه في التحضير — هتظهر السيدات هنا قريبًا</p>
+      </div>
+    </div>
+
+    <!-- Click-to-open detail modal -->
+    <div id="woi-modal" style="position:fixed; inset:0; background:rgba(2,6,23,0.92); backdrop-filter:blur(10px); z-index:9999; display:none; align-items:flex-start; justify-content:center; padding:40px 20px; overflow-y:auto;" onclick="if(event.target===this)closeWoiModal()">
+      <div style="background:linear-gradient(155deg,#0f1a3d,#0a0e27); border:1px solid rgba(244,208,63,0.3); border-radius:24px; max-width:860px; width:100%; max-height:calc(100vh - 80px); overflow-y:auto; overflow-x:hidden; position:relative;">
+        <button onclick="closeWoiModal()" style="position:absolute; top:18px; inset-inline-end:18px; z-index:2; width:38px; height:38px; border-radius:50%; background:rgba(10,14,39,0.8); border:1px solid rgba(255,255,255,0.15); color:#fff; cursor:pointer; font-size:22px;">×</button>
+        <div id="woi-modal-img" style="height:280px; background:#1a2b4d center/cover no-repeat; background-image:linear-gradient(135deg,#d4af37,#8b6914);"></div>
+        <div style="padding:28px 32px; color:#fff;">
+          <div style="display:flex; gap:12px; align-items:center; margin-bottom:14px; flex-wrap:wrap;">
+            <span id="woi-modal-rank" style="background:rgba(244,208,63,0.15); color:#F4D03F; border:1px solid rgba(244,208,63,0.4); padding:4px 12px; border-radius:999px; font-size:11px; font-weight:700;">#1</span>
+            <span id="woi-modal-sector" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:4px 10px; border-radius:999px; font-size:11px;">—</span>
+            <span id="woi-modal-flag" style="font-size:14px;">🌍</span>
+            <span id="woi-modal-country" style="font-size:12px; color:rgba(255,255,255,0.6);">—</span>
+          </div>
+          <h1 id="woi-modal-name" style="font-family:'Playfair Display', serif; font-size:32px; font-weight:900; line-height:1.2; margin-bottom:8px; color:#fff;">—</h1>
+          <p id="woi-modal-position" style="font-size:15px; color:#F4D03F; margin-bottom:18px; font-weight:600;">—</p>
+          <div id="woi-modal-quote-wrap" style="display:none; border-inline-start:3px solid #F4D03F; padding:10px 18px; margin:18px 0; background:rgba(244,208,63,0.06); border-radius:8px;">
+            <div style="font-size:11px; letter-spacing:3px; color:#F4D03F; margin-bottom:6px;">— QUOTE —</div>
+            <p id="woi-modal-quote" style="font-family:'Playfair Display', serif; font-size:18px; font-style:italic; line-height:1.5; color:rgba(255,255,255,0.9);">—</p>
+          </div>
+          <div id="woi-modal-bio" style="font-size:15px; line-height:1.9; color:rgba(255,255,255,0.8);">—</div>
+          <div id="woi-modal-stats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin-top:24px; padding-top:18px; border-top:1px solid rgba(255,255,255,0.1);"></div>
+          <div id="woi-modal-social" style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;"></div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .woi-list-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px; text-align:center; cursor:pointer; transition:all 0.25s; }
+      .woi-list-card:hover { transform:translateY(-4px); border-color:rgba(244,208,63,0.4); background:rgba(244,208,63,0.04); box-shadow:0 12px 28px rgba(0,0,0,0.4); }
+      .woi-podium-col { text-align:center; cursor:pointer; transition:all 0.3s; }
+      .woi-podium-col:hover { transform:translateY(-6px); }
+      .woi-podium-img { border-radius:50%; margin:0 auto 12px; background-size:cover; background-position:center; }
+      @media (max-width: 768px) {
+        #woi-hero > div { grid-template-columns:1fr !important; }
+        #woi-podium { grid-template-columns:1fr !important; }
+      }
+    </style>
+  </section>
+
+  <!-- =========================================================== -->
   <!--                    AI BUSINESS ASSISTANT                     -->
   <!-- =========================================================== -->
 
@@ -11901,6 +12007,231 @@
         }
       } catch (_e) {}
     }
+
+    /* ═════════════════════════════════════════════════════════════
+       WOMEN OF IMPACT — Magazine + Podium + Grid renderer
+       Data: GET /api/content-blocks?section=women-of-impact
+       Each item uses ContentBlock fields:
+         titleAr/titleEn      = name
+         positionAr/positionEn= job title
+         newCompanyAr/newCompanyEn = current company
+         authorAr             = country (in English)
+         numericLabel         = flag emoji
+         categoryAr/categoryEn= sector
+         subtitleAr/subtitleEn= featured quote
+         descAr/descEn        = bio (3-5 sentences)
+         imageUrl             = photo URL
+         linkUrl              = LinkedIn
+         numericValue         = revenue ($M)
+         sortOrder            = rank (ascending = top)
+       ═════════════════════════════════════════════════════════════ */
+    window.__woiData = [];
+
+    async function loadWomenOfImpact() {
+      try {
+        const r = await fetch('https://cairo-business-backend.vercel.app/api/content-blocks?section=women-of-impact', { cache: 'no-store' });
+        const j = await r.json();
+        const list = (j && j.data) || [];
+        window.__woiData = list;
+        const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
+        if (!list.length) {
+          document.getElementById('woi-empty').style.display = 'block';
+          return;
+        }
+        /* Featured = first item (sortOrder ascending) */
+        const featured = list[0];
+        const top3 = list.slice(0, 3);
+        const rest = list.slice(3, 10);
+        woiRenderHero(featured, isAr);
+        woiRenderPodium(top3, isAr);
+        woiRenderList(rest, isAr);
+      } catch (e) {
+        console.warn('Women of Impact load failed:', e);
+      }
+    }
+
+    function woiRenderHero(item, isAr) {
+      if (!item) return;
+      const name = isAr ? (item.titleAr || item.titleEn) : (item.titleEn || item.titleAr);
+      const position = isAr ? (item.positionAr || item.positionEn || '') : (item.positionEn || item.positionAr || '');
+      const company = isAr ? (item.newCompanyAr || item.newCompanyEn || '') : (item.newCompanyEn || item.newCompanyAr || '');
+      const country = item.authorAr || '';
+      const flag = item.numericLabel || '🌍';
+      const quote = isAr ? (item.subtitleAr || item.subtitleEn || '') : (item.subtitleEn || item.subtitleAr || '');
+      const bio = isAr ? (item.descAr || item.descEn || '') : (item.descEn || item.descAr || '');
+
+      document.getElementById('woi-hero-name').textContent = name || '—';
+      document.getElementById('woi-hero-quote').textContent = quote ? '"' + quote + '"' : (isAr ? 'قصة ملهمة' : 'An inspiring story');
+      document.getElementById('woi-hero-bio').textContent = bio.replace(/<[^>]+>/g, '').slice(0, 280) + (bio.length > 280 ? '...' : '');
+      document.getElementById('woi-hero-position').textContent = position + (company ? ' · ' + company : '');
+      document.getElementById('woi-hero-country').textContent = flag + ' ' + country;
+
+      const heroImg = document.getElementById('woi-hero-img');
+      if (item.imageUrl) {
+        heroImg.style.backgroundImage = 'url("' + item.imageUrl + '")';
+      }
+      document.getElementById('woi-hero-readmore').onclick = function () { openWoiModal(item.id); };
+      document.getElementById('woi-hero').style.display = 'block';
+    }
+
+    function woiRenderPodium(top3, isAr) {
+      const wrap = document.getElementById('woi-podium');
+      if (!top3 || top3.length < 1) return;
+      /* Order: 2nd on left, 1st in middle, 3rd on right */
+      const order = [top3[1], top3[0], top3[2]].filter(Boolean);
+      const heights = [80, 110, 60];
+      const ranks = top3[1] ? [2, 1, 3] : [1];
+      const sizes = top3[1] ? [100, 130, 90] : [130];
+      const fontSizes = top3[1] ? [26, 36, 22] : [36];
+      const colors = [
+        'linear-gradient(135deg,#c0c0c0,#808080)',  /* silver */
+        'linear-gradient(135deg,#d4af37,#8b6914)',  /* gold */
+        'linear-gradient(135deg,#cd7f32,#8b4513)'   /* bronze */
+      ];
+      const colorIdxs = top3[1] ? [0, 1, 2] : [1];
+      const labelColors = ['#c0c0c0', '#F4D03F', '#cd7f32'];
+
+      wrap.innerHTML = order.map((it, i) => {
+        const name = isAr ? (it.titleAr || it.titleEn) : (it.titleEn || it.titleAr);
+        const pos = isAr ? (it.positionAr || it.positionEn || '') : (it.positionEn || it.positionAr || '');
+        const company = isAr ? (it.newCompanyAr || it.newCompanyEn || '') : (it.newCompanyEn || it.newCompanyAr || '');
+        const rank = ranks[i];
+        const size = sizes[i];
+        const fontSize = fontSizes[i];
+        const color = colors[colorIdxs[i]];
+        const labelColor = labelColors[colorIdxs[i]];
+        const initials = (name || '?').split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('');
+        const isCenter = (rank === 1);
+        const crown = isCenter ? '<div style="font-size:28px; margin-bottom:4px;">👑</div>' : '';
+        const transform = isCenter ? 'transform:translateY(-12px);' : '';
+        const imgStyle = it.imageUrl
+          ? 'background:url("' + it.imageUrl + '") center/cover no-repeat;'
+          : 'background:' + color + ';';
+        const revVal = it.numericValue ? '$' + (it.numericValue >= 1000 ? (it.numericValue/1000).toFixed(1) + 'B' : it.numericValue.toFixed(0) + 'M') : '';
+        return ''
+          + '<div class="woi-podium-col" style="' + transform + '" data-id="' + (it.id || '') + '">'
+          +   crown
+          +   '<div style="position:relative; display:inline-block;">'
+          +     '<div class="woi-podium-img" style="width:' + size + 'px; height:' + size + 'px;' + imgStyle + ' border:3px solid ' + labelColor + '50;' + (it.imageUrl ? '' : ' display:grid; place-items:center; color:#fff; font-weight:900; font-size:' + fontSize + 'px;') + '">' + (it.imageUrl ? '' : initials) + '</div>'
+          +     '<div style="position:absolute; top:-10px; inset-inline-start:-10px; width:' + (isCenter ? 44 : 36) + 'px; height:' + (isCenter ? 44 : 36) + 'px; border-radius:50%; background:' + color + '; display:grid; place-items:center; font-weight:900; color:#0a0e27; font-size:' + (isCenter ? 18 : 14) + 'px; border:3px solid #0a0e27;">' + rank + '</div>'
+          +   '</div>'
+          +   '<h4 style="font-family:\'Playfair Display\',serif; font-size:' + (isCenter ? 22 : 17) + 'px; font-weight:900; margin:12px 0 4px; color:#fff;">' + (name || '—') + '</h4>'
+          +   '<p style="font-size:12px; color:rgba(255,255,255,0.55); margin-bottom:10px;">' + pos + (company ? ' · ' + company : '') + '</p>'
+          +   (revVal ? '<div style="background:' + labelColor + '15; border:1px solid ' + labelColor + '40; border-radius:8px; padding:8px 12px; display:inline-block;"><div style="font-size:' + (isCenter ? 22 : 16) + 'px; font-weight:900; color:' + labelColor + ';">' + revVal + '</div><div style="font-size:9px; color:rgba(255,255,255,0.5); letter-spacing:1px;">REVENUE</div></div>' : '')
+          +   '<div style="height:' + heights[i] + 'px; background:linear-gradient(180deg,' + labelColor + '40,' + labelColor + '10); border-radius:8px 8px 0 0; margin-top:14px; border-top:3px solid ' + labelColor + '; display:grid; place-items:center; font-size:' + (isCenter ? 48 : 32) + 'px; font-weight:900; color:rgba(255,255,255,0.2);">' + rank + '</div>'
+          + '</div>';
+      }).join('');
+      /* Click handlers */
+      wrap.querySelectorAll('.woi-podium-col').forEach(el => {
+        el.addEventListener('click', () => { const id = el.getAttribute('data-id'); if (id) openWoiModal(id); });
+      });
+      document.getElementById('woi-podium-wrap').style.display = 'block';
+    }
+
+    function woiRenderList(items, isAr) {
+      const wrap = document.getElementById('woi-list');
+      if (!items || !items.length) return;
+      wrap.innerHTML = items.map((it, idx) => {
+        const rank = idx + 4;
+        const name = isAr ? (it.titleAr || it.titleEn) : (it.titleEn || it.titleAr);
+        const pos = isAr ? (it.positionAr || it.positionEn || '') : (it.positionEn || it.positionAr || '');
+        const company = isAr ? (it.newCompanyAr || it.newCompanyEn || '') : (it.newCompanyEn || it.newCompanyAr || '');
+        const sector = isAr ? (it.categoryAr || it.categoryEn || '') : (it.categoryEn || it.categoryAr || '');
+        const flag = it.numericLabel || '🌍';
+        const initials = (name || '?').split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('');
+        const imgStyle = it.imageUrl
+          ? 'background:url("' + it.imageUrl + '") center/cover no-repeat;'
+          : 'background:linear-gradient(135deg,#3b3a8a,#8b5cf6); display:grid; place-items:center; color:#fff; font-weight:900; font-size:20px;';
+        const revVal = it.numericValue ? '$' + (it.numericValue >= 1000 ? (it.numericValue/1000).toFixed(1) + 'B' : it.numericValue.toFixed(0) + 'M') : '';
+        return ''
+          + '<div class="woi-list-card" data-id="' + (it.id || '') + '">'
+          +   '<div style="position:relative; display:inline-block; margin-bottom:12px;">'
+          +     '<div style="width:80px; height:80px; border-radius:50%;' + imgStyle + ' border:3px solid rgba(244,208,63,0.4);">' + (it.imageUrl ? '' : initials) + '</div>'
+          +     '<div style="position:absolute; top:-6px; inset-inline-start:-6px; width:28px; height:28px; border-radius:50%; background:rgba(244,208,63,0.95); color:#0a0e27; font-weight:900; font-size:12px; display:grid; place-items:center; border:2px solid #0a0e27;">' + rank + '</div>'
+          +   '</div>'
+          +   '<div style="font-size:10px; color:rgba(255,255,255,0.45); margin-bottom:4px; letter-spacing:1px;">' + flag + ' ' + (sector || '') + '</div>'
+          +   '<h4 style="font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; line-height:1.3;">' + (name || '—') + '</h4>'
+          +   '<p style="font-size:11px; color:rgba(255,255,255,0.55); line-height:1.5;">' + (pos || '') + (company ? '<br>' + company : '') + '</p>'
+          +   (revVal ? '<div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); font-size:11px;"><span style="color:rgba(255,255,255,0.5);">إيراد: </span><span style="color:#F4D03F; font-weight:700;">' + revVal + '</span></div>' : '')
+          + '</div>';
+      }).join('');
+      wrap.querySelectorAll('.woi-list-card').forEach(el => {
+        el.addEventListener('click', () => { const id = el.getAttribute('data-id'); if (id) openWoiModal(id); });
+      });
+      document.getElementById('woi-list-head').style.display = 'block';
+    }
+
+    function openWoiModal(id) {
+      const item = (window.__woiData || []).find(x => String(x.id) === String(id));
+      if (!item) return;
+      const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
+      const name = isAr ? (item.titleAr || item.titleEn) : (item.titleEn || item.titleAr);
+      const position = isAr ? (item.positionAr || item.positionEn || '') : (item.positionEn || item.positionAr || '');
+      const company = isAr ? (item.newCompanyAr || item.newCompanyEn || '') : (item.newCompanyEn || item.newCompanyAr || '');
+      const sector = isAr ? (item.categoryAr || item.categoryEn || '') : (item.categoryEn || item.categoryAr || '');
+      const country = item.authorAr || '';
+      const flag = item.numericLabel || '🌍';
+      const quote = isAr ? (item.subtitleAr || item.subtitleEn || '') : (item.subtitleEn || item.subtitleAr || '');
+      const bio = isAr ? (item.descAr || item.descEn || '') : (item.descEn || item.descAr || '');
+      const rank = (window.__woiData || []).indexOf(item) + 1;
+
+      document.getElementById('woi-modal-rank').textContent = '#' + rank;
+      document.getElementById('woi-modal-sector').textContent = sector || '—';
+      document.getElementById('woi-modal-flag').textContent = flag;
+      document.getElementById('woi-modal-country').textContent = country || '';
+      document.getElementById('woi-modal-name').textContent = name || '—';
+      document.getElementById('woi-modal-position').textContent = position + (company ? ' · ' + company : '');
+
+      const quoteWrap = document.getElementById('woi-modal-quote-wrap');
+      if (quote) {
+        document.getElementById('woi-modal-quote').textContent = '"' + quote + '"';
+        quoteWrap.style.display = 'block';
+      } else {
+        quoteWrap.style.display = 'none';
+      }
+
+      const bioEl = document.getElementById('woi-modal-bio');
+      if (bio && /<[a-z][\s\S]*>/i.test(bio)) bioEl.innerHTML = bio;
+      else bioEl.innerHTML = '<p>' + (bio || '').split(/\n\n+/).map(p => p.replace(/</g, '&lt;')).join('</p><p>') + '</p>';
+
+      const img = document.getElementById('woi-modal-img');
+      if (item.imageUrl) img.style.backgroundImage = 'url("' + item.imageUrl + '")';
+      else img.style.backgroundImage = 'linear-gradient(135deg,#d4af37,#8b6914)';
+
+      /* Stats */
+      const stats = document.getElementById('woi-modal-stats');
+      const cells = [];
+      if (item.numericValue) cells.push({ label: 'الإيرادات', value: '$' + (item.numericValue >= 1000 ? (item.numericValue/1000).toFixed(1) + 'B' : item.numericValue.toFixed(0) + 'M') });
+      cells.push({ label: 'القطاع', value: sector || '—' });
+      cells.push({ label: 'الدولة', value: flag + ' ' + (country || '—') });
+      stats.innerHTML = cells.map(c => '<div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 14px; text-align:center;"><div style="font-size:18px; font-weight:800; color:#F4D03F; margin-bottom:2px;">' + c.value + '</div><div style="font-size:11px; color:rgba(255,255,255,0.5);">' + c.label + '</div></div>').join('');
+
+      /* Social links */
+      const social = document.getElementById('woi-modal-social');
+      const links = [];
+      if (item.linkUrl) links.push({ icon: '💼', label: 'LinkedIn', url: item.linkUrl });
+      social.innerHTML = links.map(l => '<a href="' + l.url + '" target="_blank" rel="noopener" style="background:rgba(244,208,63,0.1); color:#F4D03F; border:1px solid rgba(244,208,63,0.3); padding:8px 16px; border-radius:9999px; font-size:13px; text-decoration:none;">' + l.icon + ' ' + l.label + '</a>').join('');
+
+      document.getElementById('woi-modal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    window.openWoiModal = openWoiModal;
+    function closeWoiModal() {
+      document.getElementById('woi-modal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    window.closeWoiModal = closeWoiModal;
+
+    /* Lazy-load when the section is near-visible */
+    (function () {
+      if (!('IntersectionObserver' in window)) { loadWomenOfImpact(); return; }
+      const sec = document.getElementById('women-of-impact');
+      if (!sec) return;
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { loadWomenOfImpact(); io.disconnect(); } });
+      }, { rootMargin: '200px 0px' });
+      io.observe(sec);
+    })();
 
     /* ───────── Comments section for news articles ───────── */
     async function renderCommentsSection(newsId, hostEl) {
