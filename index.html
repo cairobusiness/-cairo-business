@@ -12011,6 +12011,75 @@
     }
 
     /* ═════════════════════════════════════════════════════════════
+       MONTHLY STARTUPS PULSE — AI-refreshed every 30 days.
+       Backend: GET /api/startups-pulse (server-cached 30 days).
+       Maps AI items to the existing STARTUPS array shape and re-renders.
+       ═════════════════════════════════════════════════════════════ */
+    (async function () {
+      try {
+        const r = await fetch('https://cairo-business-backend.vercel.app/api/startups-pulse', { cache: 'no-store' });
+        const j = await r.json();
+        if (!j || !j.success || !Array.isArray(j.data) || !j.data.length) return;
+        if (typeof STARTUPS === 'undefined') return;
+        const mapped = j.data.map((s, i) => ({
+          id: 'ai-' + i,
+          name_ar: s.nameAr || s.nameEn,
+          name_en: s.nameEn || s.nameAr,
+          sector_ar: s.sectorAr,
+          sector_en: s.sectorEn,
+          stage: s.stage || 'Growth',
+          raised: '$' + (Number(s.raisedMillions) || 0) + 'M',
+          founded: s.founded || 2020,
+          country_ar: s.country,
+          country_en: s.country,
+          flag: s.flag || '🌍',
+          valuation: s.valuation || '—',
+          employees: s.employees || 50,
+          desc_ar: s.descriptionAr,
+          desc_en: s.descriptionEn,
+          website: s.website || '',
+          score: s.aiScore || 88
+        }));
+        STARTUPS.length = 0;
+        STARTUPS.push(...mapped);
+        if (typeof renderStartups === 'function') { try { renderStartups(); } catch (_) {} }
+      } catch (_) { /* keep fallback */ }
+    })();
+
+    /* ═════════════════════════════════════════════════════════════
+       WEEKLY RESEARCH PULSE — AI-refreshed every 7 days.
+       Backend: GET /api/research-pulse (server-cached 7 days).
+       Maps to REPORTS array and re-renders.
+       ═════════════════════════════════════════════════════════════ */
+    (async function () {
+      try {
+        const r = await fetch('https://cairo-business-backend.vercel.app/api/research-pulse', { cache: 'no-store' });
+        const j = await r.json();
+        if (!j || !j.success || !Array.isArray(j.data) || !j.data.length) return;
+        if (typeof REPORTS === 'undefined') return;
+        const gradients = ['from-blue-500/20 to-cyan-500/10', 'from-amber-500/20 to-orange-500/10', 'from-emerald-500/20 to-teal-500/10', 'from-purple-500/20 to-pink-500/10', 'from-red-500/20 to-rose-500/10', 'from-indigo-500/20 to-blue-500/10'];
+        const mapped = j.data.map((r, i) => ({
+          id: 'ai-r-' + i,
+          title_ar: r.titleAr || r.titleEn,
+          title_en: r.titleEn || r.titleAr,
+          cat_ar: r.categoryAr,
+          cat_en: r.categoryEn,
+          desc_ar: r.summaryAr,
+          desc_en: r.summaryEn,
+          pages: r.pages || 24,
+          date: (r.publishedAt || '').slice(0, 10),
+          free: r.isFree !== false,
+          gradient: gradients[i % gradients.length],
+          score: r.aiScore || 88,
+          imageUrl: r.imageUrl || ''
+        }));
+        REPORTS.length = 0;
+        REPORTS.push(...mapped);
+        if (typeof renderResearch === 'function') { try { renderResearch(); } catch (_) {} }
+      } catch (_) { /* keep fallback */ }
+    })();
+
+    /* ═════════════════════════════════════════════════════════════
        TRADE FINANCE CALCULATOR — realistic LC/BG/FWD/Discount cost math.
        Live updates on every input change. Bank multipliers reflect
        observed pricing differences across the Egyptian market.
