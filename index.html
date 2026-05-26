@@ -16592,6 +16592,25 @@
       `).join('');
     }
 
+    /* Weekly auto-refresh: pull AI-generated sector pulse from backend (cached 7 days).
+       Falls back to the hardcoded SECTORS_PULSE if the fetch fails. */
+    (async function () {
+      try {
+        const r = await fetch('https://cairo-business-backend.vercel.app/api/sector-pulse', { cache: 'no-store' });
+        const j = await r.json();
+        if (j && j.success && j.data && typeof j.data === 'object') {
+          /* Merge in-place so other code paths still see SECTORS_PULSE */
+          Object.keys(j.data).forEach(k => {
+            if (SECTORS_PULSE[k]) Object.assign(SECTORS_PULSE[k], j.data[k]);
+          });
+          /* Re-render if the section was already painted */
+          if (typeof renderSectorPulse === 'function') {
+            try { renderSectorPulse(); } catch (_) {}
+          }
+        }
+      } catch (_) { /* keep fallback */ }
+    })();
+
     function renderSectorPulse() {
       const wrap = document.getElementById('pulse-content');
       if (!wrap) return;
