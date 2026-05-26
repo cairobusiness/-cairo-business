@@ -572,9 +572,125 @@
     window.openBriefingPromptDialog = openBriefingPromptDialog;
 
     /* Inject the button whenever the briefing UI loads */
-    const _bfObserver = new MutationObserver(() => { _injectBriefingPromptButton(); });
+    const _bfObserver = new MutationObserver(() => { _injectBriefingPromptButton(); _injectWhosMovingGenButton(); });
     try { _bfObserver.observe(document.body, { childList: true, subtree: true }); } catch (_) {}
     setTimeout(_injectBriefingPromptButton, 800);
+    setTimeout(_injectWhosMovingGenButton, 800);
+
+    /* ============================================================
+       WHOS-MOVING AI GENERATOR — adds "🪄 ولّد الآن" button at the
+       top of the "تنقّلات تنفيذية" list. Lets editor type a prompt
+       (or use defaults) and bulk-insert 3-5 new exec moves via AI.
+       ============================================================ */
+    function _injectWhosMovingGenButton() {
+      /* Only show this button when we're on the whosmoving tab */
+      const activeTab = document.querySelector('.tab.active');
+      const isWhosMoving = activeTab && (activeTab.getAttribute('onclick') || '').includes('whosmoving');
+      if (!isWhosMoving) {
+        const existing = document.getElementById('wm-gen-btn');
+        if (existing) existing.remove();
+        return;
+      }
+      if (document.getElementById('wm-gen-btn')) return;
+      /* Inject above the list, alongside the existing "+ تنقّل جديد" button */
+      const toolbar = document.querySelector('.toolbar .actions');
+      if (!toolbar) return;
+      const btn = document.createElement('button');
+      btn.id = 'wm-gen-btn';
+      btn.className = 'btn btn-ghost';
+      btn.innerHTML = '🪄 ولّد الآن بالذكاء الاصطناعي';
+      btn.style.cssText = 'border:1px solid rgba(244,208,63,0.4);color:#F4D03F;margin-inline-end:6px;';
+      btn.onclick = openWhosMovingGenDialog;
+      toolbar.insertBefore(btn, toolbar.firstChild);
+    }
+
+    function openWhosMovingGenDialog() {
+      let overlay = document.getElementById('cb-wm-overlay');
+      if (overlay) { overlay.style.display = 'flex'; return; }
+      overlay = document.createElement('div');
+      overlay.id = 'cb-wm-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.85);backdrop-filter:blur(8px);z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;';
+      overlay.innerHTML = '<div style="background:linear-gradient(155deg,#0f1a3d,#0a0e27);border:1px solid rgba(244,208,63,.35);border-radius:18px;padding:26px 28px;max-width:780px;width:100%;position:relative;color:#fff;">'
+        +   '<button onclick="document.getElementById(\'cb-wm-overlay\').style.display=\'none\'" style="position:absolute;top:14px;inset-inline-end:14px;background:rgba(10,14,39,.7);border:1px solid rgba(255,255,255,.15);color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;">×</button>'
+        +   '<h2 style="font-size:20px;font-weight:800;color:#F4D03F;margin-bottom:6px;">🪄 توليد تنقّلات تنفيذية بالذكاء الاصطناعي</h2>'
+        +   '<p style="font-size:13px;opacity:0.75;margin-bottom:18px;line-height:1.7;">اكتب توجيه عن القطاع أو الدولة، أو سيب الحقل فاضي وهيولّد تنقّلات متنوعة من المنطقة.</p>'
+        +   '<div style="margin-bottom:6px;font-size:12px;color:#F4D03F;font-weight:700;">أمثلة سريعة:</div>'
+        +   '<div id="cb-wm-presets" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>'
+        +   '<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">'
+        +     '<label style="font-size:12px;opacity:0.7;">عدد التنقّلات:</label>'
+        +     '<input id="cb-wm-count" type="number" min="1" max="10" value="5" style="width:80px;padding:6px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-family:inherit;" />'
+        +   '</div>'
+        +   '<textarea id="cb-wm-input" placeholder="مثال: تنقّلات في قطاع البنوك المصرية والخليجية في الفترة الأخيرة" style="width:100%;min-height:100px;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(244,208,63,0.3);border-radius:10px;color:#fff;font-family:inherit;font-size:14px;line-height:1.7;resize:vertical;"></textarea>'
+        +   '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">'
+        +     '<button id="cb-wm-cancel" style="background:transparent;color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.15);padding:10px 18px;border-radius:9px;cursor:pointer;">إلغاء</button>'
+        +     '<button id="cb-wm-preview" style="background:rgba(244,208,63,0.15);color:#F4D03F;border:1px solid rgba(244,208,63,0.4);padding:10px 18px;border-radius:9px;cursor:pointer;font-weight:600;">👁️ معاينة فقط</button>'
+        +     '<button id="cb-wm-generate" style="background:linear-gradient(135deg,#F4D03F,#c9a227);color:#0A0E27;border:none;padding:10px 22px;border-radius:9px;cursor:pointer;font-weight:700;">⚡ ولّد وأضف للقائمة</button>'
+        +   '</div>'
+        +   '<div id="cb-wm-status" style="margin-top:14px;font-size:13px;line-height:1.6;min-height:20px;"></div>'
+        +   '<div id="cb-wm-result" style="margin-top:14px;max-height:340px;overflow-y:auto;"></div>'
+        + '</div>';
+      document.body.appendChild(overlay);
+
+      const presets = [
+        'تنقّلات في قطاع البنوك المصرية والخليجية',
+        'تعيينات تنفيذيين في شركات العقارات الإماراتية',
+        'تنقّلات في شركات التكنولوجيا والشركات الناشئة المصرية',
+        'تعيينات في قطاع الطاقة والبتروكيماويات السعودية',
+        'تنقّلات نسائية قيادية في المنطقة'
+      ];
+      const pst = document.getElementById('cb-wm-presets');
+      presets.forEach(p => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = p;
+        b.style.cssText = 'background:rgba(255,255,255,0.04);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,0.1);padding:5px 12px;border-radius:9999px;cursor:pointer;font-size:11px;';
+        b.onclick = function () { document.getElementById('cb-wm-input').value = p; };
+        pst.appendChild(b);
+      });
+
+      const status = document.getElementById('cb-wm-status');
+      const result = document.getElementById('cb-wm-result');
+      document.getElementById('cb-wm-cancel').onclick = function () { overlay.style.display = 'none'; };
+      const _run = async function (save) {
+        const promptText = (document.getElementById('cb-wm-input').value || '').trim();
+        const count = Number(document.getElementById('cb-wm-count').value || 5);
+        status.style.color = '#F4D03F';
+        status.textContent = '⏳ جاري التواصل مع الذكاء الاصطناعي...';
+        result.innerHTML = '';
+        try {
+          const token = localStorage.getItem('cb_auth_token');
+          const r = await fetch('https://cairo-business-backend.vercel.app/api/admin/generate-whosmoving', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: promptText, count: count, save: save })
+          });
+          const j = await r.json();
+          if (!j || !j.success) { status.style.color = '#ef4444'; status.textContent = '✗ فشل: ' + (j?.error || r.status); return; }
+          status.style.color = '#10b981';
+          status.textContent = save
+            ? '✓ تم إضافة ' + (j.saved || 0) + ' تنقّل للقائمة — حدّث الصفحة لرؤيتهم'
+            : '✓ تم التوليد — ' + j.items.length + ' تنقّل (معاينة فقط)';
+          result.innerHTML = j.items.map((it, i) => '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;line-height:1.7;">'
+            + '<strong style="color:#F4D03F;">' + (it.personAr || '?') + '</strong>'
+            + ' <span style="opacity:0.6;">' + (it.positionAr || '') + '</span><br>'
+            + '<span style="font-size:12px;color:rgba(255,255,255,0.55);">'
+            + (it.oldCompanyAr ? ('من ' + it.oldCompanyAr + ' → ') : '')
+            + (it.newCompanyAr ? ('إلى ' + it.newCompanyAr) : '')
+            + (it.categoryAr ? (' · ' + it.categoryAr) : '')
+            + '</span>'
+            + '</div>').join('');
+          if (save && typeof switchToEntity === 'function') {
+            setTimeout(function () { try { switchToEntity('whosmoving'); } catch (_) {} }, 1500);
+          }
+        } catch (e) {
+          status.style.color = '#ef4444';
+          status.textContent = '✗ خطأ: ' + (e.message || 'unknown');
+        }
+      };
+      document.getElementById('cb-wm-preview').onclick = function () { _run(false); };
+      document.getElementById('cb-wm-generate').onclick = function () { _run(true); };
+    }
+    window.openWhosMovingGenDialog = openWhosMovingGenDialog;
 
     /* ============================================================
        SET-IMAGEURL HOOK — wraps `api()` so that after a successful
