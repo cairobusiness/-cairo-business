@@ -12011,6 +12011,123 @@
     }
 
     /* ═════════════════════════════════════════════════════════════
+       PARALLEL FX — auto-fetch USD/EGP rates every 5 min + on focus.
+       Backend: GET /api/scrape/fx-egp (cached 5 min server-side).
+       Updates: rate boxes, spread, chart line, sources grid, "updated" pill.
+       ═════════════════════════════════════════════════════════════ */
+    async function loadParallelFx() {
+      try {
+        const r = await fetch('https://cairo-business-backend.vercel.app/api/scrape/fx-egp', { cache: 'no-store' });
+        const j = await r.json();
+        if (!j || !j.success || !j.data) return;
+        const d = j.data;
+
+        const fmt = (n) => Number(n).toFixed(2);
+        const sec = document.getElementById('parallel-fx');
+        if (!sec) return;
+
+        /* Official + parallel rate boxes */
+        const offEl = sec.querySelector('.pfx-official .pfx-rate-val');
+        const parEl = sec.querySelector('.pfx-parallel .pfx-rate-val');
+        if (offEl) offEl.textContent = fmt(d.official.rate);
+        if (parEl) parEl.textContent = fmt(d.parallel.rate);
+
+        /* Change pills */
+        const offChange = sec.querySelector('.pfx-official .pfx-rate-change');
+        if (offChange) {
+          const up = d.official.changePct >= 0;
+          offChange.textContent = (up ? '▲' : '▼') + ' ' + Math.abs(d.official.changePct).toFixed(1) + '%';
+          offChange.className = 'pfx-rate-change ' + (up ? 'up' : 'down');
+        }
+        const parChange = sec.querySelector('.pfx-parallel .pfx-rate-change');
+        if (parChange) {
+          const up = d.parallel.changePct >= 0;
+          parChange.textContent = (up ? '▲' : '▼') + ' ' + Math.abs(d.parallel.changePct).toFixed(1) + '%';
+          parChange.className = 'pfx-rate-change ' + (up ? 'up' : 'down');
+        }
+
+        /* Spread box */
+        const spreadVal = sec.querySelector('.pfx-vs-spread-val');
+        const spreadPct = sec.querySelector('.pfx-vs-spread-pct');
+        if (spreadVal) spreadVal.textContent = (d.spread.egp >= 0 ? '+' : '') + fmt(d.spread.egp) + ' EGP';
+        if (spreadPct) spreadPct.textContent = (d.spread.pct >= 0 ? '+' : '') + d.spread.pct.toFixed(1) + '%';
+
+        /* Sources grid */
+        const grid = document.getElementById('pfx-sources-grid');
+        if (grid && Array.isArray(d.sources)) {
+          grid.innerHTML = d.sources.map(s => {
+            const isParallel = s.tag === 'parallel';
+            return '<div class="pfx-source" style="border-color:' + (isParallel ? 'rgba(52,211,153,0.25)' : 'rgba(244,208,63,0.25)') + ';">'
+              + '<div class="pfx-source-name">' + s.name + '</div>'
+              + '<div class="pfx-source-rate" style="color:' + (isParallel ? '#34d399' : '#F4D03F') + ';">' + fmt(s.rate) + '</div>'
+              + '<div class="pfx-source-meta">' + (isParallel ? 'موازي' : 'رسمي') + ' · EGP</div>'
+              + '</div>';
+          }).join('');
+        }
+
+        /* "Updated" pill — relative time */
+        const updatedEl = sec.querySelector('.pfx-status span:last-child');
+        if (updatedEl) {
+          const dt = new Date(d.updatedAt);
+          const now = Date.now();
+          const sec_ago = Math.max(1, Math.floor((now - dt.getTime()) / 1000));
+          let label;
+          if (sec_ago < 60) label = 'مُحدّث الآن';
+          else if (sec_ago < 3600) label = 'مُحدّث منذ ' + Math.floor(sec_ago/60) + ' دقيقة';
+          else label = 'مُحدّث منذ ' + Math.floor(sec_ago/3600) + ' ساعة';
+          updatedEl.textContent = label;
+        }
+
+        /* Chart: rebuild polyline + polygons with new history */
+        if (Array.isArray(d.history?.official) && d.history.official.length > 1) {
+          const offPts = d.history.official.slice(-12);
+          const parPts = d.history.parallel.slice(-12);
+          if (offPts.length && parPts.length) {
+            const allVals = offPts.concat(parPts).map(p => p.v).filter(v => isFinite(v));
+            const minV = Math.min(...allVals);
+            const maxV = Math.max(...allVals);
+            const range = (maxV - minV) || 1;
+            const toY = (v) => 190 - ((v - minV) / range) * 160 + 5;
+            const toX = (i) => 20 + (i / (offPts.length - 1)) * 760;
+            const buildPath = (pts) => pts.map((p, i) => toX(i) + ',' + toY(p.v).toFixed(1)).join(' ');
+            const offPath = buildPath(offPts);
+            const parPath = buildPath(parPts);
+            const offPoly = sec.querySelector('polyline[stroke="#F4D03F"]');
+            const parPoly = sec.querySelector('polyline[stroke="#34d399"]');
+            const offFill = sec.querySelector('polygon[fill="url(#pfxOfficial)"]');
+            const parFill = sec.querySelector('polygon[fill="url(#pfxParallel)"]');
+            if (offPoly) offPoly.setAttribute('points', offPath);
+            if (parPoly) parPoly.setAttribute('points', parPath);
+            if (offFill) offFill.setAttribute('points', offPath + ' 780,200 20,200');
+            if (parFill) parFill.setAttribute('points', parPath + ' 780,200 20,200');
+            /* End-of-line value labels */
+            const lastOff = offPts[offPts.length - 1];
+            const lastPar = parPts[parPts.length - 1];
+            const texts = sec.querySelectorAll('text[font-family*="JetBrains"]');
+            if (texts[0]) { texts[0].textContent = fmt(lastOff.v); texts[0].setAttribute('y', String(toY(lastOff.v) - 12)); }
+            if (texts[1]) { texts[1].textContent = fmt(lastPar.v); texts[1].setAttribute('y', String(toY(lastPar.v) - 12)); }
+          }
+        }
+      } catch (e) { console.warn('Parallel FX load failed:', e); }
+    }
+
+    /* Lazy-load when section is near visible + refresh every 5 min */
+    (function () {
+      const sec = document.getElementById('parallel-fx');
+      if (!sec) return;
+      let loaded = false;
+      const trigger = () => { if (loaded) return; loaded = true; loadParallelFx(); };
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((es) => { es.forEach(e => { if (e.isIntersecting) { trigger(); io.disconnect(); } }); }, { rootMargin: '300px 0px' });
+        io.observe(sec);
+      } else { trigger(); }
+      /* Re-fetch every 5 min while page is open */
+      setInterval(() => { if (loaded && !document.hidden) loadParallelFx(); }, 5 * 60 * 1000);
+      /* Refresh when the user returns to the tab */
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && loaded) loadParallelFx(); });
+    })();
+
+    /* ═════════════════════════════════════════════════════════════
        WOMEN OF IMPACT — Magazine + Podium + Grid renderer
        Data: GET /api/content-blocks?section=women-of-impact
        Each item uses ContentBlock fields:
