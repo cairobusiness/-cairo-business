@@ -12068,7 +12068,9 @@
 
       const heroImg = document.getElementById('woi-hero-img');
       if (item.imageUrl) {
-        heroImg.style.backgroundImage = 'url("' + item.imageUrl + '")';
+        heroImg.style.backgroundImage = 'url("' + item.imageUrl.replace(/"/g, '\\"') + '")';
+        heroImg.style.backgroundSize = 'cover';
+        heroImg.style.backgroundPosition = 'center';
       }
       document.getElementById('woi-hero-readmore').onclick = function () { openWoiModal(item.id); };
       document.getElementById('woi-hero').style.display = 'block';
@@ -12104,15 +12106,15 @@
         const isCenter = (rank === 1);
         const crown = isCenter ? '<div style="font-size:28px; margin-bottom:4px;">👑</div>' : '';
         const transform = isCenter ? 'transform:translateY(-12px);' : '';
-        const imgStyle = it.imageUrl
-          ? 'background:url("' + it.imageUrl + '") center/cover no-repeat;'
-          : 'background:' + color + ';';
+        /* Always render with initials fallback styling. The background image (if any)
+           is applied via JS AFTER innerHTML — safer for base64 data URLs that would
+           break inline style="background:url(...)" with their quote characters. */
         const revVal = it.numericValue ? '$' + (it.numericValue >= 1000 ? (it.numericValue/1000).toFixed(1) + 'B' : it.numericValue.toFixed(0) + 'M') : '';
         return ''
-          + '<div class="woi-podium-col" style="' + transform + '" data-id="' + (it.id || '') + '">'
+          + '<div class="woi-podium-col" style="' + transform + '" data-id="' + (it.id || '') + '" data-img="' + (it.imageUrl ? '1' : '0') + '">'
           +   crown
           +   '<div style="position:relative; display:inline-block;">'
-          +     '<div class="woi-podium-img" style="width:' + size + 'px; height:' + size + 'px;' + imgStyle + ' border:3px solid ' + labelColor + '50;' + (it.imageUrl ? '' : ' display:grid; place-items:center; color:#fff; font-weight:900; font-size:' + fontSize + 'px;') + '">' + (it.imageUrl ? '' : initials) + '</div>'
+          +     '<div class="woi-podium-img" style="width:' + size + 'px; height:' + size + 'px; background:' + color + '; border:3px solid ' + labelColor + '50; display:grid; place-items:center; color:#fff; font-weight:900; font-size:' + fontSize + 'px;">' + initials + '</div>'
           +     '<div style="position:absolute; top:-10px; inset-inline-start:-10px; width:' + (isCenter ? 44 : 36) + 'px; height:' + (isCenter ? 44 : 36) + 'px; border-radius:50%; background:' + color + '; display:grid; place-items:center; font-weight:900; color:#0a0e27; font-size:' + (isCenter ? 18 : 14) + 'px; border:3px solid #0a0e27;">' + rank + '</div>'
           +   '</div>'
           +   '<h4 style="font-family:\'Playfair Display\',serif; font-size:' + (isCenter ? 22 : 17) + 'px; font-weight:900; margin:12px 0 4px; color:#fff;">' + (name || '—') + '</h4>'
@@ -12121,9 +12123,19 @@
           +   '<div style="height:' + heights[i] + 'px; background:linear-gradient(180deg,' + labelColor + '40,' + labelColor + '10); border-radius:8px 8px 0 0; margin-top:14px; border-top:3px solid ' + labelColor + '; display:grid; place-items:center; font-size:' + (isCenter ? 48 : 32) + 'px; font-weight:900; color:rgba(255,255,255,0.2);">' + rank + '</div>'
           + '</div>';
       }).join('');
-      /* Click handlers */
-      wrap.querySelectorAll('.woi-podium-col').forEach(el => {
+      /* Click handlers + apply background images for items that have one. */
+      wrap.querySelectorAll('.woi-podium-col').forEach((el, i) => {
         el.addEventListener('click', () => { const id = el.getAttribute('data-id'); if (id) openWoiModal(id); });
+        const it = order[i];
+        if (it && it.imageUrl) {
+          const imgDiv = el.querySelector('.woi-podium-img');
+          if (imgDiv) {
+            imgDiv.style.backgroundImage = 'url("' + it.imageUrl.replace(/"/g, '\\"') + '")';
+            imgDiv.style.backgroundSize = 'cover';
+            imgDiv.style.backgroundPosition = 'center';
+            imgDiv.textContent = ''; /* hide initials when image present */
+          }
+        }
       });
       document.getElementById('woi-podium-wrap').style.display = 'block';
     }
@@ -12139,14 +12151,11 @@
         const sector = isAr ? (it.categoryAr || it.categoryEn || '') : (it.categoryEn || it.categoryAr || '');
         const flag = it.numericLabel || '🌍';
         const initials = (name || '?').split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('');
-        const imgStyle = it.imageUrl
-          ? 'background:url("' + it.imageUrl + '") center/cover no-repeat;'
-          : 'background:linear-gradient(135deg,#3b3a8a,#8b5cf6); display:grid; place-items:center; color:#fff; font-weight:900; font-size:20px;';
         const revVal = it.numericValue ? '$' + (it.numericValue >= 1000 ? (it.numericValue/1000).toFixed(1) + 'B' : it.numericValue.toFixed(0) + 'M') : '';
         return ''
           + '<div class="woi-list-card" data-id="' + (it.id || '') + '">'
           +   '<div style="position:relative; display:inline-block; margin-bottom:12px;">'
-          +     '<div style="width:80px; height:80px; border-radius:50%;' + imgStyle + ' border:3px solid rgba(244,208,63,0.4);">' + (it.imageUrl ? '' : initials) + '</div>'
+          +     '<div class="woi-card-avatar" style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,#3b3a8a,#8b5cf6); display:grid; place-items:center; color:#fff; font-weight:900; font-size:20px; border:3px solid rgba(244,208,63,0.4); background-size:cover; background-position:center;">' + initials + '</div>'
           +     '<div style="position:absolute; top:-6px; inset-inline-start:-6px; width:28px; height:28px; border-radius:50%; background:rgba(244,208,63,0.95); color:#0a0e27; font-weight:900; font-size:12px; display:grid; place-items:center; border:2px solid #0a0e27;">' + rank + '</div>'
           +   '</div>'
           +   '<div style="font-size:10px; color:rgba(255,255,255,0.45); margin-bottom:4px; letter-spacing:1px;">' + flag + ' ' + (sector || '') + '</div>'
@@ -12155,8 +12164,17 @@
           +   (revVal ? '<div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); font-size:11px;"><span style="color:rgba(255,255,255,0.5);">إيراد: </span><span style="color:#F4D03F; font-weight:700;">' + revVal + '</span></div>' : '')
           + '</div>';
       }).join('');
-      wrap.querySelectorAll('.woi-list-card').forEach(el => {
+      /* Apply background images via JS for data URLs */
+      wrap.querySelectorAll('.woi-list-card').forEach((el, i) => {
         el.addEventListener('click', () => { const id = el.getAttribute('data-id'); if (id) openWoiModal(id); });
+        const it = items[i];
+        if (it && it.imageUrl) {
+          const av = el.querySelector('.woi-card-avatar');
+          if (av) {
+            av.style.backgroundImage = 'url("' + it.imageUrl.replace(/"/g, '\\"') + '")';
+            av.textContent = '';
+          }
+        }
       });
       document.getElementById('woi-list-head').style.display = 'block';
     }
@@ -12195,7 +12213,7 @@
       else bioEl.innerHTML = '<p>' + (bio || '').split(/\n\n+/).map(p => p.replace(/</g, '&lt;')).join('</p><p>') + '</p>';
 
       const img = document.getElementById('woi-modal-img');
-      if (item.imageUrl) img.style.backgroundImage = 'url("' + item.imageUrl + '")';
+      if (item.imageUrl) img.style.backgroundImage = 'url("' + item.imageUrl.replace(/"/g, '\\"') + '")';
       else img.style.backgroundImage = 'linear-gradient(135deg,#d4af37,#8b6914)';
 
       /* Stats */
@@ -12212,8 +12230,13 @@
       if (item.linkUrl) links.push({ icon: '💼', label: 'LinkedIn', url: item.linkUrl });
       social.innerHTML = links.map(l => '<a href="' + l.url + '" target="_blank" rel="noopener" style="background:rgba(244,208,63,0.1); color:#F4D03F; border:1px solid rgba(244,208,63,0.3); padding:8px 16px; border-radius:9999px; font-size:13px; text-decoration:none;">' + l.icon + ' ' + l.label + '</a>').join('');
 
-      document.getElementById('woi-modal').style.display = 'flex';
+      const modalEl = document.getElementById('woi-modal');
+      modalEl.style.display = 'flex';
       document.body.style.overflow = 'hidden';
+      /* Reset scroll on both overlay and inner card so the modal opens at the top */
+      modalEl.scrollTop = 0;
+      const card = modalEl.querySelector('div');
+      if (card) card.scrollTop = 0;
     }
     window.openWoiModal = openWoiModal;
     function closeWoiModal() {
