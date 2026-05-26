@@ -12011,6 +12011,102 @@
     }
 
     /* ═════════════════════════════════════════════════════════════
+       SUPPLY CHAIN — auto-fetch commodity prices + AI alerts every 10 min.
+       Backend: GET /api/scrape/supply-chain (cached 10 min server-side).
+       Updates: risk score, 4 category cards, alerts feed.
+       ═════════════════════════════════════════════════════════════ */
+    async function loadSupplyChain() {
+      try {
+        const r = await fetch('https://cairo-business-backend.vercel.app/api/scrape/supply-chain', { cache: 'no-store' });
+        const j = await r.json();
+        if (!j || !j.success || !j.data) return;
+        const d = j.data;
+        const sec = document.getElementById('supply-chain');
+        if (!sec) return;
+
+        /* Global risk pill */
+        const scoreVal = sec.querySelector('.sc-score-val');
+        if (scoreVal) scoreVal.innerHTML = d.globalRisk.score.toFixed(1) + ' <span class="sc-score-out">/10</span>';
+        const scoreStatus = sec.querySelector('.sc-score-status');
+        if (scoreStatus) scoreStatus.textContent = d.globalRisk.status.ar;
+        /* Recolor by risk code */
+        const scorePill = sec.querySelector('.sc-score-pill');
+        if (scorePill) {
+          const colors = {
+            high: { bg: 'rgba(239,68,68,.15), rgba(248,113,113,.05)', border: 'rgba(239,68,68,.40)', text: '#f87171' },
+            med:  { bg: 'rgba(251,191,36,.15), rgba(251,191,36,.05)',  border: 'rgba(251,191,36,.40)', text: '#fbbf24' },
+            low:  { bg: 'rgba(52,211,153,.15), rgba(52,211,153,.05)',  border: 'rgba(52,211,153,.40)', text: '#34d399' }
+          };
+          const c = colors[d.globalRisk.status.code] || colors.med;
+          scorePill.style.background = 'linear-gradient(135deg, ' + c.bg + ')';
+          scorePill.style.borderColor = c.border;
+          if (scoreVal) scoreVal.style.color = c.text;
+          if (scoreStatus) scoreStatus.style.color = c.text;
+        }
+
+        /* Category cards */
+        const cats = document.getElementById('sc-cats');
+        if (cats && Array.isArray(d.categories)) {
+          cats.innerHTML = d.categories.map(c => {
+            const up = c.changePct >= 0;
+            const trendColor = (c.key === 'food' || c.key === 'oil' || c.key === 'gas') ? (up ? '#f87171' : '#34d399') : (up ? '#fbbf24' : '#60a5fa');
+            return ''
+              + '<div class="sc-cat" style="--ic:' + c.color + '; --bg:' + c.color + '15; --bc:' + c.color + '30;">'
+              +   '<div class="sc-cat-icon"><i data-lucide="' + c.icon + '" class="w-5 h-5"></i></div>'
+              +   '<div class="sc-cat-name">' + c.nameAr + '</div>'
+              +   '<div class="sc-cat-count">' + c.value + '</div>'
+              +   '<div class="sc-cat-trend ' + (up ? 'up' : 'down') + '" style="color:' + trendColor + ';">' + (up ? '▲ +' : '▼ ') + Math.abs(c.changePct).toFixed(1) + '% · ' + c.subAr + '</div>'
+              + '</div>';
+          }).join('');
+          if (window.lucide) try { lucide.createIcons(); } catch (_) {}
+        }
+
+        /* Alerts feed */
+        const list = document.getElementById('sc-alerts');
+        const countPill = document.getElementById('sc-count-pill');
+        if (countPill) countPill.innerHTML = (d.alerts?.length || 0) + ' <span>تنبيه</span>';
+        if (list && Array.isArray(d.alerts)) {
+          const sevIcon = { high: 'alert-octagon', med: 'alert-triangle', low: 'info' };
+          const sevColor = { high: '#f87171', med: '#fbbf24', low: '#60a5fa' };
+          list.innerHTML = d.alerts.map(a => {
+            const sev = ['high','med','low'].includes(a.severity) ? a.severity : 'med';
+            const color = sevColor[sev];
+            return ''
+              + '<div class="sc-alert">'
+              +   '<div class="sc-alert-bar ' + sev + '"></div>'
+              +   '<div class="sc-alert-icon" style="--ic:' + color + '; --ag:' + color + '15;"><i data-lucide="' + sevIcon[sev] + '" class="w-4 h-4"></i></div>'
+              +   '<div class="sc-alert-body">'
+              +     '<div class="sc-alert-title">' + (a.titleAr || a.titleEn || '—') + '</div>'
+              +     '<div class="sc-alert-meta">'
+              +       '<span class="sc-alert-meta-item">📍 ' + (a.location || '—') + '</span>'
+              +       '<span class="sc-alert-meta-item">·</span>'
+              +       '<span class="sc-alert-meta-item">🕐 ' + (a.timeAgo || 'الآن') + '</span>'
+              +       (a.categoryAr ? '<span class="sc-alert-meta-item">·</span><span class="sc-alert-meta-item">' + a.categoryAr + '</span>' : '')
+              +     '</div>'
+              +   '</div>'
+              +   '<span class="sc-impact-pill ' + sev + '">' + (sev === 'high' ? 'مرتفع' : sev === 'med' ? 'متوسط' : 'منخفض') + '</span>'
+              + '</div>';
+          }).join('');
+          if (window.lucide) try { lucide.createIcons(); } catch (_) {}
+        }
+      } catch (e) { console.warn('Supply chain load failed:', e); }
+    }
+
+    /* Lazy-load + auto-refresh every 10 min */
+    (function () {
+      const sec = document.getElementById('supply-chain');
+      if (!sec) return;
+      let loaded = false;
+      const trigger = () => { if (loaded) return; loaded = true; loadSupplyChain(); };
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((es) => { es.forEach(e => { if (e.isIntersecting) { trigger(); io.disconnect(); } }); }, { rootMargin: '300px 0px' });
+        io.observe(sec);
+      } else { trigger(); }
+      setInterval(() => { if (loaded && !document.hidden) loadSupplyChain(); }, 10 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && loaded) loadSupplyChain(); });
+    })();
+
+    /* ═════════════════════════════════════════════════════════════
        PARALLEL FX — auto-fetch USD/EGP rates every 5 min + on focus.
        Backend: GET /api/scrape/fx-egp (cached 5 min server-side).
        Updates: rate boxes, spread, chart line, sources grid, "updated" pill.
