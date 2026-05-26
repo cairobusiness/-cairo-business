@@ -12011,6 +12011,152 @@
     }
 
     /* ═════════════════════════════════════════════════════════════
+       TRADE FINANCE CALCULATOR — realistic LC/BG/FWD/Discount cost math.
+       Live updates on every input change. Bank multipliers reflect
+       observed pricing differences across the Egyptian market.
+       ═════════════════════════════════════════════════════════════ */
+    (function () {
+      /* Per-instrument fee structure. All rates are PER YEAR (annualized).
+         Base = % of deal value · per year
+         Process = fixed USD fee
+         FX = % of deal · only if currency != EGP
+         Insurance = % of deal · per year */
+      const TF_INSTRUMENTS = {
+        lc:   { name:'Letter of Credit', base:0.0125, process:150, fx:0.0075, insurance:0.0020, perQuarter:true }, /* 1.25% per quarter */
+        bg:   { name:'Bank Guarantee',   base:0.0150, process:100, fx:0,      insurance:0.0010, perQuarter:true }, /* 1.5% per quarter */
+        fwd:  { name:'Forward Contract', base:0.0080, process:50,  fx:0.0050, insurance:0.0005, perQuarter:false }, /* 0.8% per year + spread */
+        disc: { name:'Invoice Disc.',    base:0.1800, process:80,  fx:0.0075, insurance:0.0030, perQuarter:false }  /* 18% per year (discount rate) */
+      };
+      /* Bank pricing multipliers (cheap → expensive) */
+      const TF_BANKS = {
+        adib: { name:'أبوظبي الإسلامي', mult:0.95 },
+        nbe:  { name:'البنك الأهلي المصري', mult:1.00 },
+        qnb:  { name:'QNB Al Ahli', mult:1.05 },
+        cib:  { name:'CIB', mult:1.10 },
+        hsbc: { name:'HSBC مصر', mult:1.15 }
+      };
+      /* FX rates to USD (approximate — for display only) */
+      const TF_FX_TO_USD = { USD:1, EUR:1.08, EGP:0.019, SAR:0.27, AED:0.27 };
+      const TF_SYMBOLS = { USD:'$', EUR:'€', EGP:'ج.م', SAR:'ر.س', AED:'د.إ' };
+
+      function $$(id) { return document.getElementById(id); }
+      function fmtMoney(n, symbol) {
+        if (!isFinite(n)) n = 0;
+        const rounded = Math.round(n);
+        return symbol + rounded.toLocaleString('en-US');
+      }
+
+      let currentInstrument = 'lc';
+
+      function computeTfCost() {
+        const amountInput = $$('tf-amount');
+        const currencyEl  = $$('tf-currency');
+        const periodEl    = $$('tf-period');
+        const bankEl      = $$('tf-bank');
+        if (!amountInput || !currencyEl || !periodEl || !bankEl) return;
+
+        const amount = Math.max(0, Number(amountInput.value) || 0);
+        const currency = currencyEl.value || 'USD';
+        const months   = Math.max(1, Number(periodEl.value) || 1);
+        const bankKey  = bankEl.value || 'nbe';
+        const bank     = TF_BANKS[bankKey] || TF_BANKS.nbe;
+        const instr    = TF_INSTRUMENTS[currentInstrument] || TF_INSTRUMENTS.lc;
+        const symbol   = TF_SYMBOLS[currency] || currency;
+
+        /* Period factor */
+        const years = months / 12;
+        const quarters = Math.ceil(months / 3);
+        const periodFactor = instr.perQuarter ? quarters : years;
+
+        /* Compute each component, then apply bank multiplier */
+        const feeBase    = amount * instr.base * periodFactor * bank.mult;
+        const feeProcess = instr.process * bank.mult;
+        const feeFx      = (currency !== 'EGP' && currency !== 'USD') ? amount * instr.fx : (currency === 'EGP' ? amount * instr.fx * 0.5 : 0);
+        const feeIns     = amount * instr.insurance * years * bank.mult;
+        const total = feeBase + feeProcess + feeFx + feeIns;
+        const pct   = amount > 0 ? (total / amount) * 100 : 0;
+
+        /* Render */
+        $$('tf-total').textContent       = fmtMoney(total, symbol);
+        $$('tf-pct').textContent         = pct.toFixed(2) + '%';
+        $$('tf-fee-base').textContent    = fmtMoney(feeBase, symbol);
+        $$('tf-fee-process').textContent = fmtMoney(feeProcess, symbol);
+        $$('tf-fee-fx').textContent      = fmtMoney(feeFx, symbol);
+        $$('tf-fee-insurance').textContent = fmtMoney(feeIns, symbol);
+        $$('tf-period-out').textContent  = String(months);
+
+        /* Update the tip with a smart suggestion */
+        const tipEl = document.querySelector('#trade-finance .tf-tip span');
+        if (tipEl) {
+          const cheapestBank = Object.entries(TF_BANKS).sort((a, b) => a[1].mult - b[1].mult)[0];
+          const cheapestSavings = Math.round(total * (1 - cheapestBank[1].mult / bank.mult));
+          if (bankKey !== cheapestBank[0] && cheapestSavings > 0) {
+            tipEl.innerHTML = '💡 لو اخترت <strong>' + cheapestBank[1].name + '</strong> توفر تقريباً <strong>' + fmtMoney(cheapestSavings, symbol) + '</strong>';
+          } else if (months > 12) {
+            tipEl.textContent = '💡 المدة طويلة — فكّر في تقسيم الصفقة لجزئين لتقليل تكلفة التمويل';
+          } else {
+            tipEl.textContent = '💡 نصيحة: قارن العروض من 3 بنوك على الأقل — الفرق يصل لـ 40%.';
+          }
+        }
+      }
+
+      function initTradeFinance() {
+        const section = $$('trade-finance');
+        if (!section) return;
+
+        /* Instrument pills click handler */
+        section.querySelectorAll('.tf-pill').forEach(pill => {
+          pill.addEventListener('click', () => {
+            section.querySelectorAll('.tf-pill').forEach(p => p.classList.remove('is-active'));
+            pill.classList.add('is-active');
+            currentInstrument = pill.getAttribute('data-instrument') || 'lc';
+            computeTfCost();
+          });
+        });
+
+        /* Input listeners */
+        ['tf-amount', 'tf-currency', 'tf-period', 'tf-bank'].forEach(id => {
+          const el = $$(id);
+          if (el) el.addEventListener('input', computeTfCost);
+          if (el) el.addEventListener('change', computeTfCost);
+        });
+
+        /* CTA — open contact form OR mailto */
+        const cta = section.querySelector('.tf-cta');
+        if (cta) {
+          cta.addEventListener('click', () => {
+            const amount = $$('tf-amount').value;
+            const currency = $$('tf-currency').value;
+            const months = $$('tf-period').value;
+            const bank = TF_BANKS[$$('tf-bank').value]?.name || '—';
+            const instr = TF_INSTRUMENTS[currentInstrument]?.name || '—';
+            const total = $$('tf-total').textContent;
+            const subject = encodeURIComponent('طلب عرض رسمي — ' + instr);
+            const body = encodeURIComponent(
+              'مرحباً،\n\nأرغب في الحصول على عرض رسمي لـ:\n' +
+              '• الأداة: ' + instr + '\n' +
+              '• القيمة: ' + amount + ' ' + currency + '\n' +
+              '• المدة: ' + months + ' شهور\n' +
+              '• البنك المفضل: ' + bank + '\n' +
+              '• التقدير الأولي: ' + total + '\n\n' +
+              'شكراً.'
+            );
+            window.location.href = 'mailto:contact@cairobusiness.net?subject=' + subject + '&body=' + body;
+          });
+        }
+
+        /* Initial compute */
+        computeTfCost();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTradeFinance);
+      } else {
+        initTradeFinance();
+      }
+    })();
+
+    /* ═════════════════════════════════════════════════════════════
        SUPPLY CHAIN — auto-fetch commodity prices + AI alerts every 10 min.
        Backend: GET /api/scrape/supply-chain (cached 10 min server-side).
        Updates: risk score, 4 category cards, alerts feed.
