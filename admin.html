@@ -681,9 +681,12 @@
       let item = { titleAr:'', titleEn:'', positionAr:'', positionEn:'', newCompanyAr:'', newCompanyEn:'', authorAr:'', numericLabel:'🇪🇬', categoryAr:'', categoryEn:'', subtitleAr:'', subtitleEn:'', descAr:'', descEn:'', imageUrl:'', linkUrl:'', numericValue:'', sortOrder: 100 };
       if (isEdit) {
         const token = localStorage.getItem('cb_auth_token');
-        const r = await fetch(WOI_API + '/' + id, { headers: { Authorization: 'Bearer ' + token } });
+        /* The single-item GET doesn't exist on content-blocks. Fetch the list and find by id. */
+        const r = await fetch(WOI_API + '?section=women-of-impact&limit=200', { headers: { Authorization: 'Bearer ' + token } });
         const j = await r.json();
-        if (j && j.data) item = Object.assign(item, j.data);
+        const found = (j.data || []).find(x => String(x.id) === String(id));
+        if (found) item = Object.assign(item, found);
+        else { alert('لم يتم العثور على العنصر — قد يكون محذوفاً.'); return; }
       }
       window.__currentItem = item;
 
