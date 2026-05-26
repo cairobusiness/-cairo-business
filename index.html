@@ -12024,11 +12024,12 @@
         const sec = document.getElementById('supply-chain');
         if (!sec) return;
 
-        /* Global risk pill */
+        /* Global risk pill — translate placeholder status to Arabic */
+        const statusAr = { high: 'مرتفع', med: 'متوسط', low: 'منخفض' };
         const scoreVal = sec.querySelector('.sc-score-val');
         if (scoreVal) scoreVal.innerHTML = d.globalRisk.score.toFixed(1) + ' <span class="sc-score-out">/10</span>';
         const scoreStatus = sec.querySelector('.sc-score-status');
-        if (scoreStatus) scoreStatus.textContent = d.globalRisk.status.ar;
+        if (scoreStatus) scoreStatus.textContent = statusAr[d.globalRisk.status.code] || d.globalRisk.status.ar;
         /* Recolor by risk code */
         const scorePill = sec.querySelector('.sc-score-pill');
         if (scorePill) {
@@ -12044,18 +12045,22 @@
           if (scoreStatus) scoreStatus.style.color = c.text;
         }
 
-        /* Category cards */
+        /* Category cards — translate placeholder ar keys to real Arabic */
+        const arNames = { oil: 'النفط والطاقة', gas: 'الغاز الطبيعي', metals: 'المعادن الصناعية', food: 'السلع الغذائية' };
+        const arSubs = { oil: 'برنت / يوم', gas: 'NG / MMBtu', metals: 'نحاس / رطل', food: 'قمح / بوشل' };
         const cats = document.getElementById('sc-cats');
         if (cats && Array.isArray(d.categories)) {
           cats.innerHTML = d.categories.map(c => {
             const up = c.changePct >= 0;
             const trendColor = (c.key === 'food' || c.key === 'oil' || c.key === 'gas') ? (up ? '#f87171' : '#34d399') : (up ? '#fbbf24' : '#60a5fa');
+            const name = arNames[c.key] || c.nameEn || c.nameAr;
+            const sub = arSubs[c.key] || c.subEn || c.subAr;
             return ''
               + '<div class="sc-cat" style="--ic:' + c.color + '; --bg:' + c.color + '15; --bc:' + c.color + '30;">'
               +   '<div class="sc-cat-icon"><i data-lucide="' + c.icon + '" class="w-5 h-5"></i></div>'
-              +   '<div class="sc-cat-name">' + c.nameAr + '</div>'
+              +   '<div class="sc-cat-name">' + name + '</div>'
               +   '<div class="sc-cat-count">' + c.value + '</div>'
-              +   '<div class="sc-cat-trend ' + (up ? 'up' : 'down') + '" style="color:' + trendColor + ';">' + (up ? '▲ +' : '▼ ') + Math.abs(c.changePct).toFixed(1) + '% · ' + c.subAr + '</div>'
+              +   '<div class="sc-cat-trend ' + (up ? 'up' : 'down') + '" style="color:' + trendColor + ';">' + (up ? '▲ +' : '▼ ') + Math.abs(c.changePct).toFixed(1) + '% · ' + sub + '</div>'
               + '</div>';
           }).join('');
           if (window.lucide) try { lucide.createIcons(); } catch (_) {}
