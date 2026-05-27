@@ -8055,9 +8055,13 @@
       .tf-result { background:linear-gradient(180deg, rgba(244,208,63,.08), rgba(255,255,255,.01)); }
       .tf-field { margin-bottom:18px; }
       .tf-field label { display:block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.65); margin-bottom:8px; }
-      .tf-input-row { display:flex; gap:8px; }
-      .tf-input-row input { flex:1; }
-      .tf-inputs input, .tf-inputs select { padding:12px 14px; background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.10); border-radius:10px; color:#fff; font-size:14px; font-family:inherit; width:100%; transition:all .2s; }
+      .tf-input-row { display:flex; gap:8px; align-items:stretch; width:100%; }
+      .tf-input-row input { flex:1 1 auto; min-width:0; width:auto !important; }
+      .tf-input-row select { flex:0 0 110px; width:110px !important; min-width:110px; }
+      .tf-inputs input, .tf-inputs select { padding:12px 14px; background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.10); border-radius:10px; color:#fff; font-size:16px; font-family:inherit; width:100%; transition:all .2s; box-sizing:border-box; height:auto; min-height:46px; }
+      .tf-inputs input[type="number"] { -moz-appearance:textfield; text-align:left; direction:ltr; letter-spacing:0.5px; font-weight:600; }
+      .tf-inputs input[type="number"]::-webkit-outer-spin-button,
+      .tf-inputs input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
       .tf-inputs input:focus, .tf-inputs select:focus { outline:none; border-color:#F4D03F; background:rgba(244,208,63,.05); }
       .tf-inputs select { cursor:pointer; }
       .tf-pills { display:flex; flex-wrap:wrap; gap:6px; }
