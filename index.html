@@ -5749,7 +5749,14 @@
         display: grid; place-items: center;
         flex-shrink: 0;
         font-family: 'Cairo', 'Inter', sans-serif;
+        overflow: hidden;
       }
+      .trl-logo:has(img) {
+        background: #0A0E27;
+        border: 1px solid var(--sc, rgba(244,208,63,.4));
+        padding: 0;
+      }
+      .trl-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
 
       .trl-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
       .trl-name {
@@ -11079,7 +11086,14 @@
           const colors = SECTOR_COLORS[sectorKey] || ['#888888', '#555555'];
           setI18nBoth('top10.' + id + '.name',  c.nameAr || c.nameEn, c.nameEn || c.nameAr);
           setI18nBoth('top10.' + id + '.brand', c.nameAr || c.nameEn, c.nameEn || c.nameAr);
-          setI18nBoth('top10.' + id + '.logo',  c.logo || '🏢',       c.logo || '🏢');
+          /* Logo: render as <img> if it's a URL (http/https/data/relative),
+             otherwise treat as emoji/text glyph inside a span. */
+          const rawLogo = String(c.logo || '').trim();
+          const isUrl = /^(https?:\/\/|data:image|\/)/i.test(rawLogo);
+          const logoHTML = isUrl
+            ? '<img src="' + rawLogo.replace(/"/g, '&quot;') + '" alt="' + String(c.nameEn || c.nameAr || 'logo').replace(/"/g, '&quot;') + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block">'
+            : (rawLogo || '🏢');
+          setI18nBoth('top10.' + id + '.logo', logoHTML, logoHTML);
           return {
             id, rank: idx < 10 ? '0' + idx : String(idx),
             countryKey: 'top10.cn.' + String(c.country || 'sa').toLowerCase().replace(/\s/g, ''),
@@ -11190,10 +11204,15 @@
         const tier   = tierKey(c.rank);
         const name   = t('top10.' + c.id + '.name');
         const sector = t(c.spillKey);
+        const logoHtml = t('top10.' + c.id + '.logo') || '';
+        const isImgLogo = /<img\s/i.test(logoHtml);
+        const companyLogoBlock = isImgLogo
+          ? '<div class="trophy-company-logo" style="width:64px;height:64px;border-radius:14px;overflow:hidden;margin:0 auto 14px;background:#0A0E27;border:2px solid var(--sc);box-shadow:0 6px 20px rgba(0,0,0,.4)">' + logoHtml + '</div>'
+          : '';
         return `
           <article class="trophy-card trophy-${tier} reveal" style="--sc:${c.sc};--sc2:${c.sc2};" data-tilt>
             ${tier === 'gold' ? '<div class="trophy-crown"><i data-lucide="crown" class="w-5 h-5"></i></div>' : ''}
-            ${trophySVG(tier)}
+            ${isImgLogo ? companyLogoBlock : trophySVG(tier)}
             <div class="trophy-tier">${t('top10.tier.' + tier)}</div>
             <div class="trophy-rank">${c.rank}</div>
             <h3 class="trophy-name">${name}</h3>
