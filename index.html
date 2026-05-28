@@ -11028,10 +11028,17 @@
        ═════════════════════════════════════════════════════════════ */
     (async function pullTopCompaniesFromAPI() {
       try {
-        const r = await fetch('https://cairo-business-backend.vercel.app/api/companies?limit=16', { cache: 'no-store' });
+        const r = await fetch('https://cairo-business-backend.vercel.app/api/companies?limit=100', { cache: 'no-store' });
         const j = await r.json();
         if (!j || !j.success || !Array.isArray(j.data) || !j.data.length) return;
-        const arr = j.data.slice(0, 16);
+        /* Prefer companies with a real marketCap (the seeded Top 10 set);
+           fall back to all if none have marketCap. Then sort by marketCap desc. */
+        const withCap = j.data.filter(c => typeof c.marketCap === 'number' && c.marketCap > 0);
+        const pool = withCap.length >= 10 ? withCap : j.data;
+        const arr = pool
+          .slice()
+          .sort((a, b) => (Number(b.marketCap) || Number(b.aiScore) || 0) - (Number(a.marketCap) || Number(a.aiScore) || 0))
+          .slice(0, 16);
         const SECTOR_COLORS = {
           energy: ['#FFB800','#FF9500'], banking: ['#3B82F6','#1D4ED8'],
           tech: ['#8B5CF6','#6D28D9'], telecom: ['#06B6D4','#0891B2'],
