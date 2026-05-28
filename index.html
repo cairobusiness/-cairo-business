@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl" data-theme="dark">
+<html lang="en" dir="ltr" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -10633,7 +10633,7 @@
     const $ = (s,r=document)=>r.querySelector(s);
     const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
 
-    let currentLang = 'ar';
+    let currentLang = 'en';
 
     function t(key, lang=currentLang){ return (I18N[lang] && I18N[lang][key]) || key; }
 
@@ -17929,7 +17929,15 @@
         const langBtn = document.getElementById('lang-toggle');
         if (langBtn && !langBtn._wired) {
           langBtn._wired = true;
-          try { const s = localStorage.getItem('cb-lang'); if ((s === 'ar' || s === 'en') && typeof applyLang === 'function') applyLang(s); } catch(_){}
+          try {
+            const s = localStorage.getItem('cb-lang');
+            if ((s === 'ar' || s === 'en') && typeof applyLang === 'function') {
+              applyLang(s);
+            } else if (typeof applyLang === 'function') {
+              /* First visit (no saved choice) — default to English regardless of browser locale */
+              applyLang('en');
+            }
+          } catch(_){}
           langBtn.addEventListener('click', () => {
             const cur = (typeof currentLang !== 'undefined') ? currentLang : 'ar';
             const next = cur === 'ar' ? 'en' : 'ar';
