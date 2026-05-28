@@ -18145,6 +18145,56 @@
           }
         });
         try { if (typeof initTop10ApplyForm === 'function') initTop10ApplyForm(); } catch (e) { console.warn('initTop10ApplyForm failed:', e); }
+        /* Inject result-modal UI used by the Top10 apply form (and any other public form) */
+        try {
+          if (!document.getElementById('apply-result-modal')) {
+            const modalHTML = '\n<style>\n#apply-result-modal{position:fixed;inset:0;background:rgba(2,6,23,.85);backdrop-filter:blur(10px);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px}\n#apply-result-modal.is-open{display:flex}\n#apply-result-modal .arm-card{background:linear-gradient(155deg,#0f1a3d 0%,#0a0e27 100%);border-radius:24px;max-width:520px;width:100%;padding:36px 32px;text-align:center;animation:arm-pop .35s cubic-bezier(.34,1.56,.64,1);box-shadow:0 40px 100px rgba(0,0,0,.65)}\n#apply-result-modal.success .arm-card{border:2px solid rgba(34,197,94,.45)}\n#apply-result-modal.error .arm-card{border:2px solid rgba(239,68,68,.45)}\n@keyframes arm-pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}\n#apply-result-modal .arm-icon{font-size:64px;margin-bottom:14px;line-height:1}\n#apply-result-modal .arm-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:10px}\n#apply-result-modal.success .arm-title{color:#86efac}\n#apply-result-modal.error .arm-title{color:#fca5a5}\n#apply-result-modal .arm-msg{font-size:15px;color:rgba(255,255,255,.85);line-height:1.7;margin-bottom:18px}\n#apply-result-modal .arm-id{display:inline-block;background:rgba(244,208,63,.12);color:#fbbf24;padding:6px 14px;border-radius:8px;font-family:monospace;font-size:13px;margin:8px 0;border:1px solid rgba(244,208,63,.3)}\n#apply-result-modal .arm-meta{font-size:13px;color:rgba(255,255,255,.65);margin-bottom:20px;line-height:1.7}\n#apply-result-modal .arm-meta a{color:#fbbf24;text-decoration:underline}\n#apply-result-modal .arm-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}\n#apply-result-modal .arm-btn{background:linear-gradient(135deg,#d4af37,#b8941f);color:#0a0e27;border:none;padding:12px 26px;border-radius:999px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;transition:transform .2s,box-shadow .2s;box-shadow:0 8px 20px -6px rgba(244,208,63,.5)}\n#apply-result-modal .arm-btn:hover{transform:translateY(-2px);box-shadow:0 12px 28px -6px rgba(244,208,63,.65)}\n#apply-result-modal .arm-btn-ghost{background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);box-shadow:none}\n#apply-result-modal .arm-btn-ghost:hover{background:rgba(255,255,255,.05);color:#fff;transform:none}\n</style>\n<div id="apply-result-modal" role="dialog" aria-modal="true" aria-labelledby="arm-title">\n  <div class="arm-card">\n    <div class="arm-icon" id="arm-icon">✅</div>\n    <div class="arm-title" id="arm-title">تم استلام طلبك بنجاح!</div>\n    <div class="arm-msg" id="arm-msg"></div>\n    <div class="arm-actions">\n      <button class="arm-btn" onclick="closeApplyResultModal()">حسناً</button>\n    </div>\n  </div>\n</div>';
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = modalHTML;
+            while (wrapper.firstChild) document.body.appendChild(wrapper.firstChild);
+          }
+          window.showApplyResultModal = function (opts) {
+            const m = document.getElementById('apply-result-modal');
+            const icon = document.getElementById('arm-icon');
+            const title = document.getElementById('arm-title');
+            const msg = document.getElementById('arm-msg');
+            if (!m) return;
+            m.className = ''; /* reset */
+            if (opts.type === 'success') {
+              m.classList.add('success');
+              icon.textContent = '✅';
+              title.textContent = 'تم استلام طلبك بنجاح!';
+              msg.innerHTML = (opts.name ? ('شكراً <strong>' + (opts.name || '') + '</strong>،<br>') : '')
+                + 'فريقنا في Cairo Business Research هيراجع طلبك ويتواصل معك خلال أسبوع على الإيميل اللي قدمته.'
+                + (opts.id ? ('<br><span class="arm-id">رقم طلبك: ' + opts.id + '</span><br>احفظ الرقم ده للمتابعة.') : '')
+                + '<br><br><small style="color:rgba(255,255,255,.55)">لأي استفسار: <a href="mailto:info@cairobusiness.net">info@cairobusiness.net</a></small>';
+            } else {
+              m.classList.add('error');
+              icon.textContent = '⚠️';
+              title.textContent = 'لم نتمكن من إرسال الطلب';
+              msg.innerHTML = (opts.message || 'حدث خطأ غير متوقع. حاول مرة أخرى.')
+                + '<br><br><small style="color:rgba(255,255,255,.55)">يمكنك إرسال طلبك مباشرة على:<br><a href="mailto:info@cairobusiness.net">info@cairobusiness.net</a></small>';
+            }
+            m.classList.add('is-open');
+            /* Lock body scroll while modal open */
+            document.body.style.overflow = 'hidden';
+          };
+          window.closeApplyResultModal = function () {
+            const m = document.getElementById('apply-result-modal');
+            if (m) m.classList.remove('is-open');
+            document.body.style.overflow = '';
+          };
+          /* Close on Escape and backdrop click */
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeApplyResultModal();
+          });
+          const modalEl = document.getElementById('apply-result-modal');
+          if (modalEl) {
+            modalEl.addEventListener('click', function (e) {
+              if (e.target === modalEl) closeApplyResultModal();
+            });
+          }
+        } catch (e) { console.warn('apply-result-modal init failed:', e); }
         /* Wire Top10 Apply form to /api/submissions */
         try {
           const top10Form = document.getElementById('top10-apply-form');
@@ -18162,11 +18212,15 @@
                 obj[k] = v;
               }
               if (!obj.nameAr || !obj.contactName || !obj.email || !obj.consent1 || !obj.consent2 || !obj.consent3) {
-                statusEl.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);margin-top:14px;">يرجى ملء كل الحقول المطلوبة والموافقة على الشروط.</div>';
+                if (typeof showApplyResultModal === 'function') {
+                  showApplyResultModal({ type: 'error', message: 'يرجى ملء كل الحقول المطلوبة (الاسم، الإيميل، اسم المسؤول) والموافقة على الشروط الثلاثة.' });
+                } else {
+                  statusEl.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);margin-top:14px;">يرجى ملء كل الحقول المطلوبة والموافقة على الشروط.</div>';
+                }
                 return;
               }
-              if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.6'; }
-              statusEl.innerHTML = '<div style="background:rgba(244,208,63,0.12);color:#F4D03F;padding:12px;border-radius:10px;border:1px solid rgba(244,208,63,0.3);margin-top:14px;">⏳ جاري إرسال طلبك...</div>';
+              if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.6'; submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4"></i><span>جاري الإرسال...</span>'; }
+              statusEl.innerHTML = '<div style="background:rgba(244,208,63,0.12);color:#F4D03F;padding:12px;border-radius:10px;border:1px solid rgba(244,208,63,0.3);margin-top:14px;text-align:center;font-weight:600">⏳ جاري إرسال طلبك...</div>';
               const payload = {
                 formKey: 'top10-apply',
                 name: obj.contactName,
@@ -18185,16 +18239,14 @@
                 });
                 const j = await res.json();
                 if (res.ok && j.success) {
-                  statusEl.innerHTML = '<div style="background:rgba(16,185,129,0.12);color:#6ee7b7;padding:18px;border-radius:12px;border:1px solid rgba(16,185,129,0.35);margin-top:14px;text-align:center;font-size:15px;line-height:1.7;"><div style="font-size:32px;margin-bottom:8px;">✅</div><div style="font-weight:700;font-size:17px;margin-bottom:6px;">تم استلام طلبك بنجاح!</div><div>رقم طلبك: <code style="background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:6px;color:#fbbf24;">' + (j.id || '—') + '</code></div><div style="margin-top:10px;color:#86efac;">فريقنا هيراجع طلبك ويتواصل معك خلال أسبوع على الإيميل اللي قدمته. لو في أي استفسار: <a href="mailto:info@cairobusiness.net" style="color:#fbbf24;text-decoration:underline;">info@cairobusiness.net</a></div></div>';
+                  showApplyResultModal({ type: 'success', id: j.id, name: payload.nameAr || payload.nameEn || payload.contactName });
+                  statusEl.innerHTML = '';
                   top10Form.reset();
-                  try { statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
                 } else {
-                  statusEl.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:14px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);margin-top:14px;font-size:14px;">❌ ' + (j.error || 'حصل خطأ. حاول مرة تانية.') + '<br><small style="opacity:0.8;">أو ابعت طلبك على: <a href="mailto:info@cairobusiness.net" style="color:#fbbf24;">info@cairobusiness.net</a></small></div>';
-                  try { statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+                  showApplyResultModal({ type: 'error', message: j.error || 'حصل خطأ. حاول مرة تانية.' });
                 }
               } catch (err) {
-                statusEl.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:14px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);margin-top:14px;font-size:14px;">❌ خطأ في الاتصال. تأكّد من الإنترنت وحاول تاني.<br><small style="opacity:0.8;">أو ابعت طلبك على: <a href="mailto:info@cairobusiness.net" style="color:#fbbf24;">info@cairobusiness.net</a></small></div>';
-                try { statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+                showApplyResultModal({ type: 'error', message: 'خطأ في الاتصال. تأكّد من الإنترنت وحاول تاني.' });
               } finally {
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; }
               }

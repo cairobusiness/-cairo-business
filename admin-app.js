@@ -786,6 +786,8 @@ function renderTabs() {
   const brandTab = isAdmin ? mk('__brand__', '🎨', 'العلامة التجارية', 'switchToBrand') : '';
   // Form submissions (contact + top10 apply) — Admin + Editor + Moderator
   const submissionsTab = (isAdmin || isEditor || isModerator) ? mk('__submissions__', '📬', 'طلبات التواصل', 'switchToSubmissions') : '';
+  // Top 10 Apply submissions — dedicated tab
+  const top10ApplyTab = (isAdmin || isEditor || isModerator) ? mk('__top10apply__', '🏆', 'تقديم · APPLY', 'switchToTop10Apply') : '';
   // Comments moderation — Admin + Editor + Moderator
   const commentsTab = (isAdmin || isEditor || isModerator) ? mk('__comments__', '💬', 'التعليقات', 'switchToCommentsMod') : '';
   // Global Search — Admin + Editor
@@ -813,7 +815,7 @@ function renderTabs() {
   ) : '';
   // Moderator gets messages
   const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + siteContentTab + brandTab + submissionsTab + commentsTab + searchTab + layoutTab + activityTab + backupTab + subsTab + pushTab + adminOnlyTabs + modOnlyTabs;
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + siteContentTab + brandTab + submissionsTab + top10ApplyTab + commentsTab + searchTab + layoutTab + activityTab + backupTab + subsTab + pushTab + adminOnlyTabs + modOnlyTabs;
 }
 
 /* Drafts counter kept for backward compat (no longer displayed) */
@@ -3030,6 +3032,117 @@ async function deleteSubmission(id) {
   if (!confirm('حذف هذا الطلب نهائياً؟')) return;
   const r = await api('/api/admin/submissions/' + id, { method: 'DELETE' });
   if (r.ok) switchToSubmissions();
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Top 10 Apply submissions — dedicated tab with detailed view
+   and reviewed/accepted/rejected status workflow
+   ═════════════════════════════════════════════════════════════ */
+async function switchToTop10Apply() {
+  setupListView({ key: '__top10apply__', label: '🏆 تقديم · APPLY' });
+  const r = await api('/api/admin/submissions?formKey=top10-apply&limit=200');
+  const c = document.getElementById('list-container');
+  if (!r.ok) { c.innerHTML = '<div class="msg msg-error">فشل تحميل الطلبات. شغّل migration: /api/admin/migrate-extras</div>'; return; }
+  const items = r.data.data || [];
+  if (!items.length) {
+    c.innerHTML = '<div class="empty-state"><div class="icon">🏆</div><div class="title">لا توجد طلبات تأهيل بعد</div><div class="subtitle">لما حد يبعت من نموذج "تأهّل لقائمة Top 10" في الموقع، هيظهر هنا.</div><div style="margin-top:14px;font-size:12px;color:rgba(255,255,255,0.5)">رابط النموذج: <a href="https://cairobusiness.net/#top10-apply" target="_blank" style="color:#F4D03F">cairobusiness.net/#top10-apply</a></div></div>';
+    return;
+  }
+  /* Status counters */
+  const counts = { new: 0, reviewed: 0, accepted: 0, rejected: 0 };
+  for (const it of items) { counts[it.status] = (counts[it.status] || 0) + 1; }
+  let html = '<div style="margin-bottom:18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">';
+  html += '<span class="pill" style="font-weight:700">إجمالي ' + items.length + '</span>';
+  html += '<span class="pill" style="background:rgba(34,197,94,0.2);color:#22c55e">🆕 جديد: ' + (counts.new || 0) + '</span>';
+  html += '<span class="pill" style="background:rgba(96,165,250,0.2);color:#60a5fa">👁️ تمت المراجعة: ' + (counts.reviewed || 0) + '</span>';
+  html += '<span class="pill" style="background:rgba(244,208,63,0.2);color:#F4D03F">✓ مقبول: ' + (counts.accepted || 0) + '</span>';
+  html += '<span class="pill" style="background:rgba(239,68,68,0.2);color:#ef4444">✗ مرفوض: ' + (counts.rejected || 0) + '</span>';
+  html += '</div>';
+  html += '<div style="display:flex;flex-direction:column;gap:14px">';
+  for (const s of items) {
+    let payload = {};
+    try { payload = JSON.parse(s.payload || '{}'); } catch (_e) {}
+    const statusBadge = (function () {
+      if (s.status === 'new')      return '<span class="pill" style="background:rgba(34,197,94,0.2);color:#22c55e">🆕 جديد</span>';
+      if (s.status === 'reviewed') return '<span class="pill" style="background:rgba(96,165,250,0.2);color:#60a5fa">👁️ تمت المراجعة</span>';
+      if (s.status === 'accepted') return '<span class="pill" style="background:rgba(244,208,63,0.2);color:#F4D03F">✓ مقبول</span>';
+      if (s.status === 'rejected') return '<span class="pill" style="background:rgba(239,68,68,0.2);color:#ef4444">✗ مرفوض</span>';
+      return '<span class="pill">' + escapeHtml(s.status) + '</span>';
+    })();
+    const companyName = payload.nameAr || payload.nameEn || s.company || '—';
+    const companyEn   = payload.nameEn || '';
+    html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(244,208,63,0.18);border-radius:14px;padding:18px">';
+    /* Header */
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;flex-wrap:wrap">';
+    html += '<div><div style="font-size:18px;font-weight:800;color:#F4D03F">' + escapeHtml(companyName) + '</div>';
+    if (companyEn && companyEn !== companyName) html += '<div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:2px;direction:ltr;text-align:right">' + escapeHtml(companyEn) + '</div>';
+    html += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:6px">رقم الطلب: <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;color:#F4D03F;">' + s.id + '</code> · ' + formatDate(s.createdAt) + '</div></div>';
+    html += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">' + statusBadge + '</div>';
+    html += '</div>';
+    /* Company info */
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;font-size:13px">';
+    if (payload.founded) html += '<div><strong style="color:#94a3b8">سنة التأسيس:</strong> ' + escapeHtml(String(payload.founded)) + '</div>';
+    if (payload.country) html += '<div><strong style="color:#94a3b8">البلد:</strong> ' + escapeHtml(payload.country) + '</div>';
+    if (payload.city)    html += '<div><strong style="color:#94a3b8">المدينة:</strong> ' + escapeHtml(payload.city) + '</div>';
+    if (payload.sector)  html += '<div><strong style="color:#94a3b8">القطاع:</strong> ' + escapeHtml(payload.sector) + '</div>';
+    if (payload.website) html += '<div style="grid-column:1/-1"><strong style="color:#94a3b8">الموقع:</strong> <a href="' + escapeHtml(payload.website) + '" target="_blank" style="color:#F4D03F">' + escapeHtml(payload.website) + '</a></div>';
+    html += '</div>';
+    /* Financial */
+    if (payload.revenue || payload.growth || payload.employees || payload.markets || payload.branches) {
+      html += '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#F4D03F;letter-spacing:1.5px;margin-bottom:8px">📊 الأرقام المالية</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;font-size:13px">';
+      if (payload.revenue)   html += '<div><strong style="color:#94a3b8">الإيرادات:</strong> ' + escapeHtml(payload.revenue) + '</div>';
+      if (payload.growth)    html += '<div><strong style="color:#94a3b8">النمو:</strong> ' + escapeHtml(payload.growth) + '%</div>';
+      if (payload.employees) html += '<div><strong style="color:#94a3b8">الموظفين:</strong> ' + escapeHtml(payload.employees) + '</div>';
+      if (payload.markets)   html += '<div><strong style="color:#94a3b8">الأسواق:</strong> ' + escapeHtml(payload.markets) + '</div>';
+      if (payload.branches)  html += '<div><strong style="color:#94a3b8">الفروع:</strong> ' + escapeHtml(payload.branches) + '</div>';
+      html += '</div></div>';
+    }
+    /* About */
+    if (payload.about) {
+      html += '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#F4D03F;letter-spacing:1.5px;margin-bottom:6px">📝 عن الشركة</div>';
+      html += '<div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.7">' + escapeHtml(payload.about) + '</div></div>';
+    }
+    /* Achievements */
+    if (payload.awards || payload.deals || payload.partners) {
+      html += '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#F4D03F;letter-spacing:1.5px;margin-bottom:6px">🏅 الإنجازات</div>';
+      if (payload.awards)   html += '<div style="font-size:13px;margin-bottom:6px"><strong style="color:#94a3b8">جوائز:</strong> ' + escapeHtml(payload.awards) + '</div>';
+      if (payload.deals)    html += '<div style="font-size:13px;margin-bottom:6px"><strong style="color:#94a3b8">صفقات:</strong> ' + escapeHtml(payload.deals) + '</div>';
+      if (payload.partners) html += '<div style="font-size:13px;margin-bottom:6px"><strong style="color:#94a3b8">شراكات:</strong> ' + escapeHtml(payload.partners) + '</div>';
+      html += '</div>';
+    }
+    /* Contact */
+    html += '<div style="margin-bottom:14px;padding:12px;background:rgba(244,208,63,0.05);border:1px solid rgba(244,208,63,0.15);border-radius:10px"><div style="font-size:11px;font-weight:700;color:#F4D03F;letter-spacing:1.5px;margin-bottom:8px">👤 بيانات التواصل</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;font-size:13px">';
+    if (payload.contactName) html += '<div><strong style="color:#94a3b8">المسؤول:</strong> ' + escapeHtml(payload.contactName) + '</div>';
+    if (payload.position)    html += '<div><strong style="color:#94a3b8">المنصب:</strong> ' + escapeHtml(payload.position) + '</div>';
+    if (s.email)             html += '<div style="grid-column:1/-1"><strong style="color:#94a3b8">إيميل:</strong> <a href="mailto:' + escapeHtml(s.email) + '" style="color:#F4D03F;direction:ltr">' + escapeHtml(s.email) + '</a></div>';
+    if (s.phone)             html += '<div style="grid-column:1/-1"><strong style="color:#94a3b8">تليفون:</strong> <a href="tel:' + escapeHtml(s.phone) + '" style="color:#F4D03F;direction:ltr">' + escapeHtml(s.phone) + '</a></div>';
+    if (payload.linkedin)    html += '<div style="grid-column:1/-1"><strong style="color:#94a3b8">LinkedIn:</strong> <a href="' + escapeHtml(payload.linkedin) + '" target="_blank" style="color:#F4D03F;direction:ltr">' + escapeHtml(payload.linkedin) + '</a></div>';
+    html += '</div></div>';
+    /* Action buttons */
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px">';
+    if (s.status !== 'reviewed') html += '<button class="btn btn-ghost btn-sm" onclick="markTop10Apply(\'' + s.id + '\', \'reviewed\')" style="color:#60a5fa">👁️ تمت المراجعة</button>';
+    if (s.status !== 'accepted') html += '<button class="btn btn-ghost btn-sm" onclick="markTop10Apply(\'' + s.id + '\', \'accepted\')" style="color:#F4D03F">✓ قبول</button>';
+    if (s.status !== 'rejected') html += '<button class="btn btn-ghost btn-sm" onclick="markTop10Apply(\'' + s.id + '\', \'rejected\')" style="color:#ef4444">✗ رفض</button>';
+    if (s.status !== 'new')      html += '<button class="btn btn-ghost btn-sm" onclick="markTop10Apply(\'' + s.id + '\', \'new\')">⟲ إعادة جديد</button>';
+    if (s.email) html += '<a class="btn btn-ghost btn-sm" href="mailto:' + escapeHtml(s.email) + '?subject=' + encodeURIComponent('بخصوص طلب تأهيل Top 10 — ' + companyName) + '" style="color:#22c55e">📧 رد على الإيميل</a>';
+    html += '<button class="btn btn-ghost btn-sm" onclick="deleteTop10Apply(\'' + s.id + '\')" style="color:#ef4444;margin-inline-start:auto">🗑️ حذف</button>';
+    html += '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+async function markTop10Apply(id, status) {
+  const r = await api('/api/admin/submissions/' + id, { method: 'PATCH', body: JSON.stringify({ status }) });
+  if (r.ok) switchToTop10Apply();
+  else alert('فشل تحديث الحالة: ' + (r.data?.error || 'error'));
+}
+async function deleteTop10Apply(id) {
+  if (!confirm('حذف هذا الطلب نهائياً؟ لا يمكن التراجع.')) return;
+  const r = await api('/api/admin/submissions/' + id, { method: 'DELETE' });
+  if (r.ok) switchToTop10Apply();
 }
 
 /* ═════════════════════════════════════════════════════════════
