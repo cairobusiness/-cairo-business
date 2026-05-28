@@ -18291,25 +18291,33 @@
         allKids.forEach(function (k) { parent.appendChild(k); });
         /* 3) After reorder, re-honor the URL hash if present — also handle nested
               targets like #top10-apply which sits inside the top10 section.
-              We retry scroll several times to fight late layout shifts (lazy
-              images, fonts) that push the target after our initial scroll. */
+              The page uses smooth-scroll globally + lazy-loading shifts layout
+              continuously, so we run an instant scroll campaign that re-locks
+              onto the target until two consecutive measurements agree. */
         try {
           var hash = window.location.hash;
           if (hash && hash.length > 1) {
             var target = document.getElementById(hash.slice(1));
             if (target) {
-              var delays = [120, 500, 1200, 2500];
-              delays.forEach(function (d) {
-                setTimeout(function () {
-                  try { target.scrollIntoView({ behavior: d < 200 ? 'auto' : 'smooth', block: 'start' }); } catch (_) {}
-                }, d);
-              });
-              /* Brief highlight pulse so the user knows where they landed */
+              var lockTarget = function () {
+                /* Temporarily disable smooth scroll to land instantly */
+                var prevBehavior = document.documentElement.style.scrollBehavior;
+                document.documentElement.style.scrollBehavior = 'auto';
+                var rect = target.getBoundingClientRect();
+                var absoluteTop = rect.top + window.scrollY;
+                /* Subtract scroll-padding (90px from CSS) so heading isn't hidden by sticky nav */
+                window.scrollTo(0, Math.max(0, absoluteTop - 90));
+                document.documentElement.style.scrollBehavior = prevBehavior;
+              };
+              /* Fire at multiple checkpoints — DOM ready, load, plus catch-up after lazy assets */
+              [60, 300, 800, 1600, 2800, 4200].forEach(function (d) { setTimeout(lockTarget, d); });
+              window.addEventListener('load', function () { setTimeout(lockTarget, 200); });
+              /* Highlight pulse once content is settled */
               setTimeout(function () {
                 target.style.transition = 'box-shadow .8s ease';
-                target.style.boxShadow = '0 0 0 3px rgba(244,208,63,.55), 0 0 60px 10px rgba(244,208,63,.25)';
-                setTimeout(function () { target.style.boxShadow = ''; }, 2200);
-              }, 1300);
+                target.style.boxShadow = '0 0 0 3px rgba(244,208,63,.6), 0 0 60px 12px rgba(244,208,63,.3)';
+                setTimeout(function () { target.style.boxShadow = ''; }, 2400);
+              }, 1800);
             }
           }
         } catch (_e) {}
