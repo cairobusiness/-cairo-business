@@ -18289,6 +18289,24 @@
         });
         allKids.sort(function (a, b) { return (effective[a.id] || 0) - (effective[b.id] || 0); });
         allKids.forEach(function (k) { parent.appendChild(k); });
+        /* 3) After reorder, re-honor the URL hash if present — also handle nested
+              targets like #top10-apply which sits inside the top10 section. */
+        try {
+          var hash = window.location.hash;
+          if (hash && hash.length > 1) {
+            var target = document.getElementById(hash.slice(1));
+            if (target) {
+              /* Wait a tick for layout to settle, then smooth-scroll */
+              setTimeout(function () {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                /* Brief highlight pulse so the user knows where they landed */
+                target.style.transition = 'box-shadow .8s ease';
+                target.style.boxShadow = '0 0 0 3px rgba(244,208,63,.55), 0 0 60px 10px rgba(244,208,63,.25)';
+                setTimeout(function () { target.style.boxShadow = ''; }, 1800);
+              }, 80);
+            }
+          }
+        } catch (_e) {}
       }
       function load() {
         try {
