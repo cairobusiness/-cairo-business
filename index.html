@@ -5840,6 +5840,13 @@
         outline: none; border-color: rgba(212,175,55,.5); background: rgba(255,255,255,.06);
       }
       .apply-textarea { resize: vertical; min-height: 80px; }
+      /* Dropdown option styling — native <option> inherits OS dark mode unpredictably,
+         so we force a dark background + light text + decent padding. */
+      .apply-select { appearance: none; -webkit-appearance: none; padding-inline-end: 32px;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23d4af37' d='M0 0l5 6 5-6z'/></svg>");
+        background-repeat: no-repeat; background-position: left 12px center; background-size: 10px; }
+      .apply-select option { background-color: #0f172a; color: #fff; padding: 8px; }
+      .apply-select option:hover, .apply-select option:focus, .apply-select option:checked { background-color: #1e293b; color: #fbbf24; }
       .apply-consent { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; cursor: pointer; }
       .apply-consent input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; accent-color: #d4af37; }
       .apply-consent-text { font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.5; }
@@ -18060,11 +18067,11 @@
       }
     }
 
-    /* Top 10 Apply Form: populate sector dropdown + submit handler */
+    /* Top 10 Apply Form: populate sector dropdown only.
+       The submit handler is wired in the boot sequence below (sends to /api/submissions). */
     function initTop10ApplyForm() {
       const sel = document.getElementById('apply-sector-select');
       const form = document.getElementById('top10-apply-form');
-      const status = document.getElementById('apply-status');
       if (!sel || !form) return;
       // Populate sector dropdown from TOP_FILTERS (skip 'all')
       try {
@@ -18074,48 +18081,26 @@
             return '<option value="' + f.key + '">' + label + '</option>';
           }).join('');
           sel.innerHTML = '<option value="">—</option>' + opts;
+        } else {
+          /* Fallback sectors when TOP_FILTERS not loaded yet */
+          const fallbackSectors = [
+            { key: 'oil',        ar: 'النفط والغاز' },
+            { key: 'banking',    ar: 'البنوك والتمويل' },
+            { key: 'realestate', ar: 'العقارات' },
+            { key: 'tech',       ar: 'التكنولوجيا' },
+            { key: 'telecom',    ar: 'الاتصالات' },
+            { key: 'retail',     ar: 'التجزئة' },
+            { key: 'logistics',  ar: 'اللوجستيات' },
+            { key: 'industry',   ar: 'الصناعة' },
+            { key: 'healthcare', ar: 'الرعاية الصحية' },
+            { key: 'food',       ar: 'الأغذية والمشروبات' },
+            { key: 'tourism',    ar: 'السياحة والضيافة' },
+            { key: 'media',      ar: 'الإعلام' },
+            { key: 'other',      ar: 'أخرى' }
+          ];
+          sel.innerHTML = '<option value="">—</option>' + fallbackSectors.map(s => '<option value="' + s.key + '">' + s.ar + '</option>').join('');
         }
       } catch (_e) {}
-      // Submit handler
-      form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        if (!form.checkValidity()) { form.reportValidity(); return; }
-        const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
-        const btn = form.querySelector('.apply-submit');
-        const originalBtn = btn.innerHTML;
-        btn.disabled = true; btn.innerHTML = '<span>' + (isAr ? 'جارٍ الإرسال...' : 'Sending...') + '</span>';
-        status.className = 'apply-status'; status.textContent = '';
-        try {
-          const fd = new FormData(form);
-          const payload = {};
-          fd.forEach((v, k) => { if (k !== 'logo') payload[k] = typeof v === 'string' ? v : v.name; });
-          payload.submittedAt = new Date().toISOString();
-          payload.userAgent = navigator.userAgent;
-          payload.lang = isAr ? 'ar' : 'en';
-          const res = await fetch('https://cairo-business-backend.vercel.app/api/top10-apply', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (res.ok || res.status === 404 /* endpoint may not exist yet — still show success */) {
-            status.className = 'apply-status success';
-            status.textContent = isAr ? 'تم استلام طلبك بنجاح! سيتواصل فريقنا معك خلال 5 أيام عمل.' : 'Application received! Our team will reach out within 5 business days.';
-            form.reset();
-            // Also send a fallback mailto link copy
-            const subject = encodeURIComponent('Top 10 Application: ' + (payload.nameEn || payload.nameAr || ''));
-            const body = encodeURIComponent(JSON.stringify(payload, null, 2));
-            console.log('[apply] mailto fallback:', 'mailto:info@cairobusiness.net?subject=' + subject + '&body=' + body);
-          } else {
-            throw new Error('HTTP ' + res.status);
-          }
-        } catch (err) {
-          status.className = 'apply-status error';
-          status.textContent = (isAr ? 'تعذر الإرسال للخادم. يمكنك إرسال البيانات على info@cairobusiness.net' : 'Could not submit. You can email info@cairobusiness.net');
-          console.warn('[apply] submit failed:', err);
-        } finally {
-          btn.disabled = false; btn.innerHTML = originalBtn;
-        }
-      });
     }
 
         /* Boot sequence — initialize header buttons, render briefing/dashboard, pull API data */
@@ -18200,13 +18185,16 @@
                 });
                 const j = await res.json();
                 if (res.ok && j.success) {
-                  statusEl.innerHTML = '<div style="background:rgba(16,185,129,0.12);color:#6ee7b7;padding:14px;border-radius:10px;border:1px solid rgba(16,185,129,0.3);margin-top:14px;">✅ تم استلام طلبك بنجاح! فريقنا هيراجعه ويتواصل معك خلال أسبوع.</div>';
+                  statusEl.innerHTML = '<div style="background:rgba(16,185,129,0.12);color:#6ee7b7;padding:18px;border-radius:12px;border:1px solid rgba(16,185,129,0.35);margin-top:14px;text-align:center;font-size:15px;line-height:1.7;"><div style="font-size:32px;margin-bottom:8px;">✅</div><div style="font-weight:700;font-size:17px;margin-bottom:6px;">تم استلام طلبك بنجاح!</div><div>رقم طلبك: <code style="background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:6px;color:#fbbf24;">' + (j.id || '—') + '</code></div><div style="margin-top:10px;color:#86efac;">فريقنا هيراجع طلبك ويتواصل معك خلال أسبوع على الإيميل اللي قدمته. لو في أي استفسار: <a href="mailto:info@cairobusiness.net" style="color:#fbbf24;text-decoration:underline;">info@cairobusiness.net</a></div></div>';
                   top10Form.reset();
+                  try { statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
                 } else {
-                  statusEl.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);margin-top:14px;">❌ ' + (j.error || 'حصل خطأ. حاول مرة تانية.') + '</div>';
+                  statusEl.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:14px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);margin-top:14px;font-size:14px;">❌ ' + (j.error || 'حصل خطأ. حاول مرة تانية.') + '<br><small style="opacity:0.8;">أو ابعت طلبك على: <a href="mailto:info@cairobusiness.net" style="color:#fbbf24;">info@cairobusiness.net</a></small></div>';
+                  try { statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
                 }
               } catch (err) {
-                statusEl.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);margin-top:14px;">❌ خطأ في الاتصال. تأكّد من الإنترنت وحاول تاني.</div>';
+                statusEl.innerHTML = '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:14px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);margin-top:14px;font-size:14px;">❌ خطأ في الاتصال. تأكّد من الإنترنت وحاول تاني.<br><small style="opacity:0.8;">أو ابعت طلبك على: <a href="mailto:info@cairobusiness.net" style="color:#fbbf24;">info@cairobusiness.net</a></small></div>';
+                try { statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
               } finally {
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; }
               }
