@@ -17930,7 +17930,10 @@
         if (langBtn && !langBtn._wired) {
           langBtn._wired = true;
           try {
-            const s = localStorage.getItem('cb-lang');
+            /* Migration: discard any pre-v2 saved language so all existing users
+               see the new English-default. They can switch back via the toggle. */
+            try { localStorage.removeItem('cb-lang'); } catch (_) {}
+            const s = localStorage.getItem('cb-lang-v2');
             if ((s === 'ar' || s === 'en') && typeof applyLang === 'function') {
               applyLang(s);
             } else if (typeof applyLang === 'function') {
@@ -17942,7 +17945,7 @@
             const cur = (typeof currentLang !== 'undefined') ? currentLang : 'ar';
             const next = cur === 'ar' ? 'en' : 'ar';
             if (typeof applyLang === 'function') applyLang(next);
-            try { localStorage.setItem('cb-lang', next); } catch(_){}
+            try { localStorage.setItem('cb-lang-v2', next); } catch(_){}
             if (window.lucide) try { lucide.createIcons(); } catch(_){}
           });
         }
