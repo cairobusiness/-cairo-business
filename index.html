@@ -18258,9 +18258,10 @@
             el.removeAttribute('data-cms-hidden');
           }
         });
-        /* 2) Reorder by appending in sorted order. We only move sections
-              whose parent is the same as the first found section's parent
-              to avoid breaking sections nested in special wrappers. */
+        /* 2) Reorder by appending in sorted order, preserving the relative
+              position of unmanaged sections (those not in the layout DB).
+              Each unmanaged section inherits the sortOrder of the nearest
+              preceding managed section + a tiny offset, so it stays put. */
         var firstEl = null;
         for (var i = 0; i < sections.length; i++) {
           var el = document.getElementById(sections[i].slug);
@@ -18268,12 +18269,26 @@
         }
         if (!firstEl) return;
         var parent = firstEl.parentNode;
-        sections.forEach(function (s) {
-          var el = document.getElementById(s.slug);
-          if (el && el.parentNode === parent) {
-            parent.appendChild(el);
+        var slugToSort = {};
+        sections.forEach(function (s) { slugToSort[s.slug] = Number(s.sortOrder) || 0; });
+        var allKids = [];
+        for (var c = 0; c < parent.children.length; c++) {
+          var k = parent.children[c];
+          if (k && k.tagName === 'SECTION' && k.id) allKids.push(k);
+        }
+        var lastSort = -1;
+        var effective = {};
+        allKids.forEach(function (k) {
+          if (slugToSort.hasOwnProperty(k.id)) {
+            lastSort = slugToSort[k.id];
+            effective[k.id] = lastSort;
+          } else {
+            lastSort = lastSort + 0.5;
+            effective[k.id] = lastSort;
           }
         });
+        allKids.sort(function (a, b) { return (effective[a.id] || 0) - (effective[b.id] || 0); });
+        allKids.forEach(function (k) { parent.appendChild(k); });
       }
       function load() {
         try {
