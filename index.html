@@ -5373,6 +5373,591 @@
     </div>
   </section>
 
+  <section id="top10" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-800 to-navy-900">
+    <div class="absolute inset-0 pointer-events-none opacity-50" style="background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,0.30), transparent 65%);"></div>
+    <div class="aurora opacity-30" aria-hidden="true"><div class="a3"></div></div>
+
+    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
+      <div class="text-center mb-14 reveal">
+        <div class="lux-eyebrow justify-center mb-5"><i data-lucide="crown" class="w-3.5 h-3.5"></i><span data-i18n="top10.eyebrow">POWER LIST · MENA EDITION 2026</span></div>
+        <h2 class="lux-title text-white" data-i18n="top10.title">أقوى 10 شركات في الشرق الأوسط</h2>
+        <div class="lux-divider mt-6 mx-auto max-w-md"><span class="h"></span><span class="d"></span><span class="h"></span></div>
+        <p class="mt-6 text-white/70 max-w-3xl mx-auto text-lg leading-relaxed" data-i18n="top10.subtitle2">من النفط إلى الذكاء الاصطناعي.. 10 شركات تهيمن على كل القطاعات وتشكّل ملامح الاقتصاد الجديد للشرق الأوسط</p>
+        <div class="flex items-center justify-center gap-3 mt-6 text-xs text-white/50 flex-wrap">
+          <span class="flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-mint-400"></i><span data-i18n="top10.meta.audit">تقييم مستقل</span></span>
+          <span class="opacity-40">·</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="trending-up" class="w-3.5 h-3.5 text-gold-300"></i><span data-i18n="top10.meta.data">بيانات Q1 2026</span></span>
+          <span class="opacity-40">·</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="globe-2" class="w-3.5 h-3.5 text-violet-400"></i><span data-i18n="top10.meta.scope">10 قطاعات · 5 دول</span></span>
+        </div>
+      </div>
+
+      <!-- Sector Filter Pills (data-driven) -->
+      <div id="top10-filter-pills" class="flex justify-center gap-2 flex-wrap mb-10 reveal"></div>
+
+      <!-- Trophy gallery (top 3) + Ranked list (4–10) — data-driven -->
+      <div id="top-companies-grid">
+        <div id="top10-trophies" class="trophy-row"></div>
+        <div id="top10-list" class="trophy-list"></div>
+      </div>
+
+      <!-- Hidden legacy containers (for old JS hooks - renamed to avoid id conflicts) -->
+      <div class="hidden" aria-hidden="true">
+        <div id="top10-tabs-legacy"></div>
+        <div id="top10-podium-legacy"></div>
+        <ol id="top10-list-legacy"></ol>
+      </div>
+    </div>
+
+    <!-- Sector card styling (scoped) -->
+    <style>
+      .sector-card {
+        position: relative; border-radius: 24px; overflow: hidden;
+        background:
+          linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.01) 60%),
+          rgba(15,21,53,.55);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(148,163,217,.10);
+        transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s, border-color .4s;
+        will-change: transform;
+      }
+      .sector-card::before {
+        content:''; position:absolute; inset:-1px; border-radius:24px; padding:1px;
+        background: linear-gradient(160deg, var(--sc, #c9a227), transparent 50%, var(--sc2, #c9a227));
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor; mask-composite: exclude;
+        opacity: 0; transition: opacity .35s; pointer-events: none;
+      }
+      .sector-card:hover { transform: translateY(-6px); border-color: transparent;
+        box-shadow: 0 30px 60px -20px var(--sc, #c9a227), 0 1px 0 rgba(255,255,255,.1) inset; }
+      .sector-card:hover::before { opacity: .6; }
+
+      .sector-card .sector-bar {
+        height: 4px; background: linear-gradient(90deg, var(--sc, #c9a227), var(--sc2, #c9a227), var(--sc, #c9a227));
+        background-size: 200% 100%;
+        animation: sectorShine 3s linear infinite;
+      }
+      @keyframes sectorShine { 0% { background-position: 0 0; } 100% { background-position: 200% 0; } }
+
+      .sector-card-inner { padding: 22px 20px 24px; position: relative; z-index: 1; }
+
+      .rank-badge {
+        font-family: 'Playfair Display', serif; font-weight: 900;
+        font-size: 56px; line-height: .8;
+        background: linear-gradient(135deg, var(--sc, #D4AF37), var(--sc2, #b08d23));
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--sc, #c9a227) 35%, transparent));
+      }
+      .sector-flag { font-size: 28px; filter: drop-shadow(0 2px 8px rgba(0,0,0,.5)); transition: transform .3s; }
+      .sector-card:hover .sector-flag { transform: scale(1.15) rotate(-6deg); }
+
+      .logo-circle {
+        width: 60px; height: 60px; border-radius: 18px;
+        background: linear-gradient(135deg, var(--sc, #D4AF37) 0%, var(--sc2, #b08d23) 100%);
+        display: grid; place-items: center;
+        font-weight: 900; color: #0A0E27; font-size: 14px;
+        margin-bottom: 16px;
+        box-shadow: 0 10px 30px -10px var(--sc, #D4AF37), 0 1px 0 rgba(255,255,255,.3) inset;
+        transition: transform .35s;
+        font-family: 'Cairo', 'Inter', sans-serif;
+      }
+      .sector-card:hover .logo-circle { transform: rotate(-6deg) scale(1.05); }
+
+      .company-name { font-weight: 900; color: #fff; font-size: 18px; margin-bottom: 4px; line-height: 1.2; }
+      .company-meta { font-size: 11px; color: rgba(255,255,255,.55); margin-bottom: 12px; letter-spacing: .02em; }
+
+      .sector-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 12px; border-radius: 999px;
+        background: color-mix(in srgb, var(--sc, #c9a227) 15%, transparent);
+        color: var(--sc, #c9a227);
+        border: 1px solid color-mix(in srgb, var(--sc, #c9a227) 35%, transparent);
+        font-size: 11px; font-weight: 700;
+        margin-bottom: 16px;
+      }
+
+      .market-cap {
+        display: flex; flex-direction: column; gap: 2px;
+        padding: 12px 0; margin: 4px 0;
+        border-top: 1px solid rgba(255,255,255,.06);
+        border-bottom: 1px solid rgba(255,255,255,.06);
+      }
+      .market-cap .kpi-val {
+        font-family: 'JetBrains Mono', monospace; font-weight: 800;
+        font-size: 26px; line-height: 1;
+        background: linear-gradient(135deg, var(--sc, #D4AF37), color-mix(in srgb, var(--sc, #c9a227) 50%, #fff));
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+      .market-cap .kpi-lab { color: rgba(255,255,255,.45); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
+
+      .company-tagline {
+        font-size: 12px; color: rgba(255,255,255,.65);
+        line-height: 1.55; margin: 14px 0 14px;
+      }
+
+      .trend-row { display: flex; align-items: center; gap: 8px; }
+
+      /* Fallback for browsers without color-mix */
+      @supports not (color: color-mix(in srgb, red, blue)) {
+        .sector-pill { background: rgba(212,175,55,.15); border-color: rgba(212,175,55,.35); }
+      }
+
+      /* ============================================== */
+      /*       TROPHY GALLERY — AWARDS NIGHT           */
+      /* ============================================== */
+
+      /* Row of 3 trophy cards: silver | gold (raised) | bronze */
+      .trophy-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        align-items: end;
+        margin-bottom: 36px;
+      }
+      @media (max-width: 768px) {
+        .trophy-row { grid-template-columns: 1fr; gap: 14px; }
+      }
+
+      .trophy-card {
+        position: relative;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01));
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 22px;
+        padding: 28px 22px 26px;
+        text-align: center;
+        backdrop-filter: blur(16px) saturate(150%);
+        -webkit-backdrop-filter: blur(16px) saturate(150%);
+        transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s, border-color .4s;
+        will-change: transform;
+        overflow: hidden;
+      }
+      .trophy-card::before {
+        content:'';
+        position: absolute; top: 0; left: 0; right: 0;
+        height: 3px;
+        opacity: .8;
+      }
+      .trophy-card:hover {
+        transform: translateY(-6px);
+      }
+
+      /* GOLD — center, raised, glowing */
+      .trophy-gold {
+        background:
+          linear-gradient(180deg, rgba(244,208,63,.18), rgba(244,208,63,.03) 60%, rgba(255,255,255,.01));
+        border-color: rgba(244,208,63,.40);
+        transform: translateY(-14px);
+        box-shadow:
+          0 30px 60px -20px rgba(244,208,63,.35),
+          0 1px 0 rgba(255,255,255,.08) inset;
+      }
+      .trophy-gold::before {
+        background: linear-gradient(90deg, transparent, #f4d03f, transparent);
+      }
+      .trophy-gold:hover {
+        transform: translateY(-22px);
+        box-shadow: 0 40px 80px -20px rgba(244,208,63,.55), 0 1px 0 rgba(255,255,255,.12) inset;
+        border-color: rgba(244,208,63,.65);
+      }
+
+      /* SILVER */
+      .trophy-silver {
+        background:
+          linear-gradient(180deg, rgba(203,213,225,.10), rgba(203,213,225,.02) 60%, rgba(255,255,255,.01));
+        border-color: rgba(203,213,225,.28);
+      }
+      .trophy-silver::before { background: linear-gradient(90deg, transparent, #cbd5e1, transparent); }
+      .trophy-silver:hover { box-shadow: 0 24px 48px -20px rgba(203,213,225,.25); border-color: rgba(203,213,225,.45); }
+
+      /* BRONZE */
+      .trophy-bronze {
+        background:
+          linear-gradient(180deg, rgba(217,119,6,.10), rgba(217,119,6,.02) 60%, rgba(255,255,255,.01));
+        border-color: rgba(217,119,6,.28);
+      }
+      .trophy-bronze::before { background: linear-gradient(90deg, transparent, #d97706, transparent); }
+      .trophy-bronze:hover { box-shadow: 0 24px 48px -20px rgba(217,119,6,.30); border-color: rgba(217,119,6,.45); }
+
+      /* Crown icon (gold only) */
+      .trophy-crown {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #fde047, #ca8a04);
+        color: #0A0E27;
+        display: grid; place-items: center;
+        box-shadow: 0 8px 24px -6px rgba(244,208,63,.6);
+        z-index: 2;
+      }
+
+      /* Trophy SVG sizing */
+      .trophy-svg {
+        width: 56px; height: 70px;
+        display: block; margin: 0 auto 6px;
+      }
+      .trophy-gold .trophy-svg {
+        width: 68px; height: 84px;
+        filter: drop-shadow(0 8px 16px rgba(244,208,63,.5));
+      }
+      .trophy-silver .trophy-svg { filter: drop-shadow(0 6px 12px rgba(203,213,225,.3)); }
+      .trophy-bronze .trophy-svg { filter: drop-shadow(0 6px 12px rgba(217,119,6,.3)); }
+
+      .trophy-tier {
+        font-size: 11px; letter-spacing: .26em; text-transform: uppercase;
+        font-weight: 800; margin-top: 4px;
+      }
+      .trophy-gold   .trophy-tier { color: #f4d03f; }
+      .trophy-silver .trophy-tier { color: rgba(203,213,225,.95); }
+      .trophy-bronze .trophy-tier { color: rgba(217,119,6,.95); }
+
+      .trophy-rank {
+        font-family: 'Playfair Display', serif;
+        font-size: 22px; font-weight: 900;
+        line-height: 1; margin-top: 4px;
+        color: rgba(255,255,255,.85);
+        letter-spacing: -0.02em;
+      }
+      .trophy-gold .trophy-rank   { color: #f4d03f; }
+      .trophy-silver .trophy-rank { color: #e2e8f0; }
+      .trophy-bronze .trophy-rank { color: #fbbf24; }
+
+      .trophy-name {
+        font-family: 'Cairo', sans-serif;
+        font-weight: 900;
+        font-size: 17px;
+        color: #fff;
+        line-height: 1.2;
+        margin-top: 10px;
+      }
+      [lang="en"] .trophy-name { font-family: 'Inter', sans-serif; letter-spacing: -0.015em; }
+      .trophy-gold .trophy-name { font-size: 19px; }
+
+      .trophy-sector {
+        font-size: 11px;
+        color: rgba(255,255,255,.6);
+        margin-top: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .trophy-flag { font-size: 16px; line-height: 1; }
+
+      .trophy-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 800;
+        font-size: 22px;
+        margin-top: 14px;
+        line-height: 1;
+      }
+      .trophy-gold   .trophy-value { color: #f4d03f; font-size: 28px; }
+      .trophy-silver .trophy-value { color: rgba(203,213,225,.95); }
+      .trophy-bronze .trophy-value { color: rgba(217,119,6,.95); }
+
+      .trophy-trend {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; font-weight: 700;
+        color: #34d399;
+        margin-top: 6px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: rgba(52,211,153,.10);
+        border: 1px solid rgba(52,211,153,.25);
+        display: inline-block;
+      }
+
+      /* ============================================== */
+      /*               RANKED LIST (4–10)              */
+      /* ============================================== */
+      .trophy-list {
+        background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 22px;
+        padding: 22px 22px 16px;
+        backdrop-filter: blur(12px) saturate(140%);
+        -webkit-backdrop-filter: blur(12px) saturate(140%);
+      }
+      .trophy-list-head {
+        display: flex; justify-content: space-between; align-items: end;
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(244,208,63,.18);
+      }
+      .trophy-list-eyebrow {
+        font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+        color: #f4d03f; font-weight: 800;
+      }
+      .trophy-list-meta {
+        font-size: 11px; color: rgba(255,255,255,.55);
+        padding: 4px 10px; border-radius: 999px;
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.08);
+      }
+
+      .trophy-list-rows { display: flex; flex-direction: column; }
+
+      .trophy-list-row {
+        display: grid;
+        grid-template-columns: 50px 42px 1fr 110px 80px;
+        gap: 14px;
+        align-items: center;
+        padding: 12px 8px;
+        border-bottom: 1px dashed rgba(255,255,255,.07);
+        transition: all .25s ease;
+        position: relative;
+        cursor: pointer;
+      }
+      .trophy-list-row:last-child { border-bottom: 0; }
+      .trophy-list-row:hover {
+        background: rgba(244,208,63,.04);
+        padding-inline-start: 16px;
+        padding-inline-end: 16px;
+        border-radius: 10px;
+      }
+      .trophy-list-row::after {
+        content: '';
+        position: absolute;
+        top: 50%; transform: translateY(-50%);
+        inset-inline-start: 0;
+        width: 2px; height: 0;
+        background: var(--sc, #f4d03f);
+        transition: height .3s ease;
+      }
+      .trophy-list-row:hover::after { height: 70%; }
+
+      .trl-rank {
+        font-family: 'Playfair Display', serif;
+        font-weight: 900;
+        font-size: 28px;
+        color: rgba(244,208,63,.45);
+        line-height: 1;
+        letter-spacing: -0.03em;
+      }
+      .trophy-list-row:hover .trl-rank { color: rgba(244,208,63,.85); }
+
+      .trl-logo {
+        width: 36px; height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--sc, #f4d03f), color-mix(in srgb, var(--sc, #f4d03f) 50%, #0A0E27));
+        color: #0A0E27;
+        font-weight: 900;
+        font-size: 12px;
+        display: grid; place-items: center;
+        flex-shrink: 0;
+        font-family: 'Cairo', 'Inter', sans-serif;
+      }
+
+      .trl-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .trl-name {
+        font-weight: 800;
+        font-size: 14px;
+        color: #fff;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .trl-meta {
+        font-size: 11px;
+        color: rgba(255,255,255,.55);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+
+      .trl-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 800;
+        font-size: 14px;
+        color: var(--sc, #fff);
+        text-align: end;
+      }
+      .trl-trend {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; font-weight: 700;
+        color: #34d399;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: rgba(52,211,153,.10);
+        border: 1px solid rgba(52,211,153,.25);
+        text-align: center;
+      }
+
+      @media (max-width: 640px) {
+        .trophy-list-row {
+          grid-template-columns: 36px 32px 1fr 70px;
+          gap: 10px;
+        }
+        .trl-trend { display: none; }
+        .trl-rank { font-size: 20px; }
+        .trl-name { font-size: 12px; }
+        .trl-meta { font-size: 10px; }
+        .trl-value { font-size: 12px; }
+      }
+
+      /* Fallback for browsers without color-mix */
+      @supports not (color: color-mix(in srgb, red, blue)) {
+        .trl-logo { background: linear-gradient(135deg, #f4d03f, #b08d23); }
+      }
+    </style>
+    <!-- =========================================================== -->
+  <!--                  TOP 10 APPLICATION FORM                     -->
+  <!-- =========================================================== -->
+  <section id="top10-apply" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-900 to-navy-950">
+    <div class="absolute inset-0 pointer-events-none opacity-40" style="background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,0.20), transparent 60%);"></div>
+    <style>
+      .apply-grid { display: grid; grid-template-columns: 1fr 1.8fr; gap: 28px; align-items: start; }
+      @media (max-width: 1024px) { .apply-grid { grid-template-columns: 1fr; } }
+      .apply-side {
+        background: linear-gradient(155deg, rgba(212,175,55,.08), rgba(212,175,55,.01));
+        border: 1px solid rgba(212,175,55,.2); border-radius: 22px; padding: 28px;
+        position: sticky; top: 100px;
+      }
+      .apply-benefit { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
+      .apply-benefit-icon { color: #d4af37; font-size: 18px; line-height: 1.2; flex-shrink: 0; margin-top: 2px; }
+      .apply-form {
+        background: linear-gradient(155deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+        border: 1px solid rgba(255,255,255,.08); border-radius: 22px; padding: 28px;
+      }
+      .apply-section { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.06); }
+      .apply-section:last-child { border-bottom: 0; }
+      .apply-section-title {
+        font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #d4af37;
+        text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+      }
+      .apply-section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to left, transparent, rgba(212,175,55,.25)); }
+      .apply-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+      @media (max-width: 640px) { .apply-row { grid-template-columns: 1fr; } }
+      .apply-field { display: flex; flex-direction: column; gap: 6px; }
+      .apply-field.full { grid-column: 1 / -1; }
+      .apply-label { font-size: 12px; color: rgba(255,255,255,.7); font-weight: 500; }
+      .apply-label .req { color: #f87171; margin-inline-start: 4px; }
+      .apply-input, .apply-select, .apply-textarea {
+        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+        color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 14px;
+        transition: border-color .2s, background .2s; font-family: inherit;
+      }
+      .apply-input:focus, .apply-select:focus, .apply-textarea:focus {
+        outline: none; border-color: rgba(212,175,55,.5); background: rgba(255,255,255,.06);
+      }
+      .apply-textarea { resize: vertical; min-height: 80px; }
+      .apply-consent { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; cursor: pointer; }
+      .apply-consent input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; accent-color: #d4af37; }
+      .apply-consent-text { font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.5; }
+      .apply-submit {
+        background: linear-gradient(135deg, #d4af37, #b8941f); color: #0a0e27;
+        font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 999px;
+        border: none; cursor: pointer; transition: all .2s; margin-top: 18px;
+        display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px -8px rgba(212,175,55,.4);
+      }
+      .apply-submit:hover { background: #fbbf24; transform: translateY(-2px); box-shadow: 0 12px 32px -8px rgba(212,175,55,.6); }
+      .apply-submit:disabled { opacity: .6; cursor: wait; }
+      .apply-status { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 13px; display: none; }
+      .apply-status.success { display: block; background: rgba(34,197,94,.12); color: #86efac; border: 1px solid rgba(34,197,94,.3); }
+      .apply-status.error { display: block; background: rgba(248,113,113,.12); color: #fca5a5; border: 1px solid rgba(248,113,113,.3); }
+    </style>
+    <div class="max-w-[1280px] mx-auto px-4 lg:px-8 relative">
+      <div class="text-center mb-12 reveal">
+        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
+          <i data-lucide="award" class="w-3.5 h-3.5"></i>
+          <span data-i18n="apply.eyebrow">تقديم · APPLY</span>
+        </div>
+        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="apply.title">تأهّل لقائمة Top 10</h2>
+        <p class="mt-4 text-white/60 max-w-2xl mx-auto" data-i18n="apply.subtitle">هل شركتك من الرواد في قطاعها؟ قدّم طلب الانضمام لتصنيف أقوى 10 شركات في الشرق الأوسط — تقييمنا مستقل ومجاني.</p>
+      </div>
+
+      <div class="apply-grid reveal">
+        <!-- Benefits sidebar -->
+        <aside class="apply-side">
+          <div class="text-xs font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span data-i18n="apply.benefits.title">لماذا تتقدّم؟</span>
+          </div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b1">تصنيف مستقل وموثوق</span></div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b2">وصول لمستثمرين دوليين</span></div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b3">تغطية إعلامية حصرية</span></div>
+          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b4">تقرير تحليلي مجاني</span></div>
+        </aside>
+
+        <!-- Form -->
+        <form id="top10-apply-form" class="apply-form" novalidate>
+          <!-- Section 1: Company Information -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="building" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section1">معلومات الشركة</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.nameAr">اسم الشركة (عربي)<span class="req">*</span></label><input class="apply-input" name="nameAr" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.nameEn">اسم الشركة (إنجليزي)<span class="req">*</span></label><input class="apply-input" name="nameEn" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.founded">سنة التأسيس<span class="req">*</span></label><input class="apply-input" name="founded" type="number" min="1900" max="2026" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.country">البلد<span class="req">*</span></label><select class="apply-select" name="country" required><option value="">—</option><option>مصر</option><option>السعودية</option><option>الإمارات</option><option>قطر</option><option>الكويت</option><option>البحرين</option><option>عُمان</option><option>الأردن</option><option>المغرب</option><option>تونس</option><option>الجزائر</option><option>أخرى</option></select></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.city">المدينة</label><input class="apply-input" name="city"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.website">الموقع الإلكتروني</label><input class="apply-input" name="website" type="url" placeholder="https://"></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.logo">لوجو الشركة (PNG/SVG/JPG)</label><input class="apply-input" name="logo" type="file" accept="image/*"></div>
+            </div>
+          </div>
+
+          <!-- Section 2: Sector & Activity -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="layers" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section2">القطاع والنشاط</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.sector">القطاع الرئيسي<span class="req">*</span></label><select class="apply-select" name="sector" required id="apply-sector-select"><option value="">—</option></select></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.subsectors">القطاعات الفرعية</label><input class="apply-input" name="subsectors" placeholder="مثال: فينتك، مدفوعات"></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.about">وصف مختصر للشركة<span class="req">*</span></label><textarea class="apply-textarea" name="about" rows="3" maxlength="600" required></textarea></div>
+            </div>
+          </div>
+
+          <!-- Section 3: Financial Numbers -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section3">الأرقام المالية</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.revenue">الإيرادات السنوية (آخر سنة)<span class="req">*</span></label><input class="apply-input" name="revenue" placeholder="$1.5B EGP / USD" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.growth">معدل النمو السنوي %</label><input class="apply-input" name="growth" type="number" step="0.1" placeholder="15.5"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.employees">عدد الموظفين</label><input class="apply-input" name="employees" type="number"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.markets">عدد الأسواق/الدول</label><input class="apply-input" name="markets" type="number"></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.branches">عدد الفروع</label><input class="apply-input" name="branches" type="number"></div>
+            </div>
+          </div>
+
+          <!-- Section 4: Achievements (Optional) -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="trophy" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section4">الإنجازات (اختياري)</span></div>
+            <div class="apply-row">
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.awards">جوائز ومسابقات</label><textarea class="apply-textarea" name="awards" rows="2"></textarea></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.deals">صفقات كبيرة</label><textarea class="apply-textarea" name="deals" rows="2"></textarea></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.partners">شراكات استراتيجية</label><textarea class="apply-textarea" name="partners" rows="2"></textarea></div>
+            </div>
+          </div>
+
+          <!-- Section 5: Contact -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="user" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section5">بيانات التواصل</span></div>
+            <div class="apply-row">
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.contactName">اسم المسؤول<span class="req">*</span></label><input class="apply-input" name="contactName" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.position">المنصب<span class="req">*</span></label><input class="apply-input" name="position" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.email">إيميل العمل<span class="req">*</span></label><input class="apply-input" name="email" type="email" required></div>
+              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.phone">رقم الهاتف<span class="req">*</span></label><input class="apply-input" name="phone" type="tel" required></div>
+              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.linkedin">LinkedIn (اختياري)</label><input class="apply-input" name="linkedin" type="url" placeholder="https://linkedin.com/in/..."></div>
+            </div>
+          </div>
+
+          <!-- Section 6: Consents -->
+          <div class="apply-section">
+            <div class="apply-section-title"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section6">الموافقات</span></div>
+            <label class="apply-consent"><input type="checkbox" name="consent1" required><span class="apply-consent-text" data-i18n="apply.f.consent1">أؤكد أن جميع البيانات المُقدَّمة صحيحة ودقيقة</span></label>
+            <label class="apply-consent"><input type="checkbox" name="consent2" required><span class="apply-consent-text" data-i18n="apply.f.consent2">أوافق على نشر اسم وبيانات الشركة في قائمة Top 10 في حال الموافقة</span></label>
+            <label class="apply-consent"><input type="checkbox" name="consent3" required><span class="apply-consent-text" data-i18n="apply.f.consent3">أوافق على معالجة البيانات وفقاً لسياسة الخصوصية</span></label>
+          </div>
+
+          <button type="submit" class="apply-submit">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span data-i18n="apply.submit">إرسال الطلب</span>
+          </button>
+          <div id="apply-status" class="apply-status"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  </section>
+
   <!-- =========================================================== -->
   <!--                         NEWS FEED                            -->
   <!-- =========================================================== -->
@@ -8605,590 +9190,6 @@
   <!-- =========================================================== -->
   <!--                           FOOTER                             -->
   <!-- =========================================================== -->
-  <section id="top10" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-800 to-navy-900">
-    <div class="absolute inset-0 pointer-events-none opacity-50" style="background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,0.30), transparent 65%);"></div>
-    <div class="aurora opacity-30" aria-hidden="true"><div class="a3"></div></div>
-
-    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
-      <div class="text-center mb-14 reveal">
-        <div class="lux-eyebrow justify-center mb-5"><i data-lucide="crown" class="w-3.5 h-3.5"></i><span data-i18n="top10.eyebrow">POWER LIST · MENA EDITION 2026</span></div>
-        <h2 class="lux-title text-white" data-i18n="top10.title">أقوى 10 شركات في الشرق الأوسط</h2>
-        <div class="lux-divider mt-6 mx-auto max-w-md"><span class="h"></span><span class="d"></span><span class="h"></span></div>
-        <p class="mt-6 text-white/70 max-w-3xl mx-auto text-lg leading-relaxed" data-i18n="top10.subtitle2">من النفط إلى الذكاء الاصطناعي.. 10 شركات تهيمن على كل القطاعات وتشكّل ملامح الاقتصاد الجديد للشرق الأوسط</p>
-        <div class="flex items-center justify-center gap-3 mt-6 text-xs text-white/50 flex-wrap">
-          <span class="flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-mint-400"></i><span data-i18n="top10.meta.audit">تقييم مستقل</span></span>
-          <span class="opacity-40">·</span>
-          <span class="flex items-center gap-1.5"><i data-lucide="trending-up" class="w-3.5 h-3.5 text-gold-300"></i><span data-i18n="top10.meta.data">بيانات Q1 2026</span></span>
-          <span class="opacity-40">·</span>
-          <span class="flex items-center gap-1.5"><i data-lucide="globe-2" class="w-3.5 h-3.5 text-violet-400"></i><span data-i18n="top10.meta.scope">10 قطاعات · 5 دول</span></span>
-        </div>
-      </div>
-
-      <!-- Sector Filter Pills (data-driven) -->
-      <div id="top10-filter-pills" class="flex justify-center gap-2 flex-wrap mb-10 reveal"></div>
-
-      <!-- Trophy gallery (top 3) + Ranked list (4–10) — data-driven -->
-      <div id="top-companies-grid">
-        <div id="top10-trophies" class="trophy-row"></div>
-        <div id="top10-list" class="trophy-list"></div>
-      </div>
-
-      <!-- Hidden legacy containers (for old JS hooks - renamed to avoid id conflicts) -->
-      <div class="hidden" aria-hidden="true">
-        <div id="top10-tabs-legacy"></div>
-        <div id="top10-podium-legacy"></div>
-        <ol id="top10-list-legacy"></ol>
-      </div>
-    </div>
-
-    <!-- Sector card styling (scoped) -->
-    <style>
-      .sector-card {
-        position: relative; border-radius: 24px; overflow: hidden;
-        background:
-          linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.01) 60%),
-          rgba(15,21,53,.55);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border: 1px solid rgba(148,163,217,.10);
-        transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s, border-color .4s;
-        will-change: transform;
-      }
-      .sector-card::before {
-        content:''; position:absolute; inset:-1px; border-radius:24px; padding:1px;
-        background: linear-gradient(160deg, var(--sc, #c9a227), transparent 50%, var(--sc2, #c9a227));
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor; mask-composite: exclude;
-        opacity: 0; transition: opacity .35s; pointer-events: none;
-      }
-      .sector-card:hover { transform: translateY(-6px); border-color: transparent;
-        box-shadow: 0 30px 60px -20px var(--sc, #c9a227), 0 1px 0 rgba(255,255,255,.1) inset; }
-      .sector-card:hover::before { opacity: .6; }
-
-      .sector-card .sector-bar {
-        height: 4px; background: linear-gradient(90deg, var(--sc, #c9a227), var(--sc2, #c9a227), var(--sc, #c9a227));
-        background-size: 200% 100%;
-        animation: sectorShine 3s linear infinite;
-      }
-      @keyframes sectorShine { 0% { background-position: 0 0; } 100% { background-position: 200% 0; } }
-
-      .sector-card-inner { padding: 22px 20px 24px; position: relative; z-index: 1; }
-
-      .rank-badge {
-        font-family: 'Playfair Display', serif; font-weight: 900;
-        font-size: 56px; line-height: .8;
-        background: linear-gradient(135deg, var(--sc, #D4AF37), var(--sc2, #b08d23));
-        -webkit-background-clip: text; background-clip: text; color: transparent;
-        filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--sc, #c9a227) 35%, transparent));
-      }
-      .sector-flag { font-size: 28px; filter: drop-shadow(0 2px 8px rgba(0,0,0,.5)); transition: transform .3s; }
-      .sector-card:hover .sector-flag { transform: scale(1.15) rotate(-6deg); }
-
-      .logo-circle {
-        width: 60px; height: 60px; border-radius: 18px;
-        background: linear-gradient(135deg, var(--sc, #D4AF37) 0%, var(--sc2, #b08d23) 100%);
-        display: grid; place-items: center;
-        font-weight: 900; color: #0A0E27; font-size: 14px;
-        margin-bottom: 16px;
-        box-shadow: 0 10px 30px -10px var(--sc, #D4AF37), 0 1px 0 rgba(255,255,255,.3) inset;
-        transition: transform .35s;
-        font-family: 'Cairo', 'Inter', sans-serif;
-      }
-      .sector-card:hover .logo-circle { transform: rotate(-6deg) scale(1.05); }
-
-      .company-name { font-weight: 900; color: #fff; font-size: 18px; margin-bottom: 4px; line-height: 1.2; }
-      .company-meta { font-size: 11px; color: rgba(255,255,255,.55); margin-bottom: 12px; letter-spacing: .02em; }
-
-      .sector-pill {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 5px 12px; border-radius: 999px;
-        background: color-mix(in srgb, var(--sc, #c9a227) 15%, transparent);
-        color: var(--sc, #c9a227);
-        border: 1px solid color-mix(in srgb, var(--sc, #c9a227) 35%, transparent);
-        font-size: 11px; font-weight: 700;
-        margin-bottom: 16px;
-      }
-
-      .market-cap {
-        display: flex; flex-direction: column; gap: 2px;
-        padding: 12px 0; margin: 4px 0;
-        border-top: 1px solid rgba(255,255,255,.06);
-        border-bottom: 1px solid rgba(255,255,255,.06);
-      }
-      .market-cap .kpi-val {
-        font-family: 'JetBrains Mono', monospace; font-weight: 800;
-        font-size: 26px; line-height: 1;
-        background: linear-gradient(135deg, var(--sc, #D4AF37), color-mix(in srgb, var(--sc, #c9a227) 50%, #fff));
-        -webkit-background-clip: text; background-clip: text; color: transparent;
-      }
-      .market-cap .kpi-lab { color: rgba(255,255,255,.45); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
-
-      .company-tagline {
-        font-size: 12px; color: rgba(255,255,255,.65);
-        line-height: 1.55; margin: 14px 0 14px;
-      }
-
-      .trend-row { display: flex; align-items: center; gap: 8px; }
-
-      /* Fallback for browsers without color-mix */
-      @supports not (color: color-mix(in srgb, red, blue)) {
-        .sector-pill { background: rgba(212,175,55,.15); border-color: rgba(212,175,55,.35); }
-      }
-
-      /* ============================================== */
-      /*       TROPHY GALLERY — AWARDS NIGHT           */
-      /* ============================================== */
-
-      /* Row of 3 trophy cards: silver | gold (raised) | bronze */
-      .trophy-row {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 18px;
-        align-items: end;
-        margin-bottom: 36px;
-      }
-      @media (max-width: 768px) {
-        .trophy-row { grid-template-columns: 1fr; gap: 14px; }
-      }
-
-      .trophy-card {
-        position: relative;
-        background:
-          linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01));
-        border: 1px solid rgba(255,255,255,.10);
-        border-radius: 22px;
-        padding: 28px 22px 26px;
-        text-align: center;
-        backdrop-filter: blur(16px) saturate(150%);
-        -webkit-backdrop-filter: blur(16px) saturate(150%);
-        transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s, border-color .4s;
-        will-change: transform;
-        overflow: hidden;
-      }
-      .trophy-card::before {
-        content:'';
-        position: absolute; top: 0; left: 0; right: 0;
-        height: 3px;
-        opacity: .8;
-      }
-      .trophy-card:hover {
-        transform: translateY(-6px);
-      }
-
-      /* GOLD — center, raised, glowing */
-      .trophy-gold {
-        background:
-          linear-gradient(180deg, rgba(244,208,63,.18), rgba(244,208,63,.03) 60%, rgba(255,255,255,.01));
-        border-color: rgba(244,208,63,.40);
-        transform: translateY(-14px);
-        box-shadow:
-          0 30px 60px -20px rgba(244,208,63,.35),
-          0 1px 0 rgba(255,255,255,.08) inset;
-      }
-      .trophy-gold::before {
-        background: linear-gradient(90deg, transparent, #f4d03f, transparent);
-      }
-      .trophy-gold:hover {
-        transform: translateY(-22px);
-        box-shadow: 0 40px 80px -20px rgba(244,208,63,.55), 0 1px 0 rgba(255,255,255,.12) inset;
-        border-color: rgba(244,208,63,.65);
-      }
-
-      /* SILVER */
-      .trophy-silver {
-        background:
-          linear-gradient(180deg, rgba(203,213,225,.10), rgba(203,213,225,.02) 60%, rgba(255,255,255,.01));
-        border-color: rgba(203,213,225,.28);
-      }
-      .trophy-silver::before { background: linear-gradient(90deg, transparent, #cbd5e1, transparent); }
-      .trophy-silver:hover { box-shadow: 0 24px 48px -20px rgba(203,213,225,.25); border-color: rgba(203,213,225,.45); }
-
-      /* BRONZE */
-      .trophy-bronze {
-        background:
-          linear-gradient(180deg, rgba(217,119,6,.10), rgba(217,119,6,.02) 60%, rgba(255,255,255,.01));
-        border-color: rgba(217,119,6,.28);
-      }
-      .trophy-bronze::before { background: linear-gradient(90deg, transparent, #d97706, transparent); }
-      .trophy-bronze:hover { box-shadow: 0 24px 48px -20px rgba(217,119,6,.30); border-color: rgba(217,119,6,.45); }
-
-      /* Crown icon (gold only) */
-      .trophy-crown {
-        position: absolute;
-        top: -14px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 36px; height: 36px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #fde047, #ca8a04);
-        color: #0A0E27;
-        display: grid; place-items: center;
-        box-shadow: 0 8px 24px -6px rgba(244,208,63,.6);
-        z-index: 2;
-      }
-
-      /* Trophy SVG sizing */
-      .trophy-svg {
-        width: 56px; height: 70px;
-        display: block; margin: 0 auto 6px;
-      }
-      .trophy-gold .trophy-svg {
-        width: 68px; height: 84px;
-        filter: drop-shadow(0 8px 16px rgba(244,208,63,.5));
-      }
-      .trophy-silver .trophy-svg { filter: drop-shadow(0 6px 12px rgba(203,213,225,.3)); }
-      .trophy-bronze .trophy-svg { filter: drop-shadow(0 6px 12px rgba(217,119,6,.3)); }
-
-      .trophy-tier {
-        font-size: 11px; letter-spacing: .26em; text-transform: uppercase;
-        font-weight: 800; margin-top: 4px;
-      }
-      .trophy-gold   .trophy-tier { color: #f4d03f; }
-      .trophy-silver .trophy-tier { color: rgba(203,213,225,.95); }
-      .trophy-bronze .trophy-tier { color: rgba(217,119,6,.95); }
-
-      .trophy-rank {
-        font-family: 'Playfair Display', serif;
-        font-size: 22px; font-weight: 900;
-        line-height: 1; margin-top: 4px;
-        color: rgba(255,255,255,.85);
-        letter-spacing: -0.02em;
-      }
-      .trophy-gold .trophy-rank   { color: #f4d03f; }
-      .trophy-silver .trophy-rank { color: #e2e8f0; }
-      .trophy-bronze .trophy-rank { color: #fbbf24; }
-
-      .trophy-name {
-        font-family: 'Cairo', sans-serif;
-        font-weight: 900;
-        font-size: 17px;
-        color: #fff;
-        line-height: 1.2;
-        margin-top: 10px;
-      }
-      [lang="en"] .trophy-name { font-family: 'Inter', sans-serif; letter-spacing: -0.015em; }
-      .trophy-gold .trophy-name { font-size: 19px; }
-
-      .trophy-sector {
-        font-size: 11px;
-        color: rgba(255,255,255,.6);
-        margin-top: 4px;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-      }
-      .trophy-flag { font-size: 16px; line-height: 1; }
-
-      .trophy-value {
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 800;
-        font-size: 22px;
-        margin-top: 14px;
-        line-height: 1;
-      }
-      .trophy-gold   .trophy-value { color: #f4d03f; font-size: 28px; }
-      .trophy-silver .trophy-value { color: rgba(203,213,225,.95); }
-      .trophy-bronze .trophy-value { color: rgba(217,119,6,.95); }
-
-      .trophy-trend {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px; font-weight: 700;
-        color: #34d399;
-        margin-top: 6px;
-        padding: 4px 12px;
-        border-radius: 999px;
-        background: rgba(52,211,153,.10);
-        border: 1px solid rgba(52,211,153,.25);
-        display: inline-block;
-      }
-
-      /* ============================================== */
-      /*               RANKED LIST (4–10)              */
-      /* ============================================== */
-      .trophy-list {
-        background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-        border: 1px solid rgba(255,255,255,.08);
-        border-radius: 22px;
-        padding: 22px 22px 16px;
-        backdrop-filter: blur(12px) saturate(140%);
-        -webkit-backdrop-filter: blur(12px) saturate(140%);
-      }
-      .trophy-list-head {
-        display: flex; justify-content: space-between; align-items: end;
-        margin-bottom: 14px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(244,208,63,.18);
-      }
-      .trophy-list-eyebrow {
-        font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
-        color: #f4d03f; font-weight: 800;
-      }
-      .trophy-list-meta {
-        font-size: 11px; color: rgba(255,255,255,.55);
-        padding: 4px 10px; border-radius: 999px;
-        background: rgba(255,255,255,.05);
-        border: 1px solid rgba(255,255,255,.08);
-      }
-
-      .trophy-list-rows { display: flex; flex-direction: column; }
-
-      .trophy-list-row {
-        display: grid;
-        grid-template-columns: 50px 42px 1fr 110px 80px;
-        gap: 14px;
-        align-items: center;
-        padding: 12px 8px;
-        border-bottom: 1px dashed rgba(255,255,255,.07);
-        transition: all .25s ease;
-        position: relative;
-        cursor: pointer;
-      }
-      .trophy-list-row:last-child { border-bottom: 0; }
-      .trophy-list-row:hover {
-        background: rgba(244,208,63,.04);
-        padding-inline-start: 16px;
-        padding-inline-end: 16px;
-        border-radius: 10px;
-      }
-      .trophy-list-row::after {
-        content: '';
-        position: absolute;
-        top: 50%; transform: translateY(-50%);
-        inset-inline-start: 0;
-        width: 2px; height: 0;
-        background: var(--sc, #f4d03f);
-        transition: height .3s ease;
-      }
-      .trophy-list-row:hover::after { height: 70%; }
-
-      .trl-rank {
-        font-family: 'Playfair Display', serif;
-        font-weight: 900;
-        font-size: 28px;
-        color: rgba(244,208,63,.45);
-        line-height: 1;
-        letter-spacing: -0.03em;
-      }
-      .trophy-list-row:hover .trl-rank { color: rgba(244,208,63,.85); }
-
-      .trl-logo {
-        width: 36px; height: 36px;
-        border-radius: 10px;
-        background: linear-gradient(135deg, var(--sc, #f4d03f), color-mix(in srgb, var(--sc, #f4d03f) 50%, #0A0E27));
-        color: #0A0E27;
-        font-weight: 900;
-        font-size: 12px;
-        display: grid; place-items: center;
-        flex-shrink: 0;
-        font-family: 'Cairo', 'Inter', sans-serif;
-      }
-
-      .trl-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-      .trl-name {
-        font-weight: 800;
-        font-size: 14px;
-        color: #fff;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-      .trl-meta {
-        font-size: 11px;
-        color: rgba(255,255,255,.55);
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-
-      .trl-value {
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 800;
-        font-size: 14px;
-        color: var(--sc, #fff);
-        text-align: end;
-      }
-      .trl-trend {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px; font-weight: 700;
-        color: #34d399;
-        padding: 3px 10px;
-        border-radius: 999px;
-        background: rgba(52,211,153,.10);
-        border: 1px solid rgba(52,211,153,.25);
-        text-align: center;
-      }
-
-      @media (max-width: 640px) {
-        .trophy-list-row {
-          grid-template-columns: 36px 32px 1fr 70px;
-          gap: 10px;
-        }
-        .trl-trend { display: none; }
-        .trl-rank { font-size: 20px; }
-        .trl-name { font-size: 12px; }
-        .trl-meta { font-size: 10px; }
-        .trl-value { font-size: 12px; }
-      }
-
-      /* Fallback for browsers without color-mix */
-      @supports not (color: color-mix(in srgb, red, blue)) {
-        .trl-logo { background: linear-gradient(135deg, #f4d03f, #b08d23); }
-      }
-    </style>
-    <!-- =========================================================== -->
-  <!--                  TOP 10 APPLICATION FORM                     -->
-  <!-- =========================================================== -->
-  <section id="top10-apply" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-900 to-navy-950">
-    <div class="absolute inset-0 pointer-events-none opacity-40" style="background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,0.20), transparent 60%);"></div>
-    <style>
-      .apply-grid { display: grid; grid-template-columns: 1fr 1.8fr; gap: 28px; align-items: start; }
-      @media (max-width: 1024px) { .apply-grid { grid-template-columns: 1fr; } }
-      .apply-side {
-        background: linear-gradient(155deg, rgba(212,175,55,.08), rgba(212,175,55,.01));
-        border: 1px solid rgba(212,175,55,.2); border-radius: 22px; padding: 28px;
-        position: sticky; top: 100px;
-      }
-      .apply-benefit { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
-      .apply-benefit-icon { color: #d4af37; font-size: 18px; line-height: 1.2; flex-shrink: 0; margin-top: 2px; }
-      .apply-form {
-        background: linear-gradient(155deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
-        border: 1px solid rgba(255,255,255,.08); border-radius: 22px; padding: 28px;
-      }
-      .apply-section { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.06); }
-      .apply-section:last-child { border-bottom: 0; }
-      .apply-section-title {
-        font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #d4af37;
-        text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
-      }
-      .apply-section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to left, transparent, rgba(212,175,55,.25)); }
-      .apply-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-      @media (max-width: 640px) { .apply-row { grid-template-columns: 1fr; } }
-      .apply-field { display: flex; flex-direction: column; gap: 6px; }
-      .apply-field.full { grid-column: 1 / -1; }
-      .apply-label { font-size: 12px; color: rgba(255,255,255,.7); font-weight: 500; }
-      .apply-label .req { color: #f87171; margin-inline-start: 4px; }
-      .apply-input, .apply-select, .apply-textarea {
-        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
-        color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 14px;
-        transition: border-color .2s, background .2s; font-family: inherit;
-      }
-      .apply-input:focus, .apply-select:focus, .apply-textarea:focus {
-        outline: none; border-color: rgba(212,175,55,.5); background: rgba(255,255,255,.06);
-      }
-      .apply-textarea { resize: vertical; min-height: 80px; }
-      .apply-consent { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; cursor: pointer; }
-      .apply-consent input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; accent-color: #d4af37; }
-      .apply-consent-text { font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.5; }
-      .apply-submit {
-        background: linear-gradient(135deg, #d4af37, #b8941f); color: #0a0e27;
-        font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 999px;
-        border: none; cursor: pointer; transition: all .2s; margin-top: 18px;
-        display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px -8px rgba(212,175,55,.4);
-      }
-      .apply-submit:hover { background: #fbbf24; transform: translateY(-2px); box-shadow: 0 12px 32px -8px rgba(212,175,55,.6); }
-      .apply-submit:disabled { opacity: .6; cursor: wait; }
-      .apply-status { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 13px; display: none; }
-      .apply-status.success { display: block; background: rgba(34,197,94,.12); color: #86efac; border: 1px solid rgba(34,197,94,.3); }
-      .apply-status.error { display: block; background: rgba(248,113,113,.12); color: #fca5a5; border: 1px solid rgba(248,113,113,.3); }
-    </style>
-    <div class="max-w-[1280px] mx-auto px-4 lg:px-8 relative">
-      <div class="text-center mb-12 reveal">
-        <div class="inline-flex items-center gap-2 glass-light border border-gold-500/30 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
-          <i data-lucide="award" class="w-3.5 h-3.5"></i>
-          <span data-i18n="apply.eyebrow">تقديم · APPLY</span>
-        </div>
-        <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="apply.title">تأهّل لقائمة Top 10</h2>
-        <p class="mt-4 text-white/60 max-w-2xl mx-auto" data-i18n="apply.subtitle">هل شركتك من الرواد في قطاعها؟ قدّم طلب الانضمام لتصنيف أقوى 10 شركات في الشرق الأوسط — تقييمنا مستقل ومجاني.</p>
-      </div>
-
-      <div class="apply-grid reveal">
-        <!-- Benefits sidebar -->
-        <aside class="apply-side">
-          <div class="text-xs font-bold tracking-widest text-gold-400 mb-4 flex items-center gap-2">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-            <span data-i18n="apply.benefits.title">لماذا تتقدّم؟</span>
-          </div>
-          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b1">تصنيف مستقل وموثوق</span></div>
-          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b2">وصول لمستثمرين دوليين</span></div>
-          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b3">تغطية إعلامية حصرية</span></div>
-          <div class="apply-benefit"><span class="apply-benefit-icon">✓</span><span class="text-white/85 text-sm" data-i18n="apply.b4">تقرير تحليلي مجاني</span></div>
-        </aside>
-
-        <!-- Form -->
-        <form id="top10-apply-form" class="apply-form" novalidate>
-          <!-- Section 1: Company Information -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="building" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section1">معلومات الشركة</span></div>
-            <div class="apply-row">
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.nameAr">اسم الشركة (عربي)<span class="req">*</span></label><input class="apply-input" name="nameAr" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.nameEn">اسم الشركة (إنجليزي)<span class="req">*</span></label><input class="apply-input" name="nameEn" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.founded">سنة التأسيس<span class="req">*</span></label><input class="apply-input" name="founded" type="number" min="1900" max="2026" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.country">البلد<span class="req">*</span></label><select class="apply-select" name="country" required><option value="">—</option><option>مصر</option><option>السعودية</option><option>الإمارات</option><option>قطر</option><option>الكويت</option><option>البحرين</option><option>عُمان</option><option>الأردن</option><option>المغرب</option><option>تونس</option><option>الجزائر</option><option>أخرى</option></select></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.city">المدينة</label><input class="apply-input" name="city"></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.website">الموقع الإلكتروني</label><input class="apply-input" name="website" type="url" placeholder="https://"></div>
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.logo">لوجو الشركة (PNG/SVG/JPG)</label><input class="apply-input" name="logo" type="file" accept="image/*"></div>
-            </div>
-          </div>
-
-          <!-- Section 2: Sector & Activity -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="layers" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section2">القطاع والنشاط</span></div>
-            <div class="apply-row">
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.sector">القطاع الرئيسي<span class="req">*</span></label><select class="apply-select" name="sector" required id="apply-sector-select"><option value="">—</option></select></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.subsectors">القطاعات الفرعية</label><input class="apply-input" name="subsectors" placeholder="مثال: فينتك، مدفوعات"></div>
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.about">وصف مختصر للشركة<span class="req">*</span></label><textarea class="apply-textarea" name="about" rows="3" maxlength="600" required></textarea></div>
-            </div>
-          </div>
-
-          <!-- Section 3: Financial Numbers -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section3">الأرقام المالية</span></div>
-            <div class="apply-row">
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.revenue">الإيرادات السنوية (آخر سنة)<span class="req">*</span></label><input class="apply-input" name="revenue" placeholder="$1.5B EGP / USD" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.growth">معدل النمو السنوي %</label><input class="apply-input" name="growth" type="number" step="0.1" placeholder="15.5"></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.employees">عدد الموظفين</label><input class="apply-input" name="employees" type="number"></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.markets">عدد الأسواق/الدول</label><input class="apply-input" name="markets" type="number"></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.branches">عدد الفروع</label><input class="apply-input" name="branches" type="number"></div>
-            </div>
-          </div>
-
-          <!-- Section 4: Achievements (Optional) -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="trophy" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section4">الإنجازات (اختياري)</span></div>
-            <div class="apply-row">
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.awards">جوائز ومسابقات</label><textarea class="apply-textarea" name="awards" rows="2"></textarea></div>
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.deals">صفقات كبيرة</label><textarea class="apply-textarea" name="deals" rows="2"></textarea></div>
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.partners">شراكات استراتيجية</label><textarea class="apply-textarea" name="partners" rows="2"></textarea></div>
-            </div>
-          </div>
-
-          <!-- Section 5: Contact -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="user" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section5">بيانات التواصل</span></div>
-            <div class="apply-row">
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.contactName">اسم المسؤول<span class="req">*</span></label><input class="apply-input" name="contactName" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.position">المنصب<span class="req">*</span></label><input class="apply-input" name="position" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.email">إيميل العمل<span class="req">*</span></label><input class="apply-input" name="email" type="email" required></div>
-              <div class="apply-field"><label class="apply-label" data-i18n="apply.f.phone">رقم الهاتف<span class="req">*</span></label><input class="apply-input" name="phone" type="tel" required></div>
-              <div class="apply-field full"><label class="apply-label" data-i18n="apply.f.linkedin">LinkedIn (اختياري)</label><input class="apply-input" name="linkedin" type="url" placeholder="https://linkedin.com/in/..."></div>
-            </div>
-          </div>
-
-          <!-- Section 6: Consents -->
-          <div class="apply-section">
-            <div class="apply-section-title"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i><span data-i18n="apply.form.section6">الموافقات</span></div>
-            <label class="apply-consent"><input type="checkbox" name="consent1" required><span class="apply-consent-text" data-i18n="apply.f.consent1">أؤكد أن جميع البيانات المُقدَّمة صحيحة ودقيقة</span></label>
-            <label class="apply-consent"><input type="checkbox" name="consent2" required><span class="apply-consent-text" data-i18n="apply.f.consent2">أوافق على نشر اسم وبيانات الشركة في قائمة Top 10 في حال الموافقة</span></label>
-            <label class="apply-consent"><input type="checkbox" name="consent3" required><span class="apply-consent-text" data-i18n="apply.f.consent3">أوافق على معالجة البيانات وفقاً لسياسة الخصوصية</span></label>
-          </div>
-
-          <button type="submit" class="apply-submit">
-            <i data-lucide="send" class="w-4 h-4"></i>
-            <span data-i18n="apply.submit">إرسال الطلب</span>
-          </button>
-          <div id="apply-status" class="apply-status"></div>
-        </form>
-      </div>
-    </div>
-  </section>
-
-  </section>
 
   <!-- =========================================================== -->
   <!-- =========================================================== -->
