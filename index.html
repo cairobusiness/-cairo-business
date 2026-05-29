@@ -3235,9 +3235,9 @@
           <kbd class="text-[10px] bg-white/10 px-1.5 py-0.5 rounded">⌘K</kbd>
         </button>
 
-        <button class="relative w-10 h-10 grid place-items-center rounded-full hover:bg-white/10 transition">
+        <button id="header-notif-btn" class="relative w-10 h-10 grid place-items-center rounded-full hover:bg-white/10 transition" aria-label="Notifications" title="فعّل إشعارات الأخبار / Enable news notifications">
           <i data-lucide="bell" class="w-5 h-5 text-white/80"></i>
-          <span class="absolute top-1.5 end-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-navy-800"></span>
+          <span id="header-notif-dot" class="absolute top-1.5 end-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-navy-800"></span>
         </button>
 
         <!-- Theme toggle (dark/light) -->
@@ -18000,8 +18000,103 @@
     setInterval(fetchLiveMarketData, 5 * 60 * 1000);
     setTimeout(fetchWorldBankData, 2500);
 
+    /* Show a small toast at the top of the page (auto-dismisses) */
+    function cbShowToast(msg, type) {
+      try {
+        const colors = {
+          success: { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.5)', fg: '#86efac' },
+          error:   { bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.5)',  fg: '#fca5a5' },
+          info:    { bg: 'rgba(96,165,250,0.15)', border: 'rgba(96,165,250,0.5)', fg: '#93c5fd' },
+          gold:    { bg: 'rgba(244,208,63,0.18)', border: 'rgba(244,208,63,0.6)', fg: '#fbbf24' }
+        };
+        const c = colors[type] || colors.info;
+        const el = document.createElement('div');
+        el.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:' + c.bg + ';border:1px solid ' + c.border + ';color:' + c.fg + ';padding:12px 22px;border-radius:12px;z-index:99999;font-weight:600;font-size:14px;backdrop-filter:blur(10px);box-shadow:0 12px 32px rgba(0,0,0,.5);max-width:90vw;text-align:center;';
+        el.innerHTML = msg;
+        document.body.appendChild(el);
+        setTimeout(() => { el.style.transition = 'opacity .4s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 3500);
+      } catch (_) {}
+    }
+
+    /* Subscribe browser to Web Push notifications.
+       Returns 'subscribed' / 'denied' / 'unsupported' / 'error'. */
+    async function cbEnablePushNotifications() {
+      try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return 'unsupported';
+        const reg = await navigator.serviceWorker.ready || await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        const perm = await Notification.requestPermission();
+        if (perm === 'denied') return 'denied';
+        if (perm !== 'granted') return 'error';
+        const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND) || 'https://cairo-business-backend.vercel.app';
+        const keyRes = await fetch(backend + '/api/push/public-key');
+        const keyJ = await keyRes.json();
+        if (!keyJ || !keyJ.success || !keyJ.publicKey) return 'error';
+        const appKey = (typeof urlBase64ToUint8Array === 'function') ? urlBase64ToUint8Array(keyJ.publicKey) : keyJ.publicKey;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appKey });
+        }
+        const subJson = sub.toJSON();
+        await fetch(backend + '/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys, userAgent: navigator.userAgent })
+        });
+        return 'subscribed';
+      } catch (e) {
+        console.warn('Push subscribe failed:', e);
+        return 'error';
+      }
+    }
+
     function wireHeaderButtonsSafe() {
       try {
+        /* Notification (bell) button — trigger push subscription on click */
+        const notifBtn = document.getElementById('header-notif-btn');
+        if (notifBtn && !notifBtn._wired) {
+          notifBtn._wired = true;
+          /* Hide the red dot if already subscribed */
+          try {
+            if ('Notification' in window && Notification.permission === 'granted') {
+              const dot = document.getElementById('header-notif-dot');
+              if (dot) dot.style.display = 'none';
+            }
+          } catch (_) {}
+          notifBtn.addEventListener('click', async () => {
+            const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
+            if (!('Notification' in window)) {
+              cbShowToast(isAr ? '⚠️ متصفّحك لا يدعم الإشعارات' : '⚠️ Your browser does not support notifications', 'error');
+              return;
+            }
+            const perm = Notification.permission;
+            if (perm === 'denied') {
+              cbShowToast(isAr
+                ? '🔕 الإشعارات محظورة في المتصفّح. افتح إعدادات الموقع وفعّلها يدوياً.'
+                : '🔕 Notifications are blocked. Enable them in your browser settings for this site.', 'error');
+              return;
+            }
+            if (perm === 'granted') {
+              cbShowToast(isAr ? '🔔 الإشعارات مفعّلة بالفعل ✓' : '🔔 Notifications already enabled ✓', 'success');
+              const dot = document.getElementById('header-notif-dot'); if (dot) dot.style.display = 'none';
+              return;
+            }
+            /* perm === 'default' — show subscription flow */
+            cbShowToast(isAr ? '⏳ جاري التفعيل...' : '⏳ Enabling notifications...', 'info');
+            const result = await cbEnablePushNotifications();
+            if (result === 'subscribed') {
+              cbShowToast(isAr
+                ? '✅ تم تفعيل الإشعارات! هتوصلك أهم أخبار Cairo Business فور حدوثها.'
+                : '✅ Notifications enabled! You will get the most important Cairo Business news as it happens.', 'success');
+              const dot = document.getElementById('header-notif-dot'); if (dot) dot.style.display = 'none';
+            } else if (result === 'denied') {
+              cbShowToast(isAr ? '🔕 تم رفض الإذن' : '🔕 Permission denied', 'error');
+            } else if (result === 'unsupported') {
+              cbShowToast(isAr ? '⚠️ متصفّحك لا يدعم Web Push' : '⚠️ Your browser does not support Web Push', 'error');
+            } else {
+              cbShowToast(isAr ? '❌ تعذّر تفعيل الإشعارات — حاول لاحقاً' : '❌ Could not enable notifications — try later', 'error');
+            }
+          });
+        }
         const themeBtn = document.getElementById('theme-toggle');
         if (themeBtn && !themeBtn._wired) {
           themeBtn._wired = true;
