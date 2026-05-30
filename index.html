@@ -16764,8 +16764,8 @@
           <h3 class="font-semibold text-white mb-2 text-sm">${isAr ? d.title_ar : d.title_en}</h3>
           <p class="text-xs text-white/60 mb-3">${isAr ? d.location_ar : d.location_en}</p>
           <div class="flex items-center justify-between mb-3 pb-3 border-b border-white/10">
-            <span class="text-sm font-bold text-gold-400">${d.value}</span>
-            <span class="text-[10px] text-white/50">${isAr ? 'آخل موعد: ' : 'Deadline: '}${d.deadline}</span>
+            <span class="text-sm font-bold text-gold-400">${isAr ? d.value_ar : d.value_en}</span>
+            <span class="text-[10px] text-white/50">${isAr ? 'آخل موعد: ' : 'Deadline: '}${isAr ? d.deadline_ar : d.deadline_en}</span>
           </div>
           <button class="w-full h-9 bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-400 text-xs font-semibold rounded-lg transition" data-i18n="deals.inquire">Contact</button>
         </div>
