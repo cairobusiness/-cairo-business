@@ -16767,7 +16767,7 @@
             <span class="text-sm font-bold text-gold-400">${isAr ? d.value_ar : d.value_en}</span>
             <span class="text-[10px] text-white/50">${isAr ? 'آخل موعد: ' : 'Deadline: '}${isAr ? d.deadline_ar : d.deadline_en}</span>
           </div>
-          <button class="w-full h-9 bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-400 text-xs font-semibold rounded-lg transition" data-i18n="deals.inquire" onclick="location.href='/contact.html?subject=${encodeURIComponent((isAr?'استفسار عن: ':'Inquiry about: ')+(isAr?d.title_ar:d.title_en))}'">Contact</button>
+          <button class="w-full h-9 bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-400 text-xs font-semibold rounded-lg transition" data-i18n="deals.inquire" onclick="location.href='/deal.html?id=${d.id}'">Contact</button>
         </div>
       `).join('');
     }
