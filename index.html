@@ -11871,18 +11871,18 @@
         const badge = isAr ? u.badge_ar : u.badge_en;
         const utype = isAr ? u.type_ar : u.type_en;
         const dev   = isAr ? u.developer_ar : u.developer_en;
+        const hasImg = !!u.imageUrl;
+        const cardBg = hasImg ? '' : ('bg-gradient-to-br ' + (u.color || 'from-navy-700 to-navy-900'));
         return `
         <article class="card glass-light border border-white/10 rounded-3xl overflow-hidden cursor-pointer hover:border-gold-500/40 transition" onclick="openReModal('${u.id}')">
-          <div class="relative h-48 bg-gradient-to-br ${u.color}">
-            <div class="absolute inset-0 opacity-40" style="background: radial-gradient(circle at 50% 50%, rgba(201,162,39,0.25), transparent 60%);"></div>
-            <svg class="absolute bottom-4 end-4 w-16 h-16 text-white/20" viewBox="0 0 64 64" fill="currentColor">
-              <rect x="8" y="24" width="16" height="36" rx="2"/><rect x="28" y="12" width="16" height="48" rx="2"/><rect x="48" y="30" width="12" height="30" rx="2"/>
-            </svg>
-            <div class="absolute top-3 start-3 flex gap-2">
+          <div class="relative h-48 ${cardBg}">
+            ${hasImg ? `<img src="${u.imageUrl}" alt="${(title||'').replace(/"/g,'&quot;')}" loading="lazy" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'" />` : `<svg class="absolute bottom-4 end-4 w-16 h-16 text-white/20" viewBox="0 0 64 64" fill="currentColor"><rect x="8" y="24" width="16" height="36" rx="2"/><rect x="28" y="12" width="16" height="48" rx="2"/><rect x="48" y="30" width="12" height="30" rx="2"/></svg>`}
+            <div class="absolute inset-0 ${hasImg ? 'bg-gradient-to-t from-navy-950/85 via-navy-950/20 to-transparent' : 'opacity-40'}" style="${hasImg ? '' : 'background: radial-gradient(circle at 50% 50%, rgba(201,162,39,0.25), transparent 60%);'}"></div>
+            <div class="absolute top-3 start-3 flex gap-2 z-10">
               <span class="bg-gold-500 text-navy-900 text-[10px] font-bold px-2 py-1 rounded-full">${badge}</span>
               <span class="bg-navy-900/70 text-white text-[10px] font-bold px-2 py-1 rounded-full">AI <span class="num">${u.aiScore}</span></span>
             </div>
-            <span class="absolute bottom-3 start-3 text-[10px] bg-navy-900/70 text-white/80 rounded-full px-2 py-0.5">${utype}</span>
+            <span class="absolute bottom-3 start-3 text-[10px] bg-navy-900/70 text-white/80 rounded-full px-2 py-0.5 z-10">${utype}</span>
           </div>
           <div class="p-5">
             <div class="flex items-center justify-between mb-1">
@@ -11950,23 +11950,23 @@
       const scoreColor = u.aiScore >= 90 ? 'text-emerald-400' : u.aiScore >= 80 ? 'text-gold-400' : 'text-orange-400';
       const scoreLabel = u.aiScore >= 90 ? (isAr ? 'فرصة ممتازة' : 'Excellent') : u.aiScore >= 80 ? (isAr ? 'فرصة جيدة' : 'Good') : (isAr ? 'متوسط' : 'Average');
 
+      const hasImg = !!u.imageUrl;
+      const headerBg = hasImg ? '' : ('bg-gradient-to-br ' + (u.color || 'from-navy-700 to-navy-900'));
       content.innerHTML = `
         <!-- Header -->
-        <div class="relative h-44 bg-gradient-to-br ${u.color} rounded-t-3xl overflow-hidden">
-          <div class="absolute inset-0 opacity-40" style="background: radial-gradient(circle at 50% 50%, rgba(201,162,39,0.3), transparent 60%);"></div>
-          <svg class="absolute bottom-6 end-6 w-20 h-20 text-white/15" viewBox="0 0 64 64" fill="currentColor">
-            <rect x="8" y="24" width="16" height="36" rx="2"/><rect x="28" y="12" width="16" height="48" rx="2"/><rect x="48" y="30" width="12" height="30" rx="2"/>
-          </svg>
-          <div class="absolute top-4 start-4 flex gap-2">
-            <span class="bg-gold-500 text-navy-900 text-[10px] font-bold px-2.5 py-1 rounded-full">${isAr ? u.badge_ar : u.badge_en}</span>
-            <span class="bg-navy-900/70 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">${utype}</span>
+        <div class="relative h-56 ${headerBg} rounded-t-3xl overflow-hidden">
+          ${hasImg ? `<img src="${u.imageUrl}" alt="${(title||'').replace(/"/g,'&quot;')}" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'" />` : `<svg class="absolute bottom-6 end-6 w-20 h-20 text-white/15" viewBox="0 0 64 64" fill="currentColor"><rect x="8" y="24" width="16" height="36" rx="2"/><rect x="28" y="12" width="16" height="48" rx="2"/><rect x="48" y="30" width="12" height="30" rx="2"/></svg>`}
+          <div class="absolute inset-0 ${hasImg ? 'bg-gradient-to-t from-navy-950 via-navy-950/40 to-transparent' : 'opacity-40'}" style="${hasImg ? '' : 'background: radial-gradient(circle at 50% 50%, rgba(201,162,39,0.3), transparent 60%);'}"></div>
+          <div class="absolute top-4 start-4 flex gap-2 z-10">
+            ${(isAr ? u.badge_ar : u.badge_en) ? `<span class="bg-gold-500 text-navy-900 text-[10px] font-bold px-2.5 py-1 rounded-full">${isAr ? u.badge_ar : u.badge_en}</span>` : ''}
+            ${utype ? `<span class="bg-navy-900/70 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">${utype}</span>` : ''}
           </div>
-          <button onclick="closeReModal()" class="absolute top-4 end-4 w-8 h-8 rounded-full bg-navy-900/60 hover:bg-navy-900/90 text-white grid place-items-center transition">
+          <button onclick="closeReModal()" class="absolute top-4 end-4 w-8 h-8 rounded-full bg-navy-900/60 hover:bg-navy-900/90 text-white grid place-items-center transition z-10">
             <i data-lucide="x" class="w-4 h-4"></i>
           </button>
-          <div class="absolute bottom-4 start-4">
-            <div class="text-xs text-white/70">${area} · ${dev}</div>
-            <h3 class="font-display text-xl font-black text-white mt-1">${title}</h3>
+          <div class="absolute bottom-4 start-4 z-10">
+            <div class="text-xs text-white/80">${area}${dev ? ' · ' + dev : ''}</div>
+            <h3 class="font-display text-2xl font-black text-white mt-1">${title}</h3>
           </div>
         </div>
         <!-- Body -->
@@ -12045,6 +12045,24 @@
               ${pros.map(p => '<div class="flex items-start gap-2 glass-light border border-white/10 rounded-xl p-3"><span class="text-emerald-400 mt-0.5">✓</span><span class="text-xs text-white/70">' + p + '</span></div>').join('')}
             </div>
           </div>` : ''}
+          ${(() => {
+            const phone = (window.__cbBrand && window.__cbBrand.contactPhone) ? String(window.__cbBrand.contactPhone) : '';
+            if (!phone) return '';
+            const cleanPhone = phone.replace(/\D/g, '');
+            const waText = encodeURIComponent((isAr ? 'مرحباً، مهتم بالاستعلام عن عقار: ' : 'Hi, I am interested in this property: ') + (title || ''));
+            return `
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <a href="tel:${phone}" class="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold text-sm py-3 rounded-xl transition">
+                <i data-lucide="phone" class="w-4 h-4"></i>
+                <span>${isAr ? 'اتصل الآن' : 'Call Now'}</span>
+              </a>
+              <a href="https://wa.me/${cleanPhone}?text=${waText}" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold text-sm py-3 rounded-xl transition">
+                <i data-lucide="message-circle-more" class="w-4 h-4"></i>
+                <span>${isAr ? 'واتساب' : 'WhatsApp'}</span>
+              </a>
+            </div>
+            <div class="flex items-center gap-3 my-3"><div class="flex-1 h-px bg-white/10"></div><span class="text-[10px] text-white/40 uppercase tracking-wider">${isAr ? 'أو سيب بياناتك' : 'Or leave your info'}</span><div class="flex-1 h-px bg-white/10"></div></div>`;
+          })()}
           <!-- ============= INVESTMENT INQUIRY FORM ============= -->
           <div class="glass-light border border-gold-500/30 rounded-2xl p-5 bg-gradient-to-br from-gold-500/8 to-gold-500/0" data-property-id="${u.id}" data-property-name="${title.replace(/"/g,'&quot;')}">
             <div class="flex items-center gap-2 mb-1">
@@ -12079,7 +12097,11 @@
                 <i data-lucide="check-circle-2" class="w-7 h-7 text-emerald-400"></i>
               </div>
               <div class="text-base font-bold text-white mb-1">${isAr ? 'تم استلام طلبك ✓' : 'Inquiry received ✓'}</div>
-              <p class="text-xs text-white/60 max-w-sm mx-auto">${isAr ? 'مستشار عقاري هيتواصل معاك خلال 24 ساعة على الرقم اللي سيبته. لو الموضوع عاجل تقدر تكلم على ' : 'A property advisor will reach you within 24 hours on the number you provided. For urgent inquiries call '}<a href="tel:+201000000000" class="text-gold-400 font-bold" dir="ltr">+20 100 000 0000</a></p>
+              ${(() => {
+                const phone = (window.__cbBrand && window.__cbBrand.contactPhone) ? String(window.__cbBrand.contactPhone) : '';
+                if (phone) return `<p class="text-xs text-white/60 max-w-sm mx-auto">${isAr ? 'مستشار عقاري هيتواصل معاك خلال 24 ساعة. للطوارئ كلمنا على ' : 'A property advisor will reach you within 24 hours. For urgent matters call '}<a href="tel:${phone}" class="text-gold-400 font-bold" dir="ltr">${phone}</a></p>`;
+                return `<p class="text-xs text-white/60 max-w-sm mx-auto">${isAr ? 'مستشار عقاري هيتواصل معاك خلال 24 ساعة على الرقم اللي سيبته.' : 'A property advisor will reach you within 24 hours on the number you provided.'}</p>`;
+              })()}
             </div>
           </div>
         </div>`;

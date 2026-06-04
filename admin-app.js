@@ -311,17 +311,20 @@ const ENTITIES = {
       { id: 'baths', label: 'عدد الحمامات', type: 'number', nullable: true, min: 0 },
       { id: 'developer', label: 'المطوّر', type: 'text', nullable: true },
       { id: 'aiScore', label: 'AI Score (0-100)', type: 'number', default: 0, step: '0.1', min: 0, max: 100 },
+      { id: 'imageUrl', label: '📸 صورة العقار (URL) — اضغط الزر تحت لرفع صورة من جهازك', type: 'url', nullable: true, dir: 'ltr', full: true, placeholder: 'https://...' },
       { id: 'features', label: 'المميزات (مفصول بفاصلة)', type: 'text', nullable: true },
       { id: 'description', label: 'الوصف', type: 'textarea', full: true, nullable: true }
     ],
     list: {
       title: r => r.titleAr,
       excerpt: r => (r.description || '').slice(0, 140) + ((r.description || '').length > 140 ? '...' : ''),
+      thumb: r => r.imageUrl || null,
       emoji: '🏠',
       badges: r => [
         { text: r.type, kind: 'gold' },
         { text: r.area, kind: 'blue' },
-        ...(r.aiScore ? [{ text: 'Score ' + r.aiScore, kind: 'green' }] : [])
+        ...(r.aiScore ? [{ text: 'Score ' + r.aiScore, kind: 'green' }] : []),
+        ...(r.imageUrl ? [{ text: '📸 صورة', kind: 'green' }] : [])
       ],
       meta: r => [(r.price/1000000).toFixed(2) + 'M جنيه', r.size + ' م²', ...(r.beds ? [r.beds + ' غرف'] : []), ...(r.developer ? [r.developer] : [])]
     },
