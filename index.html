@@ -12045,6 +12045,43 @@
               ${pros.map(p => '<div class="flex items-start gap-2 glass-light border border-white/10 rounded-xl p-3"><span class="text-emerald-400 mt-0.5">✓</span><span class="text-xs text-white/70">' + p + '</span></div>').join('')}
             </div>
           </div>
+          <!-- ============= INVESTMENT INQUIRY FORM ============= -->
+          <div class="glass-light border border-gold-500/30 rounded-2xl p-5 bg-gradient-to-br from-gold-500/8 to-gold-500/0" data-property-id="${u.id}" data-property-name="${title.replace(/"/g,'&quot;')}">
+            <div class="flex items-center gap-2 mb-1">
+              <i data-lucide="message-circle" class="w-4 h-4 text-gold-400"></i>
+              <span class="text-sm font-bold text-gold-400">${isAr ? 'مهتم بالعقار؟ هنتواصل معاك خلال 24 ساعة' : 'Interested? We will contact you within 24 hours'}</span>
+            </div>
+            <p class="text-[11px] text-white/50 mb-4">${isAr ? 'سيب بياناتك وهيرد عليك مستشار عقاري متخصص بكل التفاصيل والأسعار.' : 'Leave your details and a property advisor will get back to you with full details and prices.'}</p>
+            <div id="re-lead-form-wrap-${u.id}">
+              <div class="grid sm:grid-cols-2 gap-2 mb-2">
+                <input id="re-lead-name-${u.id}" type="text" placeholder="${isAr ? 'الاسم الكامل *' : 'Full name *'}" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-gold-400 focus:outline-none" />
+                <input id="re-lead-phone-${u.id}" type="tel" placeholder="${isAr ? 'رقم الموبايل *' : 'Mobile number *'}" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-gold-400 focus:outline-none" dir="ltr" />
+              </div>
+              <div class="grid sm:grid-cols-2 gap-2 mb-2">
+                <input id="re-lead-email-${u.id}" type="email" placeholder="${isAr ? 'البريد الإلكتروني (اختياري)' : 'Email (optional)'}" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-gold-400 focus:outline-none" dir="ltr" />
+                <select id="re-lead-budget-${u.id}" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-gold-400 focus:outline-none">
+                  <option value="">${isAr ? 'الميزانية (اختياري)' : 'Budget (optional)'}</option>
+                  <option value="cash">${isAr ? 'كاش' : 'Cash'}</option>
+                  <option value="installments-5y">${isAr ? 'أقساط حتى 5 سنوات' : 'Installments up to 5 yrs'}</option>
+                  <option value="installments-10y">${isAr ? 'أقساط 5–10 سنوات' : 'Installments 5–10 yrs'}</option>
+                  <option value="mortgage">${isAr ? 'تمويل عقاري' : 'Mortgage'}</option>
+                </select>
+              </div>
+              <textarea id="re-lead-msg-${u.id}" placeholder="${isAr ? 'رسالة (اختياري)' : 'Message (optional)'}" rows="2" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-gold-400 focus:outline-none mb-3"></textarea>
+              <button onclick="submitPropertyLead('${u.id}')" id="re-lead-btn-${u.id}" class="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-900 font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 transition">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>${isAr ? 'اطلب التواصل' : 'Request a Callback'}</span>
+              </button>
+              <div id="re-lead-err-${u.id}" class="hidden text-xs text-red-400 mt-2 text-center"></div>
+            </div>
+            <div id="re-lead-success-${u.id}" class="hidden text-center py-6">
+              <div class="w-14 h-14 mx-auto rounded-full bg-emerald-500/15 grid place-items-center mb-3">
+                <i data-lucide="check-circle-2" class="w-7 h-7 text-emerald-400"></i>
+              </div>
+              <div class="text-base font-bold text-white mb-1">${isAr ? 'تم استلام طلبك ✓' : 'Inquiry received ✓'}</div>
+              <p class="text-xs text-white/60 max-w-sm mx-auto">${isAr ? 'مستشار عقاري هيتواصل معاك خلال 24 ساعة على الرقم اللي سيبته. لو الموضوع عاجل تقدر تكلم على ' : 'A property advisor will reach you within 24 hours on the number you provided. For urgent inquiries call '}<a href="tel:+201000000000" class="text-gold-400 font-bold" dir="ltr">+20 100 000 0000</a></p>
+            </div>
+          </div>
         </div>`;
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -12058,6 +12095,55 @@
       modal.classList.remove('flex');
       document.body.style.overflow = '';
     }
+
+    /* Submit a property inquiry from the modal form */
+    async function submitPropertyLead(propertyId) {
+      const isAr = currentLang === 'ar';
+      const name = document.getElementById('re-lead-name-' + propertyId)?.value.trim();
+      const phone = document.getElementById('re-lead-phone-' + propertyId)?.value.trim();
+      const email = document.getElementById('re-lead-email-' + propertyId)?.value.trim();
+      const budget = document.getElementById('re-lead-budget-' + propertyId)?.value || '';
+      const message = document.getElementById('re-lead-msg-' + propertyId)?.value.trim();
+      const errEl = document.getElementById('re-lead-err-' + propertyId);
+      const btn = document.getElementById('re-lead-btn-' + propertyId);
+      const formWrap = document.getElementById('re-lead-form-wrap-' + propertyId);
+      const successEl = document.getElementById('re-lead-success-' + propertyId);
+
+      const showErr = (msg) => { if (errEl) { errEl.textContent = msg; errEl.classList.remove('hidden'); } };
+      if (!name || name.length < 2) return showErr(isAr ? 'من فضلك ادخل الاسم الكامل' : 'Please enter your full name');
+      if (!phone || phone.replace(/\D/g, '').length < 8) return showErr(isAr ? 'من فضلك ادخل رقم موبايل صحيح' : 'Please enter a valid phone number');
+      if (errEl) errEl.classList.add('hidden');
+
+      const prop = REAL_ESTATE.find(x => x.id === propertyId);
+      const propertyName = prop ? (isAr ? prop.title_ar : prop.title_en) : '';
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>' + (isAr ? 'جاري الإرسال...' : 'Sending...') + '</span>';
+        if (window.lucide) try { lucide.createIcons(); } catch (_) {}
+      }
+
+      try {
+        const r = await fetch('https://cairo-business-backend.vercel.app/api/property-leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ propertyId, propertyName, fullName: name, phone, email, message, budget, source: 'website' })
+        });
+        const j = await r.json();
+        if (!r.ok || !j.success) throw new Error(j.error || 'Request failed');
+        if (formWrap) formWrap.classList.add('hidden');
+        if (successEl) successEl.classList.remove('hidden');
+        if (window.lucide) try { lucide.createIcons(); } catch (_) {}
+      } catch (e) {
+        showErr(isAr ? 'حصل خطأ، حاول تاني أو كلمنا مباشرة' : 'Something went wrong — please try again or call us directly');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i><span>' + (isAr ? 'اطلب التواصل' : 'Request a Callback') + '</span>';
+          if (window.lucide) try { lucide.createIcons(); } catch (_) {}
+        }
+      }
+    }
+    window.submitPropertyLead = submitPropertyLead;
 
     /* ============== EVENTS FROM BACKEND API ============== */
     const EVENTS_API_URL = 'https://cairo-business-backend.vercel.app/api/events?limit=12';

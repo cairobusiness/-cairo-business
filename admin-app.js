@@ -689,6 +689,42 @@ const ENTITIES = {
     list: { title: c => c.titleAr, excerpt: c => (c.descAr||'').split('\n')[0], emoji: '🏆', badges: c => [...(c.isFeatured?[{text:'⭐ الأكثر شعبية',kind:'gold'}]:[]), ...(c.numericValue?[{text:'$'+c.numericValue+'/شهر',kind:'green'}]:[])], meta: c => [c.subtitleAr || ''] },
     stats: items => ({ 'إجمالي الباقات': items.length, 'الأرخص': items.length ? '$' + Math.min(...items.filter(c=>c.numericValue).map(c=>c.numericValue)) : '—' })
   },
+  propertyleads: {
+    key: 'propertyleads', icon: '🏘️', nameAr: 'طلبات العقارات', singularAr: 'طلب',
+    endpoint: '/api/admin/property-leads',
+    fields: [
+      { id: 'fullName', label: 'الاسم الكامل', type: 'text' },
+      { id: 'phone', label: 'رقم الموبايل', type: 'text', dir: 'ltr' },
+      { id: 'email', label: 'البريد الإلكتروني', type: 'text', nullable: true, dir: 'ltr' },
+      { id: 'propertyName', label: 'العقار', type: 'text', nullable: true },
+      { id: 'budget', label: 'الميزانية', type: 'select', nullable: true, options: [
+        ['', '—'],['cash','كاش'],['installments-5y','أقساط حتى 5 سنوات'],['installments-10y','أقساط 5–10 سنوات'],['mortgage','تمويل عقاري']
+      ]},
+      { id: 'message', label: 'الرسالة', type: 'textarea', full: true, nullable: true },
+      { id: 'status', label: 'الحالة', type: 'select', default: 'new', options: [
+        ['new','جديد 🆕'],['contacted','تم التواصل 📞'],['interested','مهتم ⭐'],['scheduled','زيارة محجوزة 📅'],['won','تم البيع ✅'],['lost','مفقود ❌']
+      ]},
+      { id: 'notes', label: 'ملاحظات داخلية للفريق', type: 'textarea', full: true, nullable: true }
+    ],
+    list: {
+      title: l => l.fullName + ' · ' + (l.phone || ''),
+      excerpt: l => (l.propertyName || '—') + (l.message ? ' · ' + l.message.slice(0, 100) : ''),
+      emoji: '🏘️',
+      badges: l => [
+        { text: ({new:'🆕 جديد', contacted:'📞 تم التواصل', interested:'⭐ مهتم', scheduled:'📅 زيارة', won:'✅ مبيع', lost:'❌ مفقود'})[l.status] || l.status, kind: l.status === 'won' ? 'green' : l.status === 'lost' ? 'red' : l.status === 'new' ? 'gold' : 'blue' },
+        ...(l.budget ? [{ text: l.budget, kind: 'blue' }] : [])
+      ],
+      meta: l => [
+        ...(l.email ? [l.email] : []),
+        ...(l.createdAt ? [new Date(l.createdAt).toLocaleDateString('ar-EG')] : [])
+      ]
+    },
+    stats: items => ({
+      'إجمالي الطلبات': items.length,
+      'جديد': items.filter(l => l.status === 'new').length,
+      'تم البيع': items.filter(l => l.status === 'won').length
+    })
+  },
   topceos: {
     key: 'topceos', icon: '👔', nameAr: 'أقوى 10 CEOs', singularAr: 'CEO',
     endpoint: '/api/admin/top-ceos',
