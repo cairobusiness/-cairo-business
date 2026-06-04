@@ -688,6 +688,56 @@ const ENTITIES = {
     ],
     list: { title: c => c.titleAr, excerpt: c => (c.descAr||'').split('\n')[0], emoji: '🏆', badges: c => [...(c.isFeatured?[{text:'⭐ الأكثر شعبية',kind:'gold'}]:[]), ...(c.numericValue?[{text:'$'+c.numericValue+'/شهر',kind:'green'}]:[])], meta: c => [c.subtitleAr || ''] },
     stats: items => ({ 'إجمالي الباقات': items.length, 'الأرخص': items.length ? '$' + Math.min(...items.filter(c=>c.numericValue).map(c=>c.numericValue)) : '—' })
+  },
+  topceos: {
+    key: 'topceos', icon: '👔', nameAr: 'أقوى 10 CEOs', singularAr: 'CEO',
+    endpoint: '/api/admin/top-ceos',
+    fields: [
+      { id: 'rank', label: 'الترتيب (1 = الأقوى) *', type: 'number', required: true, min: 1, max: 999, default: 1 },
+      { id: 'sector', label: 'القطاع *', type: 'select', required: true, default: 'all', options: [
+        ['all','الكل'],['realestate','عقارات'],['automotive','سيارات'],['banks','بنوك'],
+        ['restaurants','مطاعم'],['hospitals','مستشفيات'],['schools','مدارس'],
+        ['energy','طاقة'],['tech','تكنولوجيا'],['retail','تجزئة'],['construction','مقاولات'],
+        ['media','إعلام'],['aviation','طيران'],['logistics','لوجستيات'],['pharma','أدوية'],
+        ['manufacturing','صناعة'],['entertainment','ترفيه']
+      ]},
+      { id: 'nameAr', label: 'الاسم بالعربية *', type: 'text', required: true, placeholder: 'محمد منصور' },
+      { id: 'nameEn', label: 'Name in English *', type: 'text', required: true, dir: 'ltr', placeholder: 'Mohamed Mansour' },
+      { id: 'titleAr', label: 'المسمى الوظيفي بالعربية', type: 'text', nullable: true, placeholder: 'رئيس مجلس الإدارة' },
+      { id: 'titleEn', label: 'Title in English', type: 'text', nullable: true, dir: 'ltr', placeholder: 'Chairman' },
+      { id: 'company', label: 'اسم الشركة', type: 'text', nullable: true, placeholder: 'Mansour Group' },
+      { id: 'country', label: 'الدولة', type: 'text', nullable: true, default: 'Egypt', placeholder: 'Egypt' },
+      { id: 'powerScore', label: 'مؤشر القوة (0-100)', type: 'number', nullable: true, min: 0, max: 100, default: 80 },
+      { id: 'photoUrl', label: '📸 صورة الـ CEO (URL) — اضغط الزر تحت لرفع صورة من جهازك', type: 'url', nullable: true, dir: 'ltr', full: true, placeholder: 'https://...' },
+      { id: 'quoteAr', label: 'الاقتباس بالعربية', type: 'textarea', nullable: true, full: true, placeholder: 'قصة نمو مصر بدأت للتو.' },
+      { id: 'quoteEn', label: 'Quote in English', type: 'textarea', nullable: true, full: true, dir: 'ltr', placeholder: "Egypt's growth story is just beginning." },
+      { id: 'bioAr', label: 'نبذة بالعربية', type: 'textarea', nullable: true, full: true },
+      { id: 'bioEn', label: 'Bio in English', type: 'textarea', nullable: true, full: true, dir: 'ltr' },
+      { id: 'linkedinUrl', label: 'رابط LinkedIn', type: 'url', nullable: true, dir: 'ltr', upload: false },
+      { id: 'twitterUrl', label: 'رابط Twitter / X', type: 'url', nullable: true, dir: 'ltr', upload: false },
+      { id: 'isVisible', label: '👁️ مرئي على الموقع', type: 'checkbox', full: true, default: true }
+    ],
+    list: {
+      title: c => c.nameAr,
+      excerpt: c => (c.bioAr || c.quoteAr || '').slice(0, 140),
+      thumb: c => c.photoUrl || null,
+      emoji: '👔',
+      badges: c => [
+        { text: '#' + (c.rank || 99), kind: c.rank <= 3 ? 'gold' : 'blue' },
+        ...(c.sector && c.sector !== 'all' ? [{ text: c.sector, kind: 'green' }] : []),
+        ...(c.isVisible === false ? [{ text: 'مخفي', kind: 'red' }] : [])
+      ],
+      meta: c => [
+        ...(c.titleAr ? [c.titleAr] : []),
+        ...(c.company ? [c.company] : []),
+        ...(c.powerScore ? ['Power ' + c.powerScore + '/100'] : [])
+      ]
+    },
+    stats: items => ({
+      'إجمالي الـ CEOs': items.length,
+      'مرئي على الموقع': items.filter(c => c.isVisible !== false).length,
+      'بصورة': items.filter(c => c.photoUrl).length
+    })
   }
 };
 
