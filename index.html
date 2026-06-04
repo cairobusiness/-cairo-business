@@ -15444,6 +15444,20 @@
       lucide.createIcons();
     }
 
+    /* Compare section — initial render + interactive listeners (was only wired into applyLang re-render) */
+    (function bootCompare() {
+      function attach() {
+        const selA = document.getElementById('cmp-select-a');
+        const selB = document.getElementById('cmp-select-b');
+        if (!selA || !selB) return;
+        renderCompare();
+        selA.addEventListener('change', updateCompareResult);
+        selB.addEventListener('change', updateCompareResult);
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', attach);
+      else attach();
+    })();
+
     // ===== STARTUPS DATA =====
     let activeStartupFilter = 'all';
     let STARTUPS = [
