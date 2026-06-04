@@ -11975,50 +11975,30 @@
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div class="text-xs text-white/40">${l.price}</div>
-              <div class="text-3xl font-black text-white num">EGP ${u.price}</div>
-              <div class="text-xs ${u.deltaGood ? 'text-emerald-400' : 'text-red-400'} font-bold num mt-1">${u.delta} ${l.marketDelta}</div>
+              <div class="text-3xl font-black text-white num">${u.price != null ? 'EGP ' + Number(u.price).toLocaleString() : '—'}</div>
+              ${u.delta ? `<div class="text-xs ${u.deltaGood ? 'text-emerald-400' : 'text-red-400'} font-bold num mt-1">${u.delta} ${l.marketDelta}</div>` : ''}
             </div>
-            <div class="glass-light border border-white/10 rounded-2xl p-4 text-center min-w-[100px]">
+            ${u.aiScore ? `<div class="glass-light border border-white/10 rounded-2xl p-4 text-center min-w-[100px]">
               <div class="text-[10px] text-white/40 uppercase tracking-wider">AI Score</div>
               <div class="text-3xl font-black ${scoreColor} num mt-1">${u.aiScore}</div>
               <div class="text-[10px] ${scoreColor} font-semibold">${scoreLabel}</div>
-            </div>
+            </div>` : ''}
           </div>
-          <!-- Specs Grid -->
-          <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-            <div class="glass-light border border-white/10 rounded-xl p-2.5 text-center">
-              <div class="text-[9px] text-white/40">${l.size}</div>
-              <div class="text-sm font-bold text-white num">${u.size} m²</div>
-            </div>
-            <div class="glass-light border border-white/10 rounded-xl p-2.5 text-center">
-              <div class="text-[9px] text-white/40">${l.rooms}</div>
-              <div class="text-sm font-bold text-white num">${u.rooms}</div>
-            </div>
-            <div class="glass-light border border-white/10 rounded-xl p-2.5 text-center">
-              <div class="text-[9px] text-white/40">${l.baths}</div>
-              <div class="text-sm font-bold text-white num">${u.baths}</div>
-            </div>
-            <div class="glass-light border border-white/10 rounded-xl p-2.5 text-center">
-              <div class="text-[9px] text-white/40">${l.psm}</div>
-              <div class="text-sm font-bold text-white num">${u.psm}</div>
-            </div>
-            <div class="glass-light border border-white/10 rounded-xl p-2.5 text-center">
-              <div class="text-[9px] text-white/40">${l.delivery}</div>
-              <div class="text-sm font-bold text-white num">${u.delivery}</div>
-            </div>
-            <div class="glass-light border border-white/10 rounded-xl p-2.5 text-center">
-              <div class="text-[9px] text-white/40">${l.finishing}</div>
-              <div class="text-sm font-bold text-white">${fin}</div>
-            </div>
-            <div class="glass-light border border-white/10 rounded-xl p-2.5 text-center">
-              <div class="text-[9px] text-white/40">${l.parking}</div>
-              <div class="text-sm font-bold text-white num">${u.parking}</div>
-            </div>
-            <div class="glass-light border border-white/10 rounded-xl p-2.5 text-center">
-              <div class="text-[9px] text-white/40">${l.floor}</div>
-              <div class="text-sm font-bold text-white num">${u.floor === 0 ? (isAr ? 'أرضي' : 'Ground') : u.floor}</div>
-            </div>
-          </div>
+          ${(() => {
+            const beds = u.rooms ?? u.beds;
+            const specs = [
+              { label: l.size, value: u.size ? (u.size + ' m²') : null },
+              { label: l.rooms, value: beds != null ? String(beds) : null },
+              { label: l.baths, value: u.baths != null ? String(u.baths) : null },
+              { label: l.psm, value: u.psm || (u.size && u.price ? Math.round(u.price / u.size).toLocaleString() : null) },
+              { label: l.delivery, value: u.delivery || null },
+              { label: l.finishing, value: (fin && fin !== '—') ? fin : null },
+              { label: l.parking, value: u.parking != null ? String(u.parking) : null },
+              { label: l.floor, value: u.floor != null ? (u.floor === 0 ? (isAr ? 'أرضي' : 'Ground') : String(u.floor)) : null }
+            ].filter(s => s.value != null && s.value !== '');
+            if (!specs.length) return '';
+            return `<div class="grid grid-cols-3 sm:grid-cols-4 gap-3">${specs.map(s => `<div class="glass-light border border-white/10 rounded-xl p-2.5 text-center"><div class="text-[9px] text-white/40">${s.label}</div><div class="text-sm font-bold text-white num">${s.value}</div></div>`).join('')}</div>`;
+          })()}
           <!-- Description -->
           <div>
             <div class="flex items-center gap-2 mb-2">
