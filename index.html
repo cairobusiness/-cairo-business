@@ -5472,13 +5472,15 @@
       @media (max-width:768px) { .ceos-nav-btn { display:none; } .ceos-card { flex-basis:200px; } }
 
       /* Modal */
-      .ceos-modal { position:fixed; inset:0; background:rgba(2,6,23,.88); backdrop-filter:blur(12px); z-index:9999; display:none; align-items:flex-start; justify-content:center; padding:40px 20px; overflow-y:auto; }
+      .ceos-modal { position:fixed; inset:0; background:rgba(2,6,23,.88); backdrop-filter:blur(12px); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
       .ceos-modal.is-open { display:flex; }
-      .ceos-modal-card { background:linear-gradient(155deg,#0f1a3d 0%,#0a0e27 100%); border:1.5px solid rgba(244,208,63,.35); border-radius:24px; max-width:900px; width:100%; max-height:calc(100vh - 80px); overflow:auto; box-shadow:0 30px 80px rgba(0,0,0,.6); animation:cm-in .3s ease-out; }
+      body.ceos-modal-open { overflow:hidden; }
+      .ceos-modal-card { background:linear-gradient(155deg,#0f1a3d 0%,#0a0e27 100%); border:1.5px solid rgba(244,208,63,.35); border-radius:24px; max-width:900px; width:100%; max-height:calc(100vh - 40px); overflow:auto; box-shadow:0 30px 80px rgba(0,0,0,.6); animation:cm-in .3s ease-out; margin:auto; }
       @keyframes cm-in { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
       .ceos-modal-grid { display:grid; grid-template-columns:1fr 1.4fr; gap:0; }
       @media (max-width:768px) { .ceos-modal-grid { grid-template-columns:1fr; } }
-      .ceos-modal-photo { aspect-ratio:3/4; background-size:cover; background-position:center; background-color:#1e293b; position:relative; }
+      .ceos-modal-photo { aspect-ratio:1/1; min-height:280px; max-height:55vh; background-size:cover; background-position:center; background-color:#1e293b; position:relative; }
+      @media (max-width:768px) { .ceos-modal-photo { aspect-ratio:16/9; min-height:200px; max-height:35vh; } }
       .ceos-modal-photo::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg, transparent 70%, rgba(10,14,39,.5) 100%); }
       .ceos-modal-body { padding:32px 30px; color:#fff; }
       .ceos-modal-close { position:absolute; top:18px; right:18px; width:38px; height:38px; border-radius:50%; background:rgba(10,14,39,.8); border:1px solid rgba(255,255,255,.15); color:#fff; display:grid; place-items:center; cursor:pointer; z-index:3; }
@@ -5675,13 +5677,20 @@
           ${(c.linkedinUrl || c.twitterUrl) ? '<div class="ceos-modal-socials">' + (c.linkedinUrl ? '<a class="ceos-modal-social" href="' + c.linkedinUrl + '" target="_blank" aria-label="LinkedIn"><i data-lucide="linkedin" class="w-5 h-5"></i></a>' : '') + (c.twitterUrl ? '<a class="ceos-modal-social" href="' + c.twitterUrl + '" target="_blank" aria-label="Twitter"><i data-lucide="twitter" class="w-5 h-5"></i></a>' : '') + '</div>' : ''}
         `;
         const modal = document.getElementById('ceos-modal');
-        if (modal) modal.classList.add('is-open');
+        if (modal) {
+          modal.classList.add('is-open');
+          modal.scrollTop = 0;
+          const card = modal.querySelector('.ceos-modal-card');
+          if (card) card.scrollTop = 0;
+        }
+        document.body.classList.add('ceos-modal-open');
         document.body.style.overflow = 'hidden';
         if (window.lucide) try { lucide.createIcons(); } catch (_) {}
       };
       window.closeCEOModal = function () {
         const modal = document.getElementById('ceos-modal');
         if (modal) modal.classList.remove('is-open');
+        document.body.classList.remove('ceos-modal-open');
         document.body.style.overflow = '';
       };
       document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeCEOModal(); });
