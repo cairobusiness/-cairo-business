@@ -16341,10 +16341,26 @@
       if (dealScoreFill) dealScoreFill.style.width = (deal.score != null ? Math.max(0, Math.min(100, deal.score)) : 0) + '%';
       const lu = document.getElementById('briefing-last-update');
       if (lu) {
-        const now = new Date();
-        const hh = String(now.getHours()).padStart(2,'0');
-        const mm = String(now.getMinutes()).padStart(2,'0');
-        lu.textContent = (isAr ? 'آخر تحديث ' : 'Last update ') + hh + ':' + mm;
+        const upd = MORNING_BRIEFING.updatedAt ? new Date(MORNING_BRIEFING.updatedAt) : null;
+        if (upd && !isNaN(upd.getTime())) {
+          const now = new Date();
+          const diffH = Math.floor((now - upd) / 3600000);
+          const diffM = Math.floor((now - upd) / 60000);
+          let relative;
+          if (diffM < 1) relative = isAr ? 'الآن' : 'just now';
+          else if (diffM < 60) relative = isAr ? ('منذ ' + diffM + ' دقيقة') : (diffM + ' min ago');
+          else if (diffH < 24) relative = isAr ? ('منذ ' + diffH + ' ساعة') : (diffH + ' h ago');
+          else relative = isAr ? ('منذ ' + Math.floor(diffH / 24) + ' يوم') : (Math.floor(diffH / 24) + ' d ago');
+          /* Stale warning if briefing date isn't today (Cairo) */
+          const today = new Date().toISOString().slice(0, 10);
+          const bd = (MORNING_BRIEFING.briefingDate || '').slice(0, 10);
+          const isStale = bd && bd !== today;
+          const cairoTime = upd.toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' });
+          lu.innerHTML = (isAr ? 'آخر تحديث ' : 'Last update ') + cairoTime + ' · ' + relative +
+            (isStale ? ' <span style="color:#fb923c;font-weight:700;margin-inline-start:6px;">⚠️ ' + (isAr ? 'موجز ' + bd : 'briefing ' + bd) + '</span>' : ' <span style="color:#34d399;font-weight:700;margin-inline-start:6px;">✓ ' + (isAr ? 'اليوم' : 'TODAY') + '</span>');
+        } else {
+          lu.textContent = isAr ? 'جاري التحميل…' : 'Loading…';
+        }
       }
     }
 
@@ -18127,6 +18143,9 @@
               if (validItems.length) MORNING_BRIEFING.items = validItems;
               if (dod && (dod.name_ar || dod.name_en) && (dod.value || dod.score)) MORNING_BRIEFING.dealOfDay = dod;
               MORNING_BRIEFING.date = new Date(bJson.data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+              /* Track the REAL update time from DB so the UI doesn't lie */
+              MORNING_BRIEFING.updatedAt = bJson.data.updatedAt || bJson.data.createdAt || null;
+              MORNING_BRIEFING.briefingDate = bJson.data.date || null;
               if (typeof renderMorningBriefing === 'function') try { renderMorningBriefing(); } catch(_){}
               if (typeof renderBriefing === 'function') try { renderBriefing(); } catch(_){}
             }
