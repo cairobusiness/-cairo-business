@@ -5426,6 +5426,300 @@
   </section>
 
   <!-- =========================================================== -->
+  <!--          CAIRO'S TOP 10 CEOs · Portrait Carousel             -->
+  <!-- =========================================================== -->
+  <section id="top-ceos" class="lux-section relative overflow-hidden bg-gradient-to-b from-navy-950 to-navy-900">
+    <div class="absolute inset-0 pointer-events-none opacity-30" style="background: radial-gradient(ellipse 70% 50% at 20% 0%, rgba(244,208,63,.18), transparent 60%), radial-gradient(ellipse 60% 40% at 100% 100%, rgba(212,175,55,.12), transparent 60%);"></div>
+    <style>
+      .ceos-eyebrow { display:inline-flex; align-items:center; gap:8px; padding:5px 14px; border:1px solid rgba(244,208,63,.4); border-radius:999px; background:rgba(244,208,63,.08); font-size:11px; font-weight:700; letter-spacing:3px; color:#fbbf24; margin-bottom:14px; }
+      .ceos-title { font-family:'Playfair Display',serif; font-size:clamp(36px,5vw,52px); font-weight:900; color:#fff; line-height:1.05; letter-spacing:-0.5px; margin-bottom:10px; }
+      html[lang="ar"] .ceos-title { font-family:'Tajawal','Cairo',sans-serif; }
+      .ceos-sub { color:rgba(255,255,255,.6); font-size:15px; max-width:560px; margin-inline:auto; line-height:1.6; }
+      .ceos-filter { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:36px 0 28px; padding:0 10px; }
+      .ceos-pill { padding:7px 16px; border-radius:999px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); color:rgba(255,255,255,.7); font-size:12px; font-weight:600; cursor:pointer; transition:all .25s; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+      .ceos-pill:hover { background:rgba(244,208,63,.08); border-color:rgba(244,208,63,.3); color:#fbbf24; }
+      .ceos-pill.is-active { background:linear-gradient(135deg,#fde047,#d4af37); color:#0a0e27; border-color:transparent; box-shadow:0 6px 18px -4px rgba(244,208,63,.45); }
+      .ceos-pill-icon { font-size:14px; }
+      .ceos-carousel-wrap { position:relative; }
+      .ceos-carousel { display:flex; gap:18px; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth; padding:6px 4px 28px; scrollbar-width:thin; scrollbar-color:rgba(244,208,63,.35) transparent; }
+      .ceos-carousel::-webkit-scrollbar { height:6px; }
+      .ceos-carousel::-webkit-scrollbar-track { background:rgba(255,255,255,.02); border-radius:3px; }
+      .ceos-carousel::-webkit-scrollbar-thumb { background:rgba(244,208,63,.35); border-radius:3px; }
+      .ceos-card { flex:0 0 260px; aspect-ratio:3/4.2; border-radius:18px; overflow:hidden; position:relative; background:linear-gradient(180deg,#1e293b 0%,#0f1a3d 100%); border:1.5px solid rgba(255,255,255,.08); scroll-snap-align:start; cursor:pointer; transition:transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .35s, border-color .25s; isolation:isolate; }
+      .ceos-card:hover { transform:translateY(-6px); border-color:rgba(244,208,63,.55); box-shadow:0 24px 60px -8px rgba(244,208,63,.18); }
+      .ceos-card.rank-1 { border-color:rgba(244,208,63,.65); }
+      .ceos-card.rank-1::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg, rgba(244,208,63,.15), transparent 60%); pointer-events:none; z-index:1; }
+      .ceos-photo { position:absolute; inset:0; background-size:cover; background-position:center 20%; background-color:#1e293b; }
+      .ceos-photo::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg, transparent 35%, rgba(10,14,39,.55) 60%, rgba(10,14,39,.95) 88%, #0a0e27 100%); }
+      .ceos-photo-placeholder { position:absolute; inset:0; display:grid; place-items:center; color:rgba(255,255,255,.18); font-size:90px; }
+      .ceos-rank-badge { position:absolute; top:14px; left:14px; min-width:38px; height:38px; padding:0 8px; border-radius:50%; display:grid; place-items:center; font-family:'Playfair Display',serif; font-weight:800; font-size:15px; z-index:3; box-shadow:0 6px 16px rgba(0,0,0,.3); }
+      .ceos-rank-1 { background:linear-gradient(135deg,#fde047,#d4af37); color:#0a0e27; }
+      .ceos-rank-2 { background:linear-gradient(135deg,#e2e8f0,#94a3b8); color:#0a0e27; }
+      .ceos-rank-3 { background:linear-gradient(135deg,#fbbf24,#7c2d12); color:#fff; }
+      .ceos-rank-other { background:rgba(10,14,39,.85); color:#fbbf24; border:1px solid rgba(244,208,63,.35); backdrop-filter:blur(8px); }
+      .ceos-sector-tag { position:absolute; top:16px; right:14px; padding:4px 12px; background:rgba(10,14,39,.7); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border:1px solid rgba(244,208,63,.25); border-radius:999px; font-size:10px; color:#fbbf24; z-index:3; font-weight:600; letter-spacing:.5px; }
+      .ceos-info { position:absolute; bottom:0; left:0; right:0; padding:20px 18px; z-index:2; color:#fff; }
+      .ceos-name { font-family:'Playfair Display',serif; font-size:20px; font-weight:800; line-height:1.15; margin-bottom:4px; letter-spacing:-0.3px; }
+      html[lang="ar"] .ceos-name { font-family:'Tajawal','Cairo',sans-serif; }
+      .ceos-title-line { font-size:11px; color:#fbbf24; letter-spacing:1.5px; text-transform:uppercase; font-weight:700; margin-bottom:2px; }
+      .ceos-company { font-size:12px; color:rgba(255,255,255,.7); font-weight:500; }
+      .ceos-stats { display:flex; align-items:center; gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,.1); font-size:11px; color:rgba(255,255,255,.6); }
+      .ceos-stats-score { color:#fbbf24; font-weight:700; }
+      .ceos-nav-btn { position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; background:rgba(10,14,39,.9); border:1px solid rgba(244,208,63,.4); color:#fbbf24; display:grid; place-items:center; cursor:pointer; z-index:5; transition:all .2s; backdrop-filter:blur(8px); box-shadow:0 8px 20px rgba(0,0,0,.4); }
+      .ceos-nav-btn:hover { background:#fbbf24; color:#0a0e27; }
+      .ceos-nav-prev { left:-22px; }
+      .ceos-nav-next { right:-22px; }
+      @media (max-width:768px) { .ceos-nav-btn { display:none; } .ceos-card { flex-basis:200px; } }
+
+      /* Modal */
+      .ceos-modal { position:fixed; inset:0; background:rgba(2,6,23,.88); backdrop-filter:blur(12px); z-index:9999; display:none; align-items:flex-start; justify-content:center; padding:40px 20px; overflow-y:auto; }
+      .ceos-modal.is-open { display:flex; }
+      .ceos-modal-card { background:linear-gradient(155deg,#0f1a3d 0%,#0a0e27 100%); border:1.5px solid rgba(244,208,63,.35); border-radius:24px; max-width:900px; width:100%; max-height:calc(100vh - 80px); overflow:auto; box-shadow:0 30px 80px rgba(0,0,0,.6); animation:cm-in .3s ease-out; }
+      @keyframes cm-in { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+      .ceos-modal-grid { display:grid; grid-template-columns:1fr 1.4fr; gap:0; }
+      @media (max-width:768px) { .ceos-modal-grid { grid-template-columns:1fr; } }
+      .ceos-modal-photo { aspect-ratio:3/4; background-size:cover; background-position:center; background-color:#1e293b; position:relative; }
+      .ceos-modal-photo::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg, transparent 70%, rgba(10,14,39,.5) 100%); }
+      .ceos-modal-body { padding:32px 30px; color:#fff; }
+      .ceos-modal-close { position:absolute; top:18px; right:18px; width:38px; height:38px; border-radius:50%; background:rgba(10,14,39,.8); border:1px solid rgba(255,255,255,.15); color:#fff; display:grid; place-items:center; cursor:pointer; z-index:3; }
+      .ceos-modal-close:hover { background:#fbbf24; color:#0a0e27; }
+      .ceos-modal-rank { display:inline-block; font-family:'Playfair Display',serif; color:#fbbf24; font-size:13px; letter-spacing:3px; font-weight:700; margin-bottom:6px; }
+      .ceos-modal-name { font-family:'Playfair Display',serif; font-size:36px; font-weight:900; line-height:1.05; margin-bottom:6px; }
+      html[lang="ar"] .ceos-modal-name { font-family:'Tajawal','Cairo',sans-serif; }
+      .ceos-modal-title-line { color:#fbbf24; font-size:13px; letter-spacing:2px; text-transform:uppercase; font-weight:700; margin-bottom:18px; }
+      .ceos-modal-quote { font-family:'Playfair Display',serif; font-style:italic; color:rgba(255,255,255,.85); font-size:17px; line-height:1.6; padding:14px 16px; border-inline-start:3px solid #fbbf24; background:rgba(244,208,63,.05); border-radius:10px; margin-bottom:18px; }
+      html[lang="ar"] .ceos-modal-quote { font-family:'Tajawal','Cairo',sans-serif; }
+      .ceos-modal-bio { color:rgba(255,255,255,.78); font-size:14px; line-height:1.75; margin-bottom:18px; }
+      .ceos-modal-meta-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:18px; }
+      .ceos-modal-meta-item { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:10px 12px; }
+      .ceos-modal-meta-label { font-size:10px; color:rgba(255,255,255,.5); letter-spacing:1.5px; text-transform:uppercase; font-weight:600; margin-bottom:4px; }
+      .ceos-modal-meta-value { color:#fbbf24; font-size:14px; font-weight:700; }
+      .ceos-modal-socials { display:flex; gap:10px; }
+      .ceos-modal-social { width:40px; height:40px; border-radius:10px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); color:#fff; display:grid; place-items:center; transition:all .2s; }
+      .ceos-modal-social:hover { background:#fbbf24; color:#0a0e27; }
+    </style>
+    <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
+      <div class="text-center reveal">
+        <div class="ceos-eyebrow">
+          <i data-lucide="crown" class="w-3.5 h-3.5"></i>
+          <span data-i18n="topceos.eyebrow">POWER LIST · CEOs</span>
+        </div>
+        <h2 class="ceos-title" data-i18n="topceos.title">Cairo's Top 10 CEOs</h2>
+        <p class="ceos-sub" data-i18n="topceos.subtitle">The decision-makers reshaping Egypt's economy in 2026.</p>
+      </div>
+
+      <div id="ceos-filter" class="ceos-filter reveal"></div>
+
+      <div class="ceos-carousel-wrap reveal">
+        <button class="ceos-nav-btn ceos-nav-prev" aria-label="Previous" onclick="document.getElementById('ceos-carousel').scrollBy({left:-280,behavior:'smooth'})"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+        <div id="ceos-carousel" class="ceos-carousel"></div>
+        <button class="ceos-nav-btn ceos-nav-next" aria-label="Next" onclick="document.getElementById('ceos-carousel').scrollBy({left:280,behavior:'smooth'})"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+      </div>
+    </div>
+
+    <!-- CEO Modal -->
+    <div id="ceos-modal" class="ceos-modal" onclick="if(event.target===this)closeCEOModal()">
+      <div class="ceos-modal-card" style="position:relative">
+        <button class="ceos-modal-close" onclick="closeCEOModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <div class="ceos-modal-grid">
+          <div id="ceos-modal-photo" class="ceos-modal-photo"></div>
+          <div id="ceos-modal-body" class="ceos-modal-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    /* ═════════════════════════════════════════════════════════════
+       Cairo's Top 10 CEOs — Portrait Carousel
+       Seed data inline; replace with /api/top-ceos when admin is built.
+       ═════════════════════════════════════════════════════════════ */
+    (function () {
+      const SECTORS = [
+        { key:'all',         icon:'⭐', ar:'الكل',           en:'All Sectors' },
+        { key:'realestate',  icon:'🏢', ar:'العقارات',       en:'Real Estate' },
+        { key:'automotive',  icon:'🚗', ar:'السيارات',       en:'Automotive' },
+        { key:'banks',       icon:'🏦', ar:'البنوك',         en:'Banks' },
+        { key:'restaurants', icon:'🍽️', ar:'المطاعم',        en:'Restaurants' },
+        { key:'hospitals',   icon:'🏥', ar:'المستشفيات',     en:'Hospitals' },
+        { key:'schools',     icon:'🎓', ar:'المدارس',        en:'Schools' },
+        { key:'energy',      icon:'⚡', ar:'الطاقة',         en:'Energy' },
+        { key:'tech',        icon:'📱', ar:'التكنولوجيا',    en:'Tech' },
+        { key:'retail',      icon:'🛍️', ar:'التجزئة',        en:'Retail' },
+        { key:'construction',icon:'🏗️', ar:'الإنشاءات',      en:'Construction' },
+        { key:'media',       icon:'📺', ar:'الإعلام',        en:'Media' },
+        { key:'aviation',    icon:'✈️', ar:'الطيران',        en:'Aviation' },
+        { key:'logistics',   icon:'📦', ar:'اللوجستيات',     en:'Logistics' },
+        { key:'pharma',      icon:'💊', ar:'الأدوية',        en:'Pharma' },
+        { key:'manufacturing', icon:'🏭', ar:'التصنيع',      en:'Manufacturing' },
+        { key:'entertainment', icon:'🎬', ar:'الترفيه',      en:'Entertainment' }
+      ];
+
+      /* Seed CEOs — 10 across all sectors + sector-specific entries.
+         Replace photoUrl with real headshots via admin upload. */
+      let CEOS = [
+        { id:'c1',  rank:1, sector:'automotive',  nameEn:'Mohamed Mansour',       nameAr:'محمد منصور',         titleEn:'Chairman',     titleAr:'رئيس مجلس الإدارة', company:'Mansour Group',          country:'Egypt', photoUrl:'', powerScore:98, quoteEn:'Egypt\'s growth story is just beginning.', quoteAr:'قصة نمو مصر بدأت للتو.', bioEn:'Chairman of Mansour Group, one of Egypt\'s largest multi-industry conglomerates with operations in 100+ countries.', bioAr:'رئيس مجموعة منصور، إحدى أكبر التكتلات المتعددة الصناعات في مصر.' },
+        { id:'c2',  rank:2, sector:'tech',        nameEn:'Naguib Sawiris',        nameAr:'نجيب ساويرس',        titleEn:'Chairman',     titleAr:'رئيس مجلس الإدارة', company:'Orascom TMT',            country:'Egypt', photoUrl:'', powerScore:96, quoteEn:'Build, don\'t inherit.', quoteAr:'ابنِ، لا ترث.', bioEn:'Telecom magnate and chairman of Orascom TMT Investments, with significant holdings across MENA.', bioAr:'قطب الاتصالات ورئيس أوراسكوم للاستثمارات.' },
+        { id:'c3',  rank:3, sector:'realestate',  nameEn:'Hisham Talaat Moustafa',nameAr:'هشام طلعت مصطفى',     titleEn:'CEO',          titleAr:'الرئيس التنفيذي',   company:'TMG Holding',            country:'Egypt', photoUrl:'', powerScore:94, quoteEn:'We build communities, not just buildings.', quoteAr:'نبني مجتمعات، لا مجرد مبانٍ.', bioEn:'CEO of TMG Holding, behind iconic Egyptian developments like Madinaty and Al Rehab City.', bioAr:'رئيس مجموعة طلعت مصطفى، صاحبة مدينتي والرحاب.' },
+        { id:'c4',  rank:4, sector:'energy',      nameEn:'Ahmed Heikal',          nameAr:'أحمد هيكل',           titleEn:'Founder & Chairman', titleAr:'المؤسس والرئيس', company:'Qalaa Holdings',         country:'Egypt', photoUrl:'', powerScore:92, quoteEn:'Infrastructure is the backbone of growth.', quoteAr:'البنية التحتية أساس النمو.', bioEn:'Founder of Qalaa Holdings, leading Africa\'s energy & infrastructure investments.', bioAr:'مؤسس قلعة القابضة الرائدة في استثمارات الطاقة بأفريقيا.' },
+        { id:'c5',  rank:5, sector:'manufacturing', nameEn:'Ahmed Elsewedy',     nameAr:'أحمد السويدي',        titleEn:'President & CEO', titleAr:'الرئيس التنفيذي',  company:'Elsewedy Electric',      country:'Egypt', photoUrl:'', powerScore:90, quoteEn:'Powering Africa, one project at a time.', quoteAr:'نُمد أفريقيا بالطاقة، مشروعاً تلو الآخر.', bioEn:'President of Elsewedy Electric, a leader in cables, electrical products and energy projects across Africa.', bioAr:'رئيس السويدي إليكتريك، الرائدة في الكابلات ومشاريع الطاقة.' },
+        { id:'c6',  rank:6, sector:'manufacturing', nameEn:'Ahmed Abou Hashima', nameAr:'أحمد أبو هشيمة',      titleEn:'Chairman',     titleAr:'رئيس مجلس الإدارة', company:'Egyptian Steel',         country:'Egypt', photoUrl:'', powerScore:88, quoteEn:'Steel built Egypt\'s skyline.', quoteAr:'الحديد بنى أفق مصر.', bioEn:'Founder and chairman of Egyptian Steel, one of the country\'s largest steel producers.', bioAr:'مؤسس ورئيس حديد المصريين، أحد أكبر منتجي الحديد.' },
+        { id:'c7',  rank:7, sector:'banks',       nameEn:'Hisham Ezz Al-Arab',    nameAr:'هشام عز العرب',       titleEn:'Chairman',     titleAr:'رئيس مجلس الإدارة', company:'CIB',                    country:'Egypt', photoUrl:'', powerScore:87, quoteEn:'Banking is about trust, scaled.', quoteAr:'البنوك تعني الثقة الموسّعة.', bioEn:'Former chairman of CIB, the leading private bank in Egypt by assets.', bioAr:'الرئيس السابق للبنك التجاري الدولي، أكبر البنوك الخاصة في مصر.' },
+        { id:'c8',  rank:8, sector:'tech',        nameEn:'Ashraf Sabry',          nameAr:'أشرف صبري',           titleEn:'CEO',          titleAr:'الرئيس التنفيذي',   company:'Fawry',                  country:'Egypt', photoUrl:'', powerScore:85, quoteEn:'Financial inclusion through technology.', quoteAr:'الشمول المالي عبر التكنولوجيا.', bioEn:'Founder & CEO of Fawry, Egypt\'s leading e-payment platform serving 50M+ customers.', bioAr:'مؤسس ورئيس فوري، منصة المدفوعات الإلكترونية الأولى في مصر.' },
+        { id:'c9',  rank:9, sector:'hospitals',   nameEn:'Magdy Yacoub',          nameAr:'مجدي يعقوب',          titleEn:'Founder',      titleAr:'المؤسس',            company:'Aswan Heart Centre',     country:'Egypt', photoUrl:'', powerScore:84, quoteEn:'Healing without borders.', quoteAr:'الشفاء بلا حدود.', bioEn:'World-renowned cardiac surgeon and founder of the Aswan Heart Centre.', bioAr:'جراح القلب العالمي ومؤسس مركز أسوان للقلب.' },
+        { id:'c10', rank:10, sector:'pharma',     nameEn:'Riad Armanious',        nameAr:'رياض أرمانيوس',       titleEn:'CEO',          titleAr:'الرئيس التنفيذي',   company:'EVA Pharma',             country:'Egypt', photoUrl:'', powerScore:82, quoteEn:'Medicine should be affordable, period.', quoteAr:'الدواء يجب أن يكون في متناول الجميع.', bioEn:'CEO of EVA Pharma, Egypt\'s largest pharmaceutical exporter to 40+ countries.', bioAr:'رئيس إيفا فارما، أكبر مصدّر دوائي مصري لأكثر من 40 دولة.' },
+        /* sector-specific extras */
+        { id:'c11', rank:11, sector:'realestate', nameEn:'Yasseen Mansour',       nameAr:'ياسين منصور',         titleEn:'Chairman',     titleAr:'رئيس مجلس الإدارة', company:'Palm Hills Developments',country:'Egypt', photoUrl:'', powerScore:81, quoteEn:'Luxury living, Egyptian roots.', quoteAr:'حياة فاخرة بجذور مصرية.', bioEn:'Chairman of Palm Hills, a leading premium real estate developer.', bioAr:'رئيس بالم هيلز، أحد أبرز مطوّري العقارات الفاخرة.' },
+        { id:'c12', rank:12, sector:'realestate', nameEn:'Hassan Allam',          nameAr:'حسن علام',             titleEn:'CEO',          titleAr:'الرئيس التنفيذي',   company:'Hassan Allam Holding',   country:'Egypt', photoUrl:'', powerScore:80, quoteEn:'A century of building Egypt.', quoteAr:'قرن من بناء مصر.', bioEn:'CEO of Hassan Allam Holding, behind major infrastructure across Egypt.', bioAr:'رئيس مجموعة حسن علام، صاحبة مشاريع بنية تحتية ضخمة في مصر.' },
+        { id:'c13', rank:13, sector:'banks',      nameEn:'Tarek Amer',            nameAr:'طارق عامر',           titleEn:'Former Governor',titleAr:'المحافظ السابق',     company:'Central Bank of Egypt',  country:'Egypt', photoUrl:'', powerScore:79, quoteEn:'Stability built Egypt\'s financial future.', quoteAr:'الاستقرار بنى المستقبل المالي لمصر.', bioEn:'Former governor of CBE, architect of Egypt\'s 2016 monetary reform.', bioAr:'محافظ البنك المركزي السابق، مهندس الإصلاح النقدي لعام 2016.' },
+        { id:'c14', rank:14, sector:'banks',      nameEn:'Mohamed El Etreby',     nameAr:'محمد الإتربي',        titleEn:'Chairman',     titleAr:'رئيس مجلس الإدارة', company:'Banque Misr',            country:'Egypt', photoUrl:'', powerScore:78, quoteEn:'A national bank for a national vision.', quoteAr:'بنك وطني لرؤية وطنية.', bioEn:'Chairman of Banque Misr, the second-largest state-owned bank.', bioAr:'رئيس بنك مصر، ثاني أكبر بنك حكومي.' },
+        { id:'c15', rank:15, sector:'media',      nameEn:'Tarek Nour',            nameAr:'طارق نور',            titleEn:'Founder',      titleAr:'المؤسس',            company:'Tarek Nour Group',       country:'Egypt', photoUrl:'', powerScore:77, quoteEn:'Stories sell ideas.', quoteAr:'القصص تبيع الأفكار.', bioEn:'Founder of Tarek Nour Group, Egypt\'s largest independent advertising agency.', bioAr:'مؤسس مجموعة طارق نور، أكبر وكالة إعلانات مستقلة في مصر.' },
+        { id:'c16', rank:16, sector:'restaurants',nameEn:'Mahmoud Khattab',       nameAr:'محمود خطاب',          titleEn:'CEO',          titleAr:'الرئيس التنفيذي',   company:'Americana Group',        country:'Egypt', photoUrl:'', powerScore:76, quoteEn:'Hospitality is in our DNA.', quoteAr:'الضيافة جزء من هويّتنا.', bioEn:'CEO of Americana Group, MENA\'s largest food & beverage operator.', bioAr:'رئيس أمريكانا، أكبر مشغّل أغذية ومشروبات بالشرق الأوسط.' },
+        { id:'c17', rank:17, sector:'hospitals',  nameEn:'Mohamed Roshdy',        nameAr:'محمد رشدي',           titleEn:'Chairman',     titleAr:'رئيس مجلس الإدارة', company:'Cleopatra Hospitals',    country:'Egypt', photoUrl:'', powerScore:75, quoteEn:'Quality care, accessible to all.', quoteAr:'رعاية عالية الجودة للجميع.', bioEn:'Chairman of Cleopatra Hospitals Group, Egypt\'s largest private healthcare operator.', bioAr:'رئيس مستشفيات كليوباترا، أكبر مزود رعاية صحية خاصة في مصر.' },
+        { id:'c18', rank:18, sector:'schools',    nameEn:'Mohamed Lashin',        nameAr:'محمد لاشين',          titleEn:'Founder',      titleAr:'المؤسس',            company:'Misr International Schools', country:'Egypt', photoUrl:'', powerScore:74, quoteEn:'Education is Egypt\'s real wealth.', quoteAr:'التعليم هو الثروة الحقيقية لمصر.', bioEn:'Founder of Misr International Schools and a leader in K-12 private education.', bioAr:'مؤسس مدارس مصر الدولية ورائد في التعليم الخاص K-12.' },
+        { id:'c19', rank:19, sector:'aviation',   nameEn:'Yehia Zakaria',         nameAr:'يحيى زكريا',          titleEn:'Chairman',     titleAr:'رئيس مجلس الإدارة', company:'EgyptAir',               country:'Egypt', photoUrl:'', powerScore:73, quoteEn:'Egypt\'s wings to the world.', quoteAr:'أجنحة مصر إلى العالم.', bioEn:'Chairman of EgyptAir, the national flag carrier connecting 80+ destinations.', bioAr:'رئيس مصر للطيران، الناقل الوطني الذي يربط أكثر من 80 وجهة.' },
+        { id:'c20', rank:20, sector:'retail',     nameEn:'Ali El Khazindar',      nameAr:'علي الخازندار',       titleEn:'Co-Founder',   titleAr:'المؤسس المشارك',    company:'B.TECH',                 country:'Egypt', photoUrl:'', powerScore:72, quoteEn:'Affordable technology for every home.', quoteAr:'تكنولوجيا بمتناول كل بيت.', bioEn:'Co-founder of B.TECH, Egypt\'s leading consumer electronics retailer.', bioAr:'المؤسس المشارك لـ B.TECH، أكبر متاجر الإلكترونيات في مصر.' }
+      ];
+
+      let ACTIVE_SECTOR = 'all';
+
+      function ceoT(key, ar, en) {
+        const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : false;
+        return isAr ? ar : en;
+      }
+      function rankClass(r) { return r === 1 ? 'ceos-rank-1' : r === 2 ? 'ceos-rank-2' : r === 3 ? 'ceos-rank-3' : 'ceos-rank-other'; }
+      function sectorLabel(key) {
+        const s = SECTORS.find(x => x.key === key);
+        if (!s) return key;
+        return s.icon + ' ' + ceoT('sec.' + key, s.ar, s.en);
+      }
+
+      function renderFilter() {
+        const wrap = document.getElementById('ceos-filter');
+        if (!wrap) return;
+        wrap.innerHTML = SECTORS.map(s => {
+          const cls = (ACTIVE_SECTOR === s.key) ? 'ceos-pill is-active' : 'ceos-pill';
+          return '<button class="' + cls + '" data-ceos-sector="' + s.key + '"><span class="ceos-pill-icon">' + s.icon + '</span><span>' + ceoT('sec.' + s.key, s.ar, s.en) + '</span></button>';
+        }).join('');
+        wrap.querySelectorAll('[data-ceos-sector]').forEach(btn => {
+          btn.onclick = () => {
+            ACTIVE_SECTOR = btn.getAttribute('data-ceos-sector') || 'all';
+            renderFilter();
+            renderCarousel();
+          };
+        });
+      }
+
+      function renderCarousel() {
+        const wrap = document.getElementById('ceos-carousel');
+        if (!wrap) return;
+        let pool = CEOS.slice();
+        if (ACTIVE_SECTOR !== 'all') pool = pool.filter(c => c.sector === ACTIVE_SECTOR);
+        pool.sort((a,b) => (a.rank||99) - (b.rank||99));
+        const top10 = pool.slice(0, 10);
+        if (!top10.length) {
+          wrap.innerHTML = '<div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,.4);width:100%">' + ceoT('ceos.empty', 'لا توجد بيانات لهذا القطاع بعد', 'No data for this sector yet') + '</div>';
+          return;
+        }
+        wrap.innerHTML = top10.map((c, i) => {
+          const idx = i + 1; /* display rank within filter */
+          const name = ceoT('ceos.name', c.nameAr, c.nameEn);
+          const titleLine = ceoT('ceos.title', c.titleAr || '', c.titleEn || '');
+          const sec = SECTORS.find(s => s.key === c.sector);
+          const photoStyle = c.photoUrl
+            ? 'background-image:url(' + JSON.stringify(c.photoUrl).slice(1,-1) + ')'
+            : '';
+          const placeholder = c.photoUrl ? '' : '<div class="ceos-photo-placeholder"><i data-lucide="user" class="w-20 h-20"></i></div>';
+          return `
+            <article class="ceos-card ${idx === 1 ? 'rank-1' : ''}" data-ceos-id="${c.id}">
+              <div class="ceos-photo" style="${photoStyle}"></div>
+              ${placeholder}
+              <div class="ceos-rank-badge ${rankClass(idx)}">${idx < 10 ? '0' + idx : idx}</div>
+              ${sec ? '<div class="ceos-sector-tag">' + sec.icon + ' ' + ceoT('sec.tag.' + c.sector, sec.ar, sec.en) + '</div>' : ''}
+              <div class="ceos-info">
+                <div class="ceos-name">${name}</div>
+                <div class="ceos-title-line">${titleLine}</div>
+                <div class="ceos-company">${c.company || ''}</div>
+                ${c.powerScore ? '<div class="ceos-stats"><span>POWER SCORE</span><span class="ceos-stats-score">' + c.powerScore + '/100</span></div>' : ''}
+              </div>
+            </article>
+          `;
+        }).join('');
+        wrap.querySelectorAll('.ceos-card').forEach(card => {
+          card.onclick = () => openCEOModal(card.getAttribute('data-ceos-id'));
+        });
+        if (window.lucide) try { lucide.createIcons(); } catch (_) {}
+      }
+
+      window.openCEOModal = function (id) {
+        const c = CEOS.find(x => x.id === id);
+        if (!c) return;
+        const photoEl = document.getElementById('ceos-modal-photo');
+        const bodyEl = document.getElementById('ceos-modal-body');
+        if (!photoEl || !bodyEl) return;
+        photoEl.style.backgroundImage = c.photoUrl ? "url('" + c.photoUrl + "')" : '';
+        if (!c.photoUrl) photoEl.innerHTML = '<div class="ceos-photo-placeholder" style="position:absolute"><i data-lucide="user" style="width:80px;height:80px"></i></div>';
+        else photoEl.innerHTML = '';
+        const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : false;
+        const sec = SECTORS.find(s => s.key === c.sector);
+        bodyEl.innerHTML = `
+          <div class="ceos-modal-rank">RANK · ${String(c.rank).padStart(2,'0')}${sec ? ' · ' + sec.icon + ' ' + (isAr ? sec.ar : sec.en) : ''}</div>
+          <h3 class="ceos-modal-name">${isAr ? c.nameAr : c.nameEn}</h3>
+          <div class="ceos-modal-title-line">${(isAr ? c.titleAr : c.titleEn) || ''} · ${c.company || ''}</div>
+          ${(c.quoteAr || c.quoteEn) ? '<div class="ceos-modal-quote">"' + (isAr ? c.quoteAr : c.quoteEn) + '"</div>' : ''}
+          ${(c.bioAr || c.bioEn) ? '<p class="ceos-modal-bio">' + (isAr ? c.bioAr : c.bioEn) + '</p>' : ''}
+          <div class="ceos-modal-meta-grid">
+            ${c.powerScore ? '<div class="ceos-modal-meta-item"><div class="ceos-modal-meta-label">POWER SCORE</div><div class="ceos-modal-meta-value">' + c.powerScore + '/100</div></div>' : ''}
+            ${c.country ? '<div class="ceos-modal-meta-item"><div class="ceos-modal-meta-label">COUNTRY</div><div class="ceos-modal-meta-value">' + c.country + '</div></div>' : ''}
+            ${c.company ? '<div class="ceos-modal-meta-item"><div class="ceos-modal-meta-label">COMPANY</div><div class="ceos-modal-meta-value">' + c.company + '</div></div>' : ''}
+          </div>
+          ${(c.linkedinUrl || c.twitterUrl) ? '<div class="ceos-modal-socials">' + (c.linkedinUrl ? '<a class="ceos-modal-social" href="' + c.linkedinUrl + '" target="_blank" aria-label="LinkedIn"><i data-lucide="linkedin" class="w-5 h-5"></i></a>' : '') + (c.twitterUrl ? '<a class="ceos-modal-social" href="' + c.twitterUrl + '" target="_blank" aria-label="Twitter"><i data-lucide="twitter" class="w-5 h-5"></i></a>' : '') + '</div>' : ''}
+        `;
+        const modal = document.getElementById('ceos-modal');
+        if (modal) modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        if (window.lucide) try { lucide.createIcons(); } catch (_) {}
+      };
+      window.closeCEOModal = function () {
+        const modal = document.getElementById('ceos-modal');
+        if (modal) modal.classList.remove('is-open');
+        document.body.style.overflow = '';
+      };
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeCEOModal(); });
+
+      /* Pull from API if available (drop-in replace seed) */
+      (async function pullCEOsFromAPI() {
+        try {
+          const r = await fetch('https://cairo-business-backend.vercel.app/api/top-ceos?limit=100', { cache: 'no-store' });
+          if (!r.ok) return;
+          const j = await r.json();
+          if (j && j.success && Array.isArray(j.data) && j.data.length) {
+            CEOS = j.data;
+            renderCarousel();
+          }
+        } catch (_) {}
+      })();
+
+      function boot() {
+        renderFilter();
+        renderCarousel();
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+      else boot();
+
+      /* Re-render on language switch */
+      const _origApplyLang = window.applyLang;
+      if (typeof _origApplyLang === 'function') {
+        window.applyLang = function () {
+          const r = _origApplyLang.apply(this, arguments);
+          try { renderFilter(); renderCarousel(); } catch (_) {}
+          return r;
+        };
+      }
+    })();
+    </script>
+  </section>
+
+  <!-- =========================================================== -->
   <!--                    WHO'S MOVING                              -->
   <!-- =========================================================== -->
   <section id="whos-moving" class="py-20 lg:py-28 bg-navy-800 relative">
