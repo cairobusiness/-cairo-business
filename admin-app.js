@@ -869,6 +869,8 @@ function renderTabs() {
   const layoutTab = isAdmin ? mk('__layout__', '🎛️', 'تخطيط الصفحة', 'switchToLayout') : '';
   // Hero (waterhole CMS) — Admin + Editor
   const heroTab = (isAdmin || isEditor) ? mk('__hero__', '🎯', 'الواجهة (Hero)', 'switchToHero') : '';
+  // Investor Dashboard — Admin + Editor
+  const investorTab = (isAdmin || isEditor) ? mk('__investor__', '📊', 'لوحة المستثمر', 'switchToInvestor') : '';
   // Site Content (key/value copy) — Admin + Editor
   const siteContentTab = (isAdmin || isEditor) ? mk('__sitecontent__', '📝', 'نصوص الموقع', 'switchToSiteContent') : '';
   // Brand Settings — Admin only
@@ -904,7 +906,7 @@ function renderTabs() {
   ) : '';
   // Moderator gets messages
   const modOnlyTabs = isModerator ? mk('__messages__', '📧', 'الرسائل', 'switchToMessages') : '';
-  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + siteContentTab + brandTab + submissionsTab + top10ApplyTab + commentsTab + searchTab + layoutTab + activityTab + backupTab + subsTab + pushTab + adminOnlyTabs + modOnlyTabs;
+  wrap.innerHTML = dashboardTab + entityTabs + briefingTab + cbiTab + heroTab + investorTab + siteContentTab + brandTab + submissionsTab + top10ApplyTab + commentsTab + searchTab + layoutTab + activityTab + backupTab + subsTab + pushTab + adminOnlyTabs + modOnlyTabs;
 }
 
 /* Drafts counter kept for backward compat (no longer displayed) */
@@ -2882,6 +2884,140 @@ async function saveHero() {
   }
   _heroData = r.data.data;
   if (status) status.innerHTML = '<span style="color:#22c55e">✅ تم الحفظ بنجاح — التغيير ينعكس على الموقع خلال دقيقة.</span>';
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Investor Dashboard — per-country editor (5 sections × 6 rows each)
+   Auto-symbols are read-only labels indicating which fields are
+   automatically refreshed by scrapers.
+   ═════════════════════════════════════════════════════════════ */
+let _investorRows = [];
+let _investorCurrentId = 'eg';
+
+async function switchToInvestor() {
+  currentEntityKey = '__investor__';
+  renderTabs();
+  document.getElementById('page-title').textContent = '📊 لوحة المستثمر (كل ما تحتاج معرفته الآن)';
+  document.getElementById('search-input').style.display = 'none';
+  const addBtn = document.querySelector('.actions button.btn-primary');
+  if (addBtn) addBtn.style.display = 'none';
+  document.getElementById('stats-section').innerHTML = '';
+  await loadInvestorUI();
+}
+
+async function loadInvestorUI() {
+  const container = document.getElementById('list-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const r = await api('/api/admin/investor-dashboard');
+  if (!r.ok || !r.data?.data) {
+    container.innerHTML =
+      '<div class="msg msg-error">لم يتم تحميل البيانات. شغّل الـ migration أولاً: '
+      + '<a href="https://cairo-business-backend.vercel.app/api/admin/migrate-investor-dashboard" target="_blank" style="color:#F4D03F;text-decoration:underline">/api/admin/migrate-investor-dashboard</a>'
+      + '</div>';
+    return;
+  }
+  _investorRows = r.data.data;
+  if (!_investorRows.length) {
+    container.innerHTML = '<div class="msg msg-error">لا توجد دول. شغّل الـ migration أولاً.</div>';
+    return;
+  }
+  if (!_investorRows.find(c => c.id === _investorCurrentId)) _investorCurrentId = _investorRows[0].id;
+  renderInvestorForm();
+}
+
+function renderInvestorForm() {
+  const country = _investorRows.find(c => c.id === _investorCurrentId) || _investorRows[0];
+  if (!country) return;
+  const container = document.getElementById('list-container');
+
+  /* Country picker pills */
+  const pills = _investorRows.map(c =>
+    '<button class="' + (c.id === _investorCurrentId ? 'btn btn-primary' : 'btn btn-ghost') + '" style="font-size:13px;padding:8px 14px;" onclick="switchInvestorCountry(\'' + c.id + '\')">'
+    + (c.flag || '') + ' ' + escapeHtml(c.nameAr || c.id) + '</button>'
+  ).join('');
+
+  /* Header / save bar */
+  let html = '';
+  html += '<style>.idash-sec{background:rgba(255,255,255,0.03);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:12px;padding:18px;margin-bottom:18px}.idash-sec h3{font-size:14px;color:#F4D03F;margin-bottom:12px;font-weight:700}.idash-row{display:grid;grid-template-columns:1.5fr 1.2fr 0.8fr 0.8fr 1fr;gap:8px;margin-bottom:8px;align-items:center}.idash-row input,.idash-row select{padding:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;color:inherit;font-size:13px;width:100%}.idash-row label{font-size:10px;opacity:0.6}.auto-badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:10px;background:rgba(34,197,94,0.15);color:#22c55e;font-weight:700;margin-inline-start:4px}</style>';
+
+  html += '<div style="background:linear-gradient(135deg,rgba(244,208,63,0.12),rgba(212,175,55,0.06));border:1px solid rgba(244,208,63,0.4);border-radius:14px;padding:14px 18px;margin-bottom:18px;">';
+  html += '  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;">';
+  html += '    <div><div style="font-size:15px;font-weight:700;color:#F4D03F">📊 ' + (country.flag || '') + ' ' + escapeHtml(country.nameAr || country.id) + '</div>';
+  html += '    <div style="font-size:12px;opacity:0.7;margin-top:2px;">آخر تحديث: ' + (country.updatedAt ? new Date(country.updatedAt).toLocaleString('ar-EG') : '—') + ' · الحقول الخضراء <span class="auto-badge">AUTO</span> بتتحدث من scrapers تلقائياً.</div></div>';
+  html += '    <button class="btn btn-primary" id="invest-save-btn" onclick="saveInvestor()" style="font-size:14px;padding:10px 24px;">💾 حفظ التغييرات</button>';
+  html += '  </div>';
+  html += '  <div style="display:flex;gap:6px;flex-wrap:wrap;">' + pills + '</div>';
+  html += '</div>';
+  html += '<div id="invest-save-status" style="margin-bottom:14px;font-size:13px;display:none;"></div>';
+
+  const sections = [
+    { key: 'macro', title: '💼 الاقتصاد الكلي', rows: country.macro || [] },
+    { key: 'markets', title: '📈 الأسواق', rows: country.markets || [] },
+    { key: 'fx', title: '💱 العملات والفائدة', rows: country.fx || [] },
+    { key: 'commodities', title: '⚖️ السلع', rows: country.commodities || [] },
+    { key: 'sectors', title: '🏭 القطاعات', rows: country.sectors || [] }
+  ];
+
+  for (const sec of sections) {
+    html += '<div class="idash-sec"><h3>' + sec.title + '</h3>';
+    html += '<div class="idash-row" style="opacity:0.5;font-size:10px;"><div>اللصيقة AR</div><div>اللصيقة EN</div><div>القيمة</div><div>الدلتا</div><div>الترند</div></div>';
+    sec.rows.forEach((row, i) => {
+      const auto = row.autoSymbol ? '<span class="auto-badge" title="' + row.autoSymbol + '">AUTO</span>' : '';
+      html += '<div class="idash-row" data-section="' + sec.key + '" data-row="' + i + '">';
+      html += '  <input data-key="labelAr" type="text" dir="rtl" value="' + escapeHtml(row.labelAr || '') + '" />';
+      html += '  <input data-key="labelEn" type="text" dir="ltr" value="' + escapeHtml(row.labelEn || '') + '" />';
+      html += '  <input data-key="value" type="text" dir="ltr" value="' + escapeHtml(row.value || '') + '" ' + (row.autoSymbol ? 'title="هذا الحقل يتحدث تلقائياً من scrapers — التعديل اليدوي سيُستبدل عند التحديث التالي"' : '') + ' />';
+      html += '  <input data-key="delta" type="text" dir="ltr" value="' + escapeHtml(row.delta || '') + '" />';
+      html += '  <select data-key="trend"><option value="up"' + (row.trend === 'up' ? ' selected' : '') + '>▲ up</option><option value="down"' + (row.trend === 'down' ? ' selected' : '') + '>▼ down</option><option value="flat"' + (row.trend === 'flat' ? ' selected' : '') + '>━ flat</option></select>';
+      if (row.autoSymbol) {
+        html += '  <div style="grid-column:1/-1;font-size:11px;opacity:0.6;padding-inline-start:2px;">رمز السكرابر: <span style="color:#22c55e;font-family:monospace;">' + row.autoSymbol + '</span> ' + auto + '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+function switchInvestorCountry(id) {
+  _investorCurrentId = id;
+  renderInvestorForm();
+}
+
+async function saveInvestor() {
+  const btn = document.getElementById('invest-save-btn');
+  const status = document.getElementById('invest-save-status');
+  if (status) { status.style.display = 'block'; status.innerHTML = '<span style="color:#F4D03F">⏳ جاري الحفظ...</span>'; }
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+
+  const country = _investorRows.find(c => c.id === _investorCurrentId);
+  if (!country) return;
+  const updates = { macro: [], markets: [], fx: [], commodities: [], sectors: [] };
+  const origRows = { macro: country.macro || [], markets: country.markets || [], fx: country.fx || [], commodities: country.commodities || [], sectors: country.sectors || [] };
+
+  document.querySelectorAll('.idash-row[data-section]').forEach(rowEl => {
+    const sec = rowEl.dataset.section;
+    const i = Number(rowEl.dataset.row);
+    const cur = origRows[sec][i] || {};
+    const labelAr = rowEl.querySelector('[data-key="labelAr"]')?.value || '';
+    const labelEn = rowEl.querySelector('[data-key="labelEn"]')?.value || '';
+    const value = rowEl.querySelector('[data-key="value"]')?.value || '';
+    const delta = rowEl.querySelector('[data-key="delta"]')?.value || '';
+    const trend = rowEl.querySelector('[data-key="trend"]')?.value || 'flat';
+    updates[sec].push({ ...cur, labelAr, labelEn, value, delta, trend });
+  });
+
+  const r = await api('/api/admin/investor-dashboard/' + encodeURIComponent(_investorCurrentId), { method: 'PUT', body: JSON.stringify(updates) });
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  if (!r.ok || !r.data?.success) {
+    if (status) status.innerHTML = '<span style="color:#ef4444">❌ فشل الحفظ: ' + escapeHtml(r.data?.error || 'unknown') + '</span>';
+    return;
+  }
+  /* refresh row from server */
+  const idx = _investorRows.findIndex(c => c.id === _investorCurrentId);
+  if (idx >= 0 && r.data.data) _investorRows[idx] = r.data.data;
+  if (status) status.innerHTML = '<span style="color:#22c55e">✅ تم الحفظ — التغييرات ستظهر على الموقع خلال دقيقة.</span>';
 }
 
 /* ═════════════════════════════════════════════════════════════

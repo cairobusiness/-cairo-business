@@ -18126,6 +18126,50 @@
       }).join('');
     }
 
+    /* ============== INVESTOR DASHBOARD (admin-driven) ============== */
+    async function loadInvestorDashboardAPI() {
+      try {
+        const r = await fetch('https://cairo-business-backend.vercel.app/api/investor-dashboard', { cache: 'no-store' });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (!j?.success || !Array.isArray(j.data) || !j.data.length) return;
+        if (typeof COUNTRIES_DATA === 'undefined' || typeof I18N === 'undefined') return;
+        for (const country of j.data) {
+          const target = COUNTRIES_DATA[country.id];
+          if (!target) continue;
+          /* Pulse */
+          if (country.pulse) {
+            if (country.pulse.score != null) target.pulse.score = country.pulse.score;
+            const sk = '__idash_status_' + country.id;
+            I18N.ar[sk] = country.pulse.statusAr || ''; I18N.en[sk] = country.pulse.statusEn || '';
+            target.pulse.statusKey = sk;
+            if (Array.isArray(country.pulse.vitals)) {
+              target.pulse.vitals = country.pulse.vitals.map((v, i) => {
+                const labK = '__idash_vital_' + country.id + '_' + i;
+                I18N.ar[labK] = v.labelAr || ''; I18N.en[labK] = v.labelEn || '';
+                const statK = '__idash_vstatus_' + country.id + '_' + i;
+                I18N.ar[statK] = v.statusAr || ''; I18N.en[statK] = v.statusEn || '';
+                return { labKey: labK, value: v.value, percent: v.percent, color: v.color, statusKey: statK };
+              });
+            }
+          }
+          /* Brief sections: macro / markets / fx / commodities / sectors */
+          target.brief = target.brief || {};
+          ['macro', 'markets', 'fx', 'commodities', 'sectors'].forEach(sec => {
+            if (!Array.isArray(country[sec]) || !country[sec].length) return;
+            target.brief[sec] = country[sec].map((row, i) => {
+              const k = '__idash_' + sec + '_' + country.id + '_' + i;
+              I18N.ar[k] = row.labelAr || ''; I18N.en[k] = row.labelEn || '';
+              return { labKey: k, value: row.value, trend: row.trend, delta: row.delta };
+            });
+          });
+        }
+        if (typeof renderDashboard === 'function') try { renderDashboard(); } catch (_) {}
+      } catch (e) { console.warn('investor-dashboard fetch failed:', e); }
+    }
+    /* Kick off investor dashboard load shortly after boot */
+    setTimeout(loadInvestorDashboardAPI, 1500);
+
     /* ============== API DATA OVERRIDES ============== */
     async function pullHomepageDataFromApi() {
       const BASE = 'https://cairo-business-backend.vercel.app/api';
