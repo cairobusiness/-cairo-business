@@ -11920,14 +11920,14 @@
       const modal = document.getElementById('re-modal');
       const content = document.getElementById('re-modal-content');
       const isAr = currentLang === 'ar';
-      const title = isAr ? u.title_ar : u.title_en;
-      const area = isAr ? u.area_ar : u.area_en;
-      const dev = isAr ? u.developer_ar : u.developer_en;
-      const utype = isAr ? u.type_ar : u.type_en;
-      const desc = isAr ? u.desc_ar : u.desc_en;
-      const aiAnalysis = isAr ? u.aiAnalysis_ar : u.aiAnalysis_en;
-      const pros = isAr ? u.pros_ar : u.pros_en;
-      const fin = isAr ? u.furnished_ar : u.furnished_en;
+      const title = (isAr ? u.title_ar : u.title_en) || u.title_ar || u.title_en || u.name_ar || u.name_en || '';
+      const area = (isAr ? u.area_ar : u.area_en) || u.area_ar || u.area_en || u.area || '';
+      const dev = (isAr ? u.developer_ar : u.developer_en) || u.developer || '';
+      const utype = (isAr ? u.type_ar : u.type_en) || u.type || '';
+      const desc = (isAr ? u.desc_ar : u.desc_en) || (isAr ? u.description_ar : u.description_en) || u.desc_ar || u.desc_en || '';
+      const aiAnalysis = (isAr ? u.aiAnalysis_ar : u.aiAnalysis_en) || (isAr ? 'تحليل ذكاء اصطناعي شامل لهذا العقار يأخذ في الاعتبار الموقع، التشطيب، توقعات السوق، ومعدلات النمو في المنطقة.' : 'Comprehensive AI analysis of this property considering location, finishing, market outlook, and area growth rates.');
+      const pros = (isAr ? u.pros_ar : u.pros_en) || (isAr ? u.features_ar : u.features_en) || u.features || [];
+      const fin = (isAr ? u.furnished_ar : u.furnished_en) || (u.furnished === true ? (isAr ? 'مفروش' : 'Furnished') : (u.furnished === false ? (isAr ? 'بدون تشطيب' : 'Unfurnished') : '—'));
 
       const l = {
         price: isAr ? 'السعر' : 'Price',
@@ -12035,7 +12035,7 @@
             </div>
             <p class="text-sm text-white/80 leading-relaxed">${aiAnalysis}</p>
           </div>
-          <!-- Investment Pros -->
+          ${Array.isArray(pros) && pros.length ? `<!-- Investment Pros -->
           <div>
             <div class="flex items-center gap-2 mb-3">
               <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
@@ -12044,7 +12044,7 @@
             <div class="grid grid-cols-2 gap-2">
               ${pros.map(p => '<div class="flex items-start gap-2 glass-light border border-white/10 rounded-xl p-3"><span class="text-emerald-400 mt-0.5">✓</span><span class="text-xs text-white/70">' + p + '</span></div>').join('')}
             </div>
-          </div>
+          </div>` : ''}
           <!-- ============= INVESTMENT INQUIRY FORM ============= -->
           <div class="glass-light border border-gold-500/30 rounded-2xl p-5 bg-gradient-to-br from-gold-500/8 to-gold-500/0" data-property-id="${u.id}" data-property-name="${title.replace(/"/g,'&quot;')}">
             <div class="flex items-center gap-2 mb-1">
