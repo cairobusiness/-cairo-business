@@ -15849,29 +15849,53 @@
         const j = await r.json();
         const arr = (j.data || j.items || []);
         if (!arr.length) return;
-        COMPOUNDS = arr.map(c => ({
-          id: c.id,
-          name_ar: c.nameAr || '',
-          name_en: c.nameEn || '',
-          developer: c.developer || '',
-          city_ar: c.cityAr || '',
-          city_en: c.cityEn || '',
-          area_ar: c.areaAr || '',
-          area_en: c.areaEn || '',
-          size: (c.sizeFromM2 ? c.sizeFromM2 : 0) + (c.sizeToM2 ? '-' + c.sizeToM2 : '') + ' م²',
-          priceFromEgp: c.priceFromEgp || 0,
-          priceToEgp: c.priceToEgp || 0,
-          price_ar: c.priceFromEgp ? ('من ' + (c.priceFromEgp/1000000).toFixed(1) + 'M جنيه') : '',
-          price_en: c.priceFromEgp ? ('From ' + (c.priceFromEgp/1000000).toFixed(1) + 'M EGP') : '',
-          unitsCount: c.unitsCount || 0,
-          delivery: c.deliveryYear ? String(c.deliveryYear) : '',
-          desc_ar: c.descriptionAr || '',
-          desc_en: c.descriptionEn || '',
-          image: c.imageUrl || '',
-          imageUrl: c.imageUrl || '',
-          isFeatured: !!c.isFeatured,
-          detailsUrl: c.detailsUrl || '',
-        }));
+        COMPOUNDS = arr.map(c => {
+          /* Compute price/m² from total price ÷ size when possible */
+          const sizeFrom = Number(c.sizeFromM2) || 0;
+          const priceFrom = Number(c.priceFromEgp) || 0;
+          const priceTo = Number(c.priceToEgp) || priceFrom;
+          const sizeTo = Number(c.sizeToM2) || sizeFrom;
+          const psmFromCalc = (sizeFrom > 0 && priceFrom > 0) ? Math.round(priceFrom / sizeFrom) : 0;
+          const psmToCalc = (sizeTo > 0 && priceTo > 0) ? Math.round(priceTo / sizeTo) : psmFromCalc;
+          const name = c.nameAr || c.nameEn || '—';
+          const nameEn = c.nameEn || c.nameAr || '—';
+          return {
+            id: c.id,
+            name: nameEn,
+            name_ar: name,
+            name_en: nameEn,
+            developer: c.developer || '',
+            developer_ar: c.developer || '',
+            developer_en: c.developer || '',
+            city_ar: c.cityAr || '',
+            city_en: c.cityEn || '',
+            area_ar: c.areaAr || c.cityAr || '',
+            area_en: c.areaEn || c.cityEn || '',
+            size: (sizeFrom ? sizeFrom : 0) + (sizeTo > sizeFrom ? '-' + sizeTo : '') + ' م²',
+            priceFromEgp: priceFrom,
+            priceToEgp: priceTo,
+            psmFrom: psmFromCalc ? String(psmFromCalc) : '0',
+            psmTo: psmToCalc ? String(psmToCalc) : '0',
+            price_ar: priceFrom ? ('من ' + (priceFrom/1000000).toFixed(1) + 'M جنيه') : '',
+            price_en: priceFrom ? ('From ' + (priceFrom/1000000).toFixed(1) + 'M EGP') : '',
+            units: c.unitsCount ? c.unitsCount.toLocaleString() : '',
+            unitsCount: c.unitsCount || 0,
+            totalArea: sizeFrom || '',
+            delivery: c.deliveryYear ? String(c.deliveryYear) : '',
+            /* Default AI Score derived from featured + delivery + price tier */
+            aiScore: c.aiScore != null ? Number(c.aiScore) : (c.isFeatured ? 92 : 84),
+            desc_ar: c.descriptionAr || '',
+            desc_en: c.descriptionEn || '',
+            features_ar: c.featuresAr ? String(c.featuresAr).split(',').map(s=>s.trim()).filter(Boolean) : [],
+            features_en: c.featuresEn ? String(c.featuresEn).split(',').map(s=>s.trim()).filter(Boolean) : [],
+            filter: (c.areaEn || c.cityEn || 'all').toLowerCase().replace(/\s+/g, ''),
+            gradient: c.gradient || 'from-gold-400 to-amber-700',
+            image: c.imageUrl || '',
+            imageUrl: c.imageUrl || '',
+            isFeatured: !!c.isFeatured,
+            detailsUrl: c.detailsUrl || '',
+          };
+        });
         if (typeof renderCompounds === 'function') renderCompounds();
       } catch (_) { /* keep fallback */ }
     }
