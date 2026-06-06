@@ -14839,18 +14839,23 @@
       });
     }
 
-    /* === Compound Bourse: derive stock-style stats from existing data === */
+    /* === Compound Bourse: use real Groq values if present, else derive === */
     function _deriveBourseStats(c) {
       const ai = Number(c.aiScore) || 80;
-      /* Deterministic: AI score → change/roi mapping */
-      const seed = (c.id || 'x').split('').reduce((a, ch) => a + ch.charCodeAt(0), 0);
-      const wobble = ((seed % 13) - 6) / 10; /* -0.6 to +0.6 */
-      const change = +(((ai - 82) / 5) + wobble).toFixed(2); /* roughly -2% to +4% */
-      const roi = +((ai - 80) * 0.5 + 8 + wobble * 2).toFixed(1); /* roughly 7% to 16% */
-      const rating = ai >= 92 ? 'BUY' : ai >= 85 ? 'BUY' : ai >= 78 ? 'HOLD' : 'SELL';
       const psm = parseInt(String(c.psmFrom || '0').replace(/[^\d]/g, ''), 10) || 0;
       const psmTo = parseInt(String(c.psmTo || '0').replace(/[^\d]/g, ''), 10) || psm;
-      return { change, roi, rating, psm, psmTo };
+      /* Prefer real values from Groq weekly cron */
+      if (c.weeklyChange != null && c.roiProjected != null) {
+        const rating = c.rating || (ai >= 88 ? 'BUY' : ai >= 78 ? 'HOLD' : 'SELL');
+        return { change: +Number(c.weeklyChange).toFixed(2), roi: +Number(c.roiProjected).toFixed(1), rating, psm, psmTo, isLive: true };
+      }
+      /* Fallback: derive from aiScore */
+      const seed = (c.id || 'x').split('').reduce((a, ch) => a + ch.charCodeAt(0), 0);
+      const wobble = ((seed % 13) - 6) / 10;
+      const change = +(((ai - 82) / 5) + wobble).toFixed(2);
+      const roi = +((ai - 80) * 0.5 + 8 + wobble * 2).toFixed(1);
+      const rating = ai >= 92 ? 'BUY' : ai >= 85 ? 'BUY' : ai >= 78 ? 'HOLD' : 'SELL';
+      return { change, roi, rating, psm, psmTo, isLive: false };
     }
 
     function _watchlistGet() {
@@ -15882,8 +15887,12 @@
             unitsCount: c.unitsCount || 0,
             totalArea: sizeFrom || '',
             delivery: c.deliveryYear ? String(c.deliveryYear) : '',
-            /* Default AI Score derived from featured + delivery + price tier */
+            /* Real bourse values from Groq weekly cron — fall back if not yet populated */
             aiScore: c.aiScore != null ? Number(c.aiScore) : (c.isFeatured ? 92 : 84),
+            weeklyChange: c.weeklyChange != null ? Number(c.weeklyChange) : null,
+            roiProjected: c.roiProjected != null ? Number(c.roiProjected) : null,
+            rating: c.rating || null,
+            bourseAt: c.bourseAt || null,
             desc_ar: c.descriptionAr || '',
             desc_en: c.descriptionEn || '',
             features_ar: c.featuresAr ? String(c.featuresAr).split(',').map(s=>s.trim()).filter(Boolean) : [],
