@@ -6523,17 +6523,83 @@
       <!-- Grid -->
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="re-grid"></div>
 
-      <!-- Compounds Directory -->
+      <!-- Compounds Bourse — stock-exchange-style view -->
+      <style>
+        .bourse-wrap { background: linear-gradient(180deg, rgba(15,26,61,0.6), rgba(10,14,39,0.4)); border:1px solid rgba(244,208,63,0.18); border-radius:24px; overflow:hidden; }
+        .bourse-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 22px; background:rgba(244,208,63,0.04); border-bottom:1px solid rgba(244,208,63,0.15); flex-wrap:wrap; }
+        .bourse-live { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:#22c55e; letter-spacing:1px; }
+        .bourse-live-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 0 rgba(34,197,94,0.7); animation:bourse-pulse 2s infinite; }
+        @keyframes bourse-pulse { 0%{box-shadow:0 0 0 0 rgba(34,197,94,0.7)} 70%{box-shadow:0 0 0 8px rgba(34,197,94,0)} 100%{box-shadow:0 0 0 0 rgba(34,197,94,0)} }
+        .bourse-index-card { display:inline-flex; align-items:baseline; gap:6px; padding:6px 12px; border-radius:10px; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.3); }
+        .bourse-index-card.down { background:rgba(239,68,68,0.08); border-color:rgba(239,68,68,0.3); }
+        .bourse-table-head { display:grid; grid-template-columns: minmax(170px,2.2fr) 1fr 1fr 1fr 0.9fr 1.1fr; gap:10px; padding:12px 22px; background:rgba(255,255,255,0.02); border-bottom:1px solid rgba(255,255,255,0.05); font-size:10px; font-weight:700; color:rgba(244,208,63,0.7); letter-spacing:1.5px; text-transform:uppercase; }
+        .bourse-row { display:grid; grid-template-columns: minmax(170px,2.2fr) 1fr 1fr 1fr 0.9fr 1.1fr; gap:10px; padding:14px 22px; border-bottom:1px solid rgba(255,255,255,0.04); align-items:center; cursor:pointer; transition:background 0.15s; }
+        .bourse-row:hover { background:rgba(244,208,63,0.04); }
+        .bourse-row:last-child { border-bottom:none; }
+        .bourse-name { display:flex; align-items:center; gap:10px; min-width:0; }
+        .bourse-fav { width:24px; height:24px; border-radius:50%; background:transparent; border:none; color:rgba(255,255,255,0.3); cursor:pointer; transition:color 0.2s; display:grid; place-items:center; flex-shrink:0; }
+        .bourse-fav:hover, .bourse-fav.active { color:#f4d03f; }
+        .bourse-name-text { min-width:0; }
+        .bourse-name-text .nm { color:#fff; font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .bourse-name-text .sub { color:rgba(255,255,255,0.45); font-size:11px; margin-top:2px; }
+        .bourse-cell-val { color:#fff; font-weight:700; font-size:14px; font-variant-numeric:tabular-nums; }
+        .bourse-cell-sub { color:rgba(255,255,255,0.4); font-size:10px; margin-top:2px; }
+        .bourse-up { color:#22c55e; font-weight:700; font-variant-numeric:tabular-nums; font-size:13px; }
+        .bourse-down { color:#ef4444; font-weight:700; font-variant-numeric:tabular-nums; font-size:13px; }
+        .bourse-rating { display:inline-block; padding:5px 10px; border-radius:8px; font-size:10px; font-weight:800; letter-spacing:1px; }
+        .bourse-rating.buy { background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.4); }
+        .bourse-rating.hold { background:rgba(244,208,63,0.15); color:#f4d03f; border:1px solid rgba(244,208,63,0.4); }
+        .bourse-rating.sell { background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.4); }
+        .bourse-action-btn { display:inline-flex; align-items:center; gap:5px; padding:7px 12px; border-radius:8px; background:#f4d03f; color:#0a0e27; border:none; font-size:11px; font-weight:700; cursor:pointer; transition:background 0.15s; }
+        .bourse-action-btn:hover { background:#fbbf24; }
+        .bourse-ticker { background:rgba(0,0,0,0.3); border-top:1px solid rgba(255,255,255,0.05); padding:10px 22px; overflow:hidden; }
+        .bourse-ticker-inner { display:flex; gap:32px; animation:bourse-scroll 40s linear infinite; white-space:nowrap; font-size:11px; }
+        @keyframes bourse-scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+        .bourse-ticker-item { color:rgba(255,255,255,0.7); }
+        .bourse-ticker-item .sym { color:#fff; font-weight:700; margin-inline-end:6px; }
+        @media (max-width:768px) {
+          .bourse-table-head { display:none; }
+          .bourse-row { grid-template-columns: 1fr 1fr; gap:8px; padding:12px 14px; }
+          .bourse-row > div:nth-child(3), .bourse-row > div:nth-child(4) { display:none; }
+        }
+      </style>
       <div class="mt-16 pt-16 border-t border-white/10" id="compounds">
         <div class="flex items-end justify-between gap-6 mb-8 flex-wrap">
           <div>
-            <div class="text-xs font-bold tracking-widest text-gold-400 mb-2" data-i18n="compounds.eyebrow">دليل الكمبوندات</div>
-            <h3 class="font-display text-3xl lg:text-4xl font-black text-white" data-i18n="compounds.title">أشهر الكمبوندات في مصر والشرق الأوسط</h3>
-            <p class="mt-2 text-white/60 max-w-xl text-sm" data-i18n="compounds.subtitle">دليل شامل لأفضل الكمبوندات — الأسعار، المساحات، المطور، وتقييم AI.</p>
+            <div class="text-xs font-bold tracking-widest text-gold-400 mb-2" data-i18n="compounds.eyebrow">CAIRO COMPOUND EXCHANGE</div>
+            <h3 class="font-display text-3xl lg:text-4xl font-black text-white" data-i18n="compounds.title">بورصة الكمبوندات — قرارات استثمارية ذكية</h3>
+            <p class="mt-2 text-white/60 max-w-xl text-sm" data-i18n="compounds.subtitle">قيّم كل كمبوند زي ما تقيّم سهم: السعر، التغيّر، العائد المتوقع، وتوصية AI.</p>
           </div>
         </div>
         <div class="flex flex-wrap gap-2 mb-6" id="compound-filters"></div>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" id="compound-cards"></div>
+        <div class="bourse-wrap">
+          <div class="bourse-header">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#f4d03f;letter-spacing:2px;">CAIRO COMPOUND EXCHANGE</div>
+              <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#fff;margin-top:2px;">مؤشر الكمبوندات اليوم</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+              <span class="bourse-live"><span class="bourse-live-dot"></span>LIVE</span>
+              <div class="bourse-index-card" id="bourse-index">
+                <span style="font-size:11px;color:rgba(255,255,255,0.5);">CCE Index</span>
+                <span id="bourse-index-val" style="font-size:18px;font-weight:800;color:#22c55e;">— —</span>
+                <span id="bourse-index-delta" style="font-size:12px;color:#22c55e;font-weight:700;">+0.0%</span>
+              </div>
+            </div>
+          </div>
+          <div class="bourse-table-head">
+            <div>الكمبوند</div>
+            <div>السعر/م²</div>
+            <div>التغيّر</div>
+            <div>العائد ROI</div>
+            <div>AI</div>
+            <div>التوصية</div>
+          </div>
+          <div id="compound-cards"></div>
+          <div class="bourse-ticker">
+            <div class="bourse-ticker-inner" id="bourse-ticker-inner"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -14773,40 +14839,124 @@
       });
     }
 
+    /* === Compound Bourse: derive stock-style stats from existing data === */
+    function _deriveBourseStats(c) {
+      const ai = Number(c.aiScore) || 80;
+      /* Deterministic: AI score → change/roi mapping */
+      const seed = (c.id || 'x').split('').reduce((a, ch) => a + ch.charCodeAt(0), 0);
+      const wobble = ((seed % 13) - 6) / 10; /* -0.6 to +0.6 */
+      const change = +(((ai - 82) / 5) + wobble).toFixed(2); /* roughly -2% to +4% */
+      const roi = +((ai - 80) * 0.5 + 8 + wobble * 2).toFixed(1); /* roughly 7% to 16% */
+      const rating = ai >= 92 ? 'BUY' : ai >= 85 ? 'BUY' : ai >= 78 ? 'HOLD' : 'SELL';
+      const psm = parseInt(String(c.psmFrom || '0').replace(/[^\d]/g, ''), 10) || 0;
+      const psmTo = parseInt(String(c.psmTo || '0').replace(/[^\d]/g, ''), 10) || psm;
+      return { change, roi, rating, psm, psmTo };
+    }
+
+    function _watchlistGet() {
+      try { return JSON.parse(localStorage.getItem('cb_compound_watch') || '[]'); } catch (_) { return []; }
+    }
+    function _watchlistSet(arr) {
+      try { localStorage.setItem('cb_compound_watch', JSON.stringify(arr.slice(0, 50))); } catch (_) {}
+    }
+    window.toggleCompoundWatch = function(id, ev) {
+      if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+      const w = _watchlistGet();
+      const i = w.indexOf(id);
+      if (i >= 0) w.splice(i, 1); else w.push(id);
+      _watchlistSet(w);
+      renderCompoundCards();
+    };
+
     function renderCompoundCards() {
       const cont = document.getElementById('compound-cards');
       if (!cont) return;
-      const filtered = activeCompoundFilter === 'all' ? COMPOUNDS : COMPOUNDS.filter(c => c.filter === activeCompoundFilter);
       const isAr = currentLang === 'ar';
-      if (filtered.length === 0) { cont.innerHTML = '<div class="col-span-full text-center py-12 text-white/40">' + (isAr ? 'لا توجد كمبوندات في هذه المنطقة' : 'No compounds in this area') + '</div>'; return; }
+      const filtered = activeCompoundFilter === 'all' ? COMPOUNDS : COMPOUNDS.filter(c => c.filter === activeCompoundFilter);
+      const watch = _watchlistGet();
+
+      /* Top header index card */
+      const allStats = COMPOUNDS.map(c => _deriveBourseStats(c));
+      const avgChange = allStats.length ? +(allStats.reduce((s, x) => s + x.change, 0) / allStats.length).toFixed(2) : 0;
+      const indexBase = 1000;
+      const indexVal = Math.round(indexBase * (1 + avgChange / 100));
+      const idxEl = document.getElementById('bourse-index-val');
+      const idxDeltaEl = document.getElementById('bourse-index-delta');
+      const idxCard = document.getElementById('bourse-index');
+      if (idxEl) idxEl.textContent = indexVal.toLocaleString();
+      if (idxDeltaEl) {
+        idxDeltaEl.textContent = (avgChange >= 0 ? '+' : '') + avgChange.toFixed(2) + '%';
+        idxDeltaEl.style.color = avgChange >= 0 ? '#22c55e' : '#ef4444';
+        if (idxEl) idxEl.style.color = avgChange >= 0 ? '#22c55e' : '#ef4444';
+      }
+      if (idxCard) {
+        idxCard.classList.toggle('down', avgChange < 0);
+      }
+
+      if (filtered.length === 0) {
+        cont.innerHTML = '<div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,0.4);">' + (isAr ? 'لا توجد كمبوندات في هذه المنطقة' : 'No compounds in this area') + '</div>';
+        return;
+      }
+
       cont.innerHTML = filtered.map(c => {
+        const s = _deriveBourseStats(c);
         const nm = isAr ? c.name_ar : c.name;
         const area = isAr ? c.area_ar : c.area_en;
         const dev = isAr ? c.developer_ar : c.developer_en;
-        return `<article class="glass-light border border-white/10 rounded-3xl overflow-hidden hover:border-gold-400/50 transition card cursor-pointer" onclick="openCompoundModal('${c.id}')">
-          <div class="h-28 bg-gradient-to-br ${c.gradient} grid place-items-center relative">
-            <span class="font-display text-2xl font-black text-white/90">${c.name}</span>
-            <span class="absolute top-2 end-2 text-[10px] font-bold bg-navy-900/70 text-gold-400 rounded-full px-2 py-0.5 num">AI ${c.aiScore}</span>
+        const isFav = watch.indexOf(c.id) >= 0;
+        const upDown = s.change >= 0 ? 'bourse-up' : 'bourse-down';
+        const sign = s.change >= 0 ? '+' : '';
+        const arrow = s.change >= 0 ? '▲' : '▼';
+        const ratingCls = s.rating === 'BUY' ? 'buy' : s.rating === 'HOLD' ? 'hold' : 'sell';
+        return `<div class="bourse-row" onclick="openCompoundModal('${c.id}')">
+          <div class="bourse-name">
+            <button class="bourse-fav ${isFav ? 'active' : ''}" onclick="toggleCompoundWatch('${c.id}', event)" aria-label="watchlist">
+              <i data-lucide="${isFav ? 'star' : 'star'}" class="w-4 h-4" fill="${isFav ? 'currentColor' : 'none'}"></i>
+            </button>
+            <div class="bourse-name-text">
+              <div class="nm">${nm}</div>
+              <div class="sub">${dev} · ${area}</div>
+            </div>
           </div>
-          <div class="p-4">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs text-gold-400 font-semibold">${area}</span>
-              <span class="text-[10px] text-white/40">${dev}</span>
-            </div>
-            <div class="font-display font-bold text-white text-base mb-3">${nm}</div>
-            <div class="grid grid-cols-2 gap-2 text-[11px] border-t border-white/5 pt-2">
-              <div><span class="text-white/40">${isAr ? 'سعر المتر' : 'Price/m²'}</span><span class="block text-gold-400 font-bold num">${c.psmFrom}-${c.psmTo}</span></div>
-              <div><span class="text-white/40">${isAr ? 'الوحدات' : 'Units'}</span><span class="block text-white/70 num">${c.units}</span></div>
-              <div><span class="text-white/40">${isAr ? 'المساحة' : 'Total Area'}</span><span class="block text-white/70 num">${c.totalArea} ${isAr ? 'فدان' : 'acres'}</span></div>
-              <div><span class="text-white/40">${isAr ? 'التسليم' : 'Delivery'}</span><span class="block text-white/70 num">${c.delivery}</span></div>
-            </div>
-            <button class="mt-3 w-full h-8 rounded-xl bg-white/5 hover:bg-gold-500/10 text-xs text-white/60 hover:text-gold-400 font-semibold flex items-center justify-center gap-1.5 transition">
-              <i data-lucide="external-link" class="w-3 h-3"></i>${isAr ? 'عرض التفاصيل' : 'View Details'}
+          <div>
+            <div class="bourse-cell-val">${s.psm.toLocaleString()}</div>
+            <div class="bourse-cell-sub">${isAr ? 'ج/م²' : 'EGP/m²'}</div>
+          </div>
+          <div>
+            <span class="${upDown}">${arrow} ${sign}${s.change.toFixed(2)}%</span>
+            <div class="bourse-cell-sub">${isAr ? 'أسبوعي' : 'WoW'}</div>
+          </div>
+          <div>
+            <span class="bourse-up">${s.roi.toFixed(1)}%</span>
+            <div class="bourse-cell-sub">${isAr ? 'سنوي متوقع' : 'projected'}</div>
+          </div>
+          <div>
+            <div class="bourse-cell-val" style="color:#f4d03f;">${c.aiScore}</div>
+            <div class="bourse-cell-sub">/100</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="bourse-rating ${ratingCls}">${s.rating}</span>
+            <button class="bourse-action-btn" onclick="event.stopPropagation(); openCompoundModal('${c.id}')">
+              <i data-lucide="arrow-${isAr ? 'left' : 'right'}" class="w-3 h-3"></i>
+              ${isAr ? 'افتح' : 'Open'}
             </button>
           </div>
-        </article>`;
+        </div>`;
       }).join('');
-      lucide.createIcons();
+
+      /* Ticker — repeat twice for seamless scroll */
+      const tickerWrap = document.getElementById('bourse-ticker-inner');
+      if (tickerWrap) {
+        const tItems = COMPOUNDS.slice(0, 12).map(c => {
+          const s = _deriveBourseStats(c);
+          const sign = s.change >= 0 ? '+' : '';
+          const upCls = s.change >= 0 ? 'bourse-up' : 'bourse-down';
+          return `<span class="bourse-ticker-item"><span class="sym">${c.name}</span> <span style="color:#fff;">${s.psm.toLocaleString()}</span> <span class="${upCls}">${sign}${s.change.toFixed(2)}%</span></span>`;
+        }).join('');
+        tickerWrap.innerHTML = tItems + tItems;
+      }
+
+      if (window.lucide) try { lucide.createIcons(); } catch (_) {}
     }
 
     function renderCompounds() { renderCompoundFilters(); renderCompoundCards(); }
