@@ -12330,6 +12330,17 @@
     function renderMessages(){ /* stub */ }
     function renderPartnerships(){ /* stub */ }
 
+    /* Events section — initial render (was only wired into applyLang re-render) */
+    (function bootEvents() {
+      function init() {
+        if (typeof renderEvents === 'function') {
+          try { renderEvents(); } catch (e) { console.warn('renderEvents boot failed:', e); }
+        }
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+      else init();
+    })();
+
     /* ============== NEWS FROM BACKEND API ============== */
     const NEWS_API_URL = 'https://cairo-business-backend.vercel.app/api/news?limit=20';
     let NEWS_FROM_API = null; // cache so language switch doesn't re-fetch
