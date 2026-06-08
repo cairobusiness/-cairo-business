@@ -5151,12 +5151,17 @@
         box-shadow: 0 40px 80px rgba(0,0,0,.7);
       }
       .pp-profile-photo {
-        height: 360px; background: #1a2b4d center/cover no-repeat;
+        height: 420px;
+        background-color: #0f0a1f;
+        background-position: center;
+        background-size: contain;
+        background-repeat: no-repeat;
         position: relative;
       }
       .pp-profile-photo::after {
         content: ''; position: absolute; inset: 0;
-        background: linear-gradient(to top, rgba(10,14,39,.95), transparent 60%);
+        background: linear-gradient(to top, rgba(10,14,39,.6), transparent 35%);
+        pointer-events: none;
       }
       .pp-profile-close {
         position: absolute; top: 18px; inset-inline-end: 18px; z-index: 2;
