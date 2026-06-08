@@ -11079,16 +11079,98 @@
       { id:8, name_ar:'ريم الشريف', name_en:'Reem Al-Sharif', company:'Palm Hills', position_ar:'مديرة التسويق الإقليمي', position_en:'Regional Marketing VP', type:'promotion', date:'Apr 5', desc_ar:'ترقية من مديرة تسويق', color:'gold' }
     ];
 
-    let DEALS = [
-      { id:1, type_ar:'أرض', type_en:'Land', title_ar:'أرض 5000 م² في الشيخ زايد', title_en:'5000 sqm Land in Sheikh Zayed', location_ar:'الشيخ زايد', location_en:'Sheikh Zayed', value:'EGP 350M', deadline:'May 15', hot:true, desc_ar:'أرض سكنية للتطوير مباشرة' },
-      { id:2, type_ar:'شراكة', type_en:'Partnership', title_ar:'شراكة في فندق بالساحل', title_en:'Hotel Partnership - North Coast', location_ar:'الساحل الشمالي', location_en:'North Coast', value:'EGP 120M', deadline:'May 30', hot:false, desc_ar:'فرصة لشريك استثماري' },
-      { id:3, type_ar:'مناقصة', type_en:'Tender', title_ar:'مناقصة للمقاول للعاصمة الإدارية', title_en:'Tender - New Capital Roads', location_ar:'العاصمة الإدارية', location_en:'New Capital', value:'EGP 500M', deadline:'May 5', hot:true, desc_ar:'مشروع بنية تحتية حكومي' },
-      { id:4, type_ar:'تمويل', type_en:'Funding Round', title_ar:'جولة تمويل Series A لـ Fawry', title_en:'Series A Funding - Fawry', location_ar:'القاهرة', location_en:'Cairo', value:'$15M', deadline:'May 20', hot:true, desc_ar:'تمويل لشركة تكنولوجيا ناشئة' },
-      { id:5, type_ar:'استحواذ', type_en:'Acquisition', title_ar:'استحواذ على فندق 4 نجوم', title_en:'Acquisition - 4-Star Hotel', location_ar:'الجيزة', location_en:'Giza', value:'EGP 800M', deadline:'Jun 1', hot:false, desc_ar:'فندق استثماري للاستحواذ' },
-      { id:6, type_ar:'شراكة', type_en:'Partnership', title_ar:'شراكة في مول تجاري', title_en:'Commercial Mall Partnership', location_ar:'التجمع الخامس', location_en:'New Cairo', value:'EGP 280M', deadline:'May 25', hot:false, desc_ar:'مركز تجاري فاخر' },
-      { id:7, type_ar:'أرض', type_en:'Land', title_ar:'أرض زراعية بـ 50 فدان', title_en:'50 Acre Farm Land', location_ar:'الفيوم', location_en:'Fayoum', value:'EGP 45M', deadline:'Jun 10', hot:false, desc_ar:'أرض زراعية للاستثمار الزراعي' },
-      { id:8, type_ar:'تمويل', type_en:'Funding Round', title_ar:'جولة تمويل لشركة لوجستيات', title_en:'Logistics Startup Funding', location_ar:'القاهرة', location_en:'Cairo', value:'$8M', deadline:'May 12', hot:true, desc_ar:'شركة ناشئة في مجال النقل' }
-    ];
+    /* Inline deal opportunities — used as fallback before API loads, or while DB is empty.
+       Generated 2026-06-08 with dated deadlines in the 30-60 day window. */
+    let DEALS = (function(){
+      const today = new Date();
+      const d = (days) => {
+        const dt = new Date(today.getTime() + days*86400000);
+        return {
+          deadline: dt.toLocaleDateString('en-US', {day:'numeric', month:'short'}),
+          deadline_ar: dt.toLocaleDateString('ar-EG', {day:'numeric', month:'long'}),
+          daysLeft: days
+        };
+      };
+      return [
+        Object.assign({ id:'seed_1', type:'vc', type_ar:'تمويل VC', type_en:'VC Round',
+          title_ar:'جولة Series C لـ MNT-Halan بقيمة 200 مليون دولار',
+          title_en:'MNT-Halan Series C — $200M',
+          location_ar:'القاهرة، مصر', location_en:'Cairo, Egypt',
+          value:'$200M', valueRaw:200,
+          desc_ar:'فرصة دخول في أسرع شركة تكنولوجيا مالية في مصر — مستهدف توسع إقليمي',
+          desc_en:"Entry into Egypt's fastest-growing fintech — pre-MENA expansion",
+          isHot:true, hot:true, urgency:'high' }, d(12)),
+        Object.assign({ id:'seed_2', type:'real_estate', type_ar:'صفقة عقارية', type_en:'Real Estate',
+          title_ar:'أرض تجارية 12,000 م² في العاصمة الإدارية', title_en:'12,000 sqm Commercial Land — New Capital',
+          location_ar:'العاصمة الإدارية، مصر', location_en:'New Administrative Capital',
+          value:'$45M', valueRaw:45,
+          desc_ar:'موقع استراتيجي على المحور الرئيسي — مرخص لمول أو فندق',
+          desc_en:'Strategic frontage on main axis — licensed for mall or hotel',
+          isHot:true, hot:true, urgency:'high' }, d(8)),
+        Object.assign({ id:'seed_3', type:'ipo', type_ar:'طرح عام', type_en:'IPO',
+          title_ar:'طرح حصة في بنك القاهرة (Banque du Caire)',
+          title_en:'Banque du Caire Stake Sale',
+          location_ar:'البورصة المصرية', location_en:'EGX, Cairo',
+          value:'$500M', valueRaw:500,
+          desc_ar:'طرح 30% من رأس المال — أكبر طرح بنكي مرتقب لعام 2026',
+          desc_en:'30% stake offering — biggest bank IPO of 2026',
+          isHot:true, hot:true, urgency:'high' }, d(21)),
+        Object.assign({ id:'seed_4', type:'ma', type_ar:'استحواذ', type_en:'M&A',
+          title_ar:'استحواذ على سلسلة فنادق Helnan (5 فنادق)',
+          title_en:'Helnan Hotels Acquisition — 5 properties',
+          location_ar:'الإسكندرية، شرم الشيخ، القاهرة', location_en:'Alexandria, Sharm, Cairo',
+          value:'$320M', valueRaw:320,
+          desc_ar:'محفظة فندقية كاملة بإشغال 78% — للبيع كصفقة واحدة',
+          desc_en:'Full portfolio at 78% occupancy — single-transaction buyout',
+          isHot:false, hot:false, urgency:'normal' }, d(35)),
+        Object.assign({ id:'seed_5', type:'jv', type_ar:'مشروع مشترك', type_en:'JV',
+          title_ar:'مشروع مشترك مع Elsewedy لمصنع كابلات في 6 أكتوبر',
+          title_en:'Elsewedy Cables JV — 6th October Factory',
+          location_ar:'6 أكتوبر، الجيزة', location_en:'6th October, Giza',
+          value:'$85M', valueRaw:85,
+          desc_ar:'شراكة 50/50 — تصدير لأفريقيا والخليج',
+          desc_en:'50/50 partnership — exports to Africa & Gulf',
+          isHot:false, hot:false, urgency:'normal' }, d(28)),
+        Object.assign({ id:'seed_6', type:'pe', type_ar:'استثمار خاص', type_en:'PE Deal',
+          title_ar:'استثمار خاص في شركة Paymob بقيمة 100 مليون دولار',
+          title_en:'Paymob Pre-IPO PE Round — $100M',
+          location_ar:'القاهرة، الإمارات', location_en:'Cairo & UAE',
+          value:'$100M', valueRaw:100,
+          desc_ar:'جولة أخيرة قبل الطرح المرتقب 2027',
+          desc_en:'Final pre-IPO round before expected 2027 listing',
+          isHot:true, hot:true, urgency:'high' }, d(18)),
+        Object.assign({ id:'seed_7', type:'real_estate', type_ar:'صفقة عقارية', type_en:'Real Estate',
+          title_ar:'مشروع كمبوند 180 فدان في الساحل الشمالي', title_en:'180 Acre North Coast Compound',
+          location_ar:'الساحل الشمالي، مصر', location_en:'North Coast, Egypt',
+          value:'$280M', valueRaw:280,
+          desc_ar:'شراكة تطوير — تمويل بنكي قائم',
+          desc_en:'Co-development opportunity — bank financing in place',
+          isHot:false, hot:false, urgency:'normal' }, d(45)),
+        Object.assign({ id:'seed_8', type:'debt', type_ar:'تمويل دين', type_en:'Debt',
+          title_ar:'صكوك حكومية بعائد 22% لمدة 3 سنوات', title_en:'Government Sukuk — 22% / 3yr',
+          location_ar:'الحكومة المصرية', location_en:'Egyptian Treasury',
+          value:'$1.5B', valueRaw:1500,
+          desc_ar:'إصدار محدود — حد أدنى 5 مليون دولار للمستثمر',
+          desc_en:'Limited tranche — $5M minimum per investor',
+          isHot:true, hot:true, urgency:'high' }, d(7)),
+        Object.assign({ id:'seed_9', type:'vc', type_ar:'تمويل VC', type_en:'VC Round',
+          title_ar:'جولة Series B لشركة Trella للوجستيات',
+          title_en:'Trella Logistics — Series B',
+          location_ar:'القاهرة، الرياض', location_en:'Cairo & Riyadh',
+          value:'$50M', valueRaw:50,
+          desc_ar:'منصة الشحن الرائدة في المنطقة — توسع للخليج',
+          desc_en:"Region's leading freight platform — expanding to GCC",
+          isHot:false, hot:false, urgency:'normal' }, d(25)),
+        Object.assign({ id:'seed_10', type:'ma', type_ar:'استحواذ', type_en:'M&A',
+          title_ar:'استحواذ على شركة كيماويات بالعين السخنة',
+          title_en:'Sokhna Chemicals Acquisition Target',
+          location_ar:'العين السخنة، السويس', location_en:'Ain Sokhna, Suez',
+          value:'$180M', valueRaw:180,
+          desc_ar:'منشأة كاملة — تصدير 60% من الإنتاج',
+          desc_en:'Full facility — 60% production exported',
+          isHot:false, hot:false, urgency:'normal' }, d(40))
+      ];
+    })();
 
     const SECTORS_PULSE = {
       realEstate: { score:78, description_ar:'ارتفاع الطلب مع استقرار الأسعار', description_en:'Rising demand with stable pricing', metrics:[{label_ar:'نمو الإيراد',label_en:'Revenue Growth',value:'+18%'},{label_ar:'أكبر لاعب',label_en:'Top Player',value:'Emaar'},{label_ar:'حجم السوق',label_en:'Market Size',value:'$250B'},{label_ar:'التوقعات',label_en:'Outlook',value:'Positive'}], insights_ar:['الطلب على الفيلات ارتفع 22%','أسعار الشقق استقرت في الأحياء الراقية','قطاع العقارات يشهد نموا متوازنا'], insights_en:['Villa demand up 22%','Apt prices stable in premium areas','Balanced sector growth'], top3_ar:['إعمار',  'طلعت مصطفى','بالم هيلز'], top3_en:['Emaar', 'TMG', 'Palm Hills'], updated:'Apr 20' },
@@ -16147,22 +16229,56 @@
         if (!r.ok) return;
         const j = await r.json();
         const arr = (j.data || j.items || []);
-        if (!arr.length) return;
-        DEALS = arr.map((d, i) => ({
-          id: d.id || ('deal_' + i),
-          type: (d.type || 'partnership').toLowerCase(),
-          title_ar: d.titleAr || '',
-          title_en: d.titleEn || '',
-          location_ar: d.locationAr || '',
-          location_en: d.locationEn || '',
-          value: d.value != null ? '$' + d.value.toLocaleString() + 'M' : '',
-          deadline: d.deadline,
-          desc_ar: d.descriptionAr || '',
-          desc_en: d.descriptionEn || '',
-          isHot: !!d.isHot,
-          urgency: d.isHot ? 'high' : 'normal',
-        }));
+        /* Only override seed deals if the API has a healthy set (5+) */
+        if (arr.length < 5) return;
+        const typeLabels = {
+          MA: { ar: 'استحواذ', en: 'M&A' },
+          IPO: { ar: 'طرح عام', en: 'IPO' },
+          JV: { ar: 'مشروع مشترك', en: 'JV' },
+          VC: { ar: 'تمويل VC', en: 'VC Round' },
+          PE: { ar: 'استثمار خاص', en: 'PE Deal' },
+          REAL_ESTATE: { ar: 'صفقة عقارية', en: 'Real Estate' },
+          DEBT: { ar: 'تمويل دين', en: 'Debt' }
+        };
+        DEALS = arr.map((d, i) => {
+          const typeKey = String(d.type || 'JV').toUpperCase();
+          const typeLab = typeLabels[typeKey] || { ar: d.type || 'فرصة', en: d.type || 'Deal' };
+          /* Value as raw number (millions) and pre-formatted strings */
+          const vN = Number(d.value) || 0;
+          const valDisplay = vN >= 1000 ? '$' + (vN / 1000).toFixed(1) + 'B' : vN > 0 ? '$' + vN.toFixed(0) + 'M' : '—';
+          /* Deadline formatting */
+          let dl_ar = '—', dl_en = '—', daysLeft = null;
+          if (d.deadline) {
+            const dl = new Date(d.deadline);
+            if (!isNaN(dl.getTime())) {
+              daysLeft = Math.max(0, Math.ceil((dl.getTime() - Date.now()) / 86400000));
+              dl_en = dl.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+              dl_ar = dl.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' });
+            }
+          }
+          return {
+            id: d.id || ('deal_' + i),
+            type: typeKey.toLowerCase(),
+            type_ar: typeLab.ar,
+            type_en: typeLab.en,
+            title_ar: d.titleAr || d.titleEn || '—',
+            title_en: d.titleEn || d.titleAr || '—',
+            location_ar: d.locationAr || d.locationEn || '',
+            location_en: d.locationEn || d.locationAr || '',
+            value: valDisplay,
+            valueRaw: vN,
+            deadline: dl_en,
+            deadline_ar: dl_ar,
+            daysLeft: daysLeft,
+            desc_ar: d.descriptionAr || '',
+            desc_en: d.descriptionEn || '',
+            isHot: !!d.isHot,
+            hot: !!d.isHot,
+            urgency: d.isHot ? 'high' : 'normal',
+          };
+        });
         if (typeof renderDeals === 'function') renderDeals();
+        if (typeof renderDealFilters === 'function') renderDealFilters();
       } catch (_) { /* keep fallback */ }
     }
 
@@ -17960,31 +18076,120 @@
       }).join('');
     }
 
+    let activeDealFilter = 'all';
+    window.setDealFilter = function(t) { activeDealFilter = t; renderDeals(); renderDealFilters(); };
+
+    function renderDealFilters() {
+      const wrap = document.getElementById('deals-filters');
+      if (!wrap) return;
+      const isAr = currentLang === 'ar';
+      const types = [
+        { k: 'all', ar: 'كل الفرص', en: 'All', icon: '✨' },
+        { k: 'ma', ar: 'استحواذ', en: 'M&A', icon: '🤝' },
+        { k: 'ipo', ar: 'طرح عام', en: 'IPO', icon: '📈' },
+        { k: 'jv', ar: 'مشروع مشترك', en: 'JV', icon: '🌐' },
+        { k: 'vc', ar: 'تمويل VC', en: 'VC', icon: '🚀' },
+        { k: 'pe', ar: 'استثمار خاص', en: 'PE', icon: '💼' },
+        { k: 'real_estate', ar: 'عقارات', en: 'Real Estate', icon: '🏗️' },
+        { k: 'debt', ar: 'تمويل دين', en: 'Debt', icon: '💵' }
+      ];
+      wrap.innerHTML = types.map(t => {
+        const isActive = activeDealFilter === t.k;
+        const cls = isActive
+          ? 'bg-gradient-to-r from-gold-500 to-amber-600 text-navy-900 border-gold-400'
+          : 'bg-white/5 text-white/70 border-white/10 hover:border-gold-400/40';
+        return `<button onclick="setDealFilter('${t.k}')" class="px-4 py-2 rounded-full text-xs font-bold border transition flex items-center gap-1.5 ${cls}">
+          <span>${t.icon}</span>${isAr ? t.ar : t.en}
+        </button>`;
+      }).join('');
+    }
+
     function renderDeals() {
       const wrap = document.getElementById('deals-cards');
       if (!wrap) return;
       const isAr = currentLang === 'ar';
       let filtered = DEALS;
-      const activeFilter = document.querySelector('.deals-filter.active')?.dataset.type || 'all';
-      if (activeFilter !== 'all') {
-        filtered = DEALS.filter(d => d.type_ar === activeFilter || d.type_en === activeFilter);
+      if (activeDealFilter && activeDealFilter !== 'all') {
+        filtered = DEALS.filter(d => String(d.type || '').toLowerCase() === activeDealFilter);
       }
-      wrap.innerHTML = filtered.map(d => `
-        <div class="glass-light border border-white/10 rounded-2xl p-4 hover:border-gold-400/50 transition">
-          <div class="flex items-start justify-between gap-2 mb-3">
-            <span class="text-[11px] font-bold px-2 py-1 rounded-full bg-gold-500/20 text-gold-400">${isAr ? d.type_ar : d.type_en}</span>
-            ${d.hot ? '<span class="text-[11px] font-bold px-2 py-1 rounded-full bg-red-500/20 text-red-400">🔥 Hot</span>' : ''}
+      /* Sort: hot first, then by deadline asc */
+      filtered = filtered.slice().sort((a, b) => {
+        if (a.isHot !== b.isHot) return a.isHot ? -1 : 1;
+        return (a.daysLeft || 999) - (b.daysLeft || 999);
+      });
+      if (filtered.length === 0) {
+        wrap.innerHTML = '<div class="col-span-full text-center py-12 text-white/40">' + (isAr ? 'مفيش فرص متاحة في القطاع ده دلوقتي' : 'No deals in this category right now') + '</div>';
+        return;
+      }
+      const typeGrads = {
+        ma: 'from-violet-500 to-fuchsia-600',
+        ipo: 'from-emerald-500 to-teal-600',
+        jv: 'from-cyan-500 to-blue-600',
+        vc: 'from-orange-500 to-red-600',
+        pe: 'from-indigo-500 to-purple-600',
+        real_estate: 'from-amber-500 to-yellow-600',
+        debt: 'from-slate-500 to-gray-600'
+      };
+      wrap.innerHTML = filtered.map(d => {
+        const grad = typeGrads[d.type] || 'from-gold-500 to-amber-600';
+        const dlText = isAr ? d.deadline_ar : d.deadline;
+        const daysLeft = d.daysLeft;
+        const urgent = daysLeft !== null && daysLeft <= 7;
+        const dlLabel = daysLeft !== null
+          ? (isAr ? ('باقي ' + daysLeft + ' يوم') : (daysLeft + ' days left'))
+          : dlText;
+        const desc = isAr ? d.desc_ar : d.desc_en;
+        return `<div class="glass-light border ${d.isHot ? 'border-red-400/40' : 'border-white/10'} rounded-2xl overflow-hidden hover:border-gold-400/50 transition group">
+          <div class="h-1.5 bg-gradient-to-r ${grad}"></div>
+          <div class="p-5">
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r ${grad} text-white">${isAr ? d.type_ar : d.type_en}</span>
+              ${d.isHot ? '<span class="text-[10px] font-bold px-2 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-400/30">🔥 ' + (isAr ? 'ساخن' : 'HOT') + '</span>' : ''}
+            </div>
+            <h3 class="font-display text-base font-bold text-white mb-2 leading-tight line-clamp-2">${isAr ? d.title_ar : d.title_en}</h3>
+            ${desc ? `<p class="text-[11px] text-white/50 mb-3 line-clamp-2 leading-relaxed">${desc}</p>` : ''}
+            <div class="text-xs text-gold-400/80 mb-4 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3 h-3"></i>${isAr ? d.location_ar : d.location_en}</div>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+              <div class="bg-white/5 rounded-lg p-2.5 text-center">
+                <div class="text-[9px] text-white/40 uppercase tracking-wider mb-0.5">${isAr ? 'القيمة' : 'Deal Value'}</div>
+                <div class="text-base font-black text-gold-400 num">${d.value}</div>
+              </div>
+              <div class="bg-white/5 rounded-lg p-2.5 text-center">
+                <div class="text-[9px] text-white/40 uppercase tracking-wider mb-0.5">${isAr ? 'الموعد' : 'Deadline'}</div>
+                <div class="text-xs font-bold ${urgent ? 'text-red-400' : 'text-white'} num">${dlLabel}</div>
+              </div>
+            </div>
+            <button onclick="openDealInquiry('${d.id}')" class="w-full h-10 bg-gradient-to-r from-gold-500 to-amber-600 hover:from-gold-400 hover:to-amber-500 text-navy-900 text-sm font-bold rounded-xl transition flex items-center justify-center gap-2">
+              <i data-lucide="send" class="w-4 h-4"></i>${isAr ? 'استفسر الآن' : 'Inquire Now'}
+            </button>
           </div>
-          <h3 class="font-semibold text-white mb-2 text-sm">${isAr ? d.title_ar : d.title_en}</h3>
-          <p class="text-xs text-white/60 mb-3">${isAr ? d.location_ar : d.location_en}</p>
-          <div class="flex items-center justify-between mb-3 pb-3 border-b border-white/10">
-            <span class="text-sm font-bold text-gold-400">${d.value}</span>
-            <span class="text-[10px] text-white/50">${isAr ? 'آخل موعد: ' : 'Deadline: '}${d.deadline}</span>
-          </div>
-          <button class="w-full h-9 bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-400 text-xs font-semibold rounded-lg transition" data-i18n="deals.inquire">Contact</button>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
+      if (window.lucide) try { lucide.createIcons(); } catch (_) {}
     }
+
+    /* Open inquiry — uses brand contact phone if set, else opens an alert */
+    window.openDealInquiry = function(id) {
+      const d = DEALS.find(x => x.id === id);
+      if (!d) return;
+      const isAr = currentLang === 'ar';
+      const phone = (window.__cbBrand && window.__cbBrand.contactPhone) ? String(window.__cbBrand.contactPhone) : '';
+      const title = isAr ? d.title_ar : d.title_en;
+      if (phone) {
+        const clean = phone.replace(/\D/g, '');
+        const msg = encodeURIComponent((isAr ? 'مهتم بفرصة: ' : 'Interested in this opportunity: ') + title + ' · ' + d.value);
+        window.open('https://wa.me/' + clean + '?text=' + msg, '_blank');
+      } else {
+        alert((isAr ? 'تواصل معنا للاستفسار عن: ' : 'Contact us about: ') + title);
+      }
+    };
+
+    /* Initial render on load + after AR/EN switch */
+    (function bootDeals() {
+      const init = () => { try { renderDealFilters(); renderDeals(); } catch (_) {} };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+      else setTimeout(init, 200);
+    })();
 
     /* Weekly auto-refresh: pull AI-generated sector pulse from backend (cached 7 days).
        Falls back to the hardcoded SECTORS_PULSE if the fetch fails. */
