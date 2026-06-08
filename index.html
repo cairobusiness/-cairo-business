@@ -949,6 +949,96 @@
     html[data-theme="light"] .border-white\\/15,
     html[data-theme="light"] .border-white\\/20 { border-color: #E2E8F0 !important; }
 
+    /* ═══════ LIGHT-MODE OVERRIDES FOR CUSTOM SECTIONS ═══════
+       Custom sections (Bourse, Funding Leaderboard, CEOs, Investor Dashboard,
+       Women of Impact, Property modal, etc.) use inline styles + scoped
+       classes with hardcoded white colors. Override them here for legibility. */
+
+    /* === Compound Bourse + Startups Funding Leaderboard === */
+    html[data-theme="light"] .bourse-wrap,
+    html[data-theme="light"] .sb-wrap {
+      background: #ffffff !important;
+      border-color: #E2E8F0 !important;
+    }
+    html[data-theme="light"] .bourse-header,
+    html[data-theme="light"] .sb-header { background: #F8FAFC !important; border-bottom-color: #E2E8F0 !important; }
+    html[data-theme="light"] .bourse-header div[style*="color:#fff"],
+    html[data-theme="light"] .sb-header div[style*="color:#fff"],
+    html[data-theme="light"] .bourse-name-text .nm,
+    html[data-theme="light"] .sb-name-text .nm { color:#0F172A !important; }
+    html[data-theme="light"] .bourse-table-head,
+    html[data-theme="light"] .sb-table-head { background:#F1F5F9 !important; border-bottom-color:#E2E8F0 !important; color:#94681A !important; }
+    html[data-theme="light"] .bourse-row,
+    html[data-theme="light"] .sb-row { border-bottom-color:#F1F5F9 !important; }
+    html[data-theme="light"] .bourse-row:hover,
+    html[data-theme="light"] .sb-row:hover { background:#FEF9E7 !important; }
+    html[data-theme="light"] .bourse-cell-val,
+    html[data-theme="light"] .sb-cell-val { color:#0F172A !important; }
+    html[data-theme="light"] .bourse-name-text .sub,
+    html[data-theme="light"] .sb-name-text .sub,
+    html[data-theme="light"] .bourse-cell-sub,
+    html[data-theme="light"] .sb-cell-sub { color:#64748B !important; }
+    html[data-theme="light"] .sb-stat-card { background:#FFFFFF !important; border-color:#E2E8F0 !important; }
+    html[data-theme="light"] .sb-stat-card .val[style*="color:#fff"] { color:#0F172A !important; }
+    html[data-theme="light"] .sb-stat-card .lbl { color:#64748B !important; }
+    html[data-theme="light"] .bourse-ticker { background:#F8FAFC !important; border-top-color:#E2E8F0 !important; }
+    html[data-theme="light"] .bourse-ticker-item { color:#475569 !important; }
+    html[data-theme="light"] .bourse-ticker-item .sym { color:#0F172A !important; }
+    html[data-theme="light"] .bourse-fav { color:#94A3B8 !important; }
+    html[data-theme="light"] .bourse-fav:hover,
+    html[data-theme="light"] .bourse-fav.active { color:#B45309 !important; }
+
+    /* === CEOs Power List === */
+    html[data-theme="light"] .ceos-name,
+    html[data-theme="light"] .ceos-modal-name,
+    html[data-theme="light"] .ceos-modal-meta-value { color:#0F172A !important; }
+    html[data-theme="light"] .ceos-card { background:#FFFFFF !important; border-color:#E2E8F0 !important; box-shadow:0 4px 16px rgba(15,23,42,0.08) !important; }
+    html[data-theme="light"] .ceos-title-line,
+    html[data-theme="light"] .ceos-modal-title-line { color:#B45309 !important; }
+    html[data-theme="light"] .ceos-company,
+    html[data-theme="light"] .ceos-modal-bio { color:#475569 !important; }
+    html[data-theme="light"] .ceos-modal-card { background:#FFFFFF !important; border-color:#E2E8F0 !important; }
+    html[data-theme="light"] .ceos-modal-meta-item { background:#F8FAFC !important; border-color:#E2E8F0 !important; }
+    html[data-theme="light"] .ceos-modal-meta-label { color:#64748B !important; }
+    html[data-theme="light"] .ceos-modal-quote { color:#0F172A !important; background:#FEF9E7 !important; }
+    html[data-theme="light"] .ceos-pill { background:#FFFFFF !important; border-color:#E2E8F0 !important; color:#0F172A !important; }
+    html[data-theme="light"] .ceos-pill.is-active { background:linear-gradient(135deg,#F4D03F,#D4A23A) !important; color:#0F172A !important; }
+
+    /* === Investor Dashboard (كل ما تحتاج معرفته الآن) === */
+    html[data-theme="light"] #investor-brief-grid [style*="color:#fff"],
+    html[data-theme="light"] #investor-brief-grid [style*="color:rgba(255"],
+    html[data-theme="light"] #investor-brief-grid [style*="color: #fff"],
+    html[data-theme="light"] #investor-brief-grid [style*="color: rgba(255"] { color:#0F172A !important; }
+    html[data-theme="light"] #investor-brief-grid [style*="background:rgba(255,255,255"] { background:#F8FAFC !important; }
+
+    /* === Generic: any element using inline white text in light mode === */
+    html[data-theme="light"] [style*="color:#fff"]:not([style*="background:#"]):not(.sb-rank):not(.bourse-rating):not(.bourse-action-btn):not([class*="bg-gold"]),
+    html[data-theme="light"] [style*="color: #fff"]:not([class*="bg-gold"]),
+    html[data-theme="light"] [style*="color:white"]:not([class*="bg-gold"]),
+    html[data-theme="light"] [style*="color: white"]:not([class*="bg-gold"]) {
+      color:#0F172A !important;
+    }
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.9"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.85"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.8"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.75"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.7"] { color:#334155 !important; }
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.65"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.6"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.55"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.5"] { color:#475569 !important; }
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.45"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.4"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.35"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.3"] { color:#64748B !important; }
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.25"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.2"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.15"],
+    html[data-theme="light"] [style*="color:rgba(255,255,255,0.1"] { color:#94A3B8 !important; }
+
+    /* Numbers (.num class is used in lots of stats cards) — keep dark in light mode */
+    html[data-theme="light"] .num { color: inherit; }
+
     /* Hero — special override */
     html[data-theme="light"] section#home {
       background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 50%, #FFFFFF 100%) !important;
