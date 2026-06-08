@@ -1886,6 +1886,7 @@ async function saveItem() {
   msg.innerHTML = '';
   const payload = {};
   const missing = [];
+  const badDataUrls = [];
   for (const f of ent.fields) {
     const el = document.getElementById('f_' + f.id);
     if (!el) continue;
@@ -1893,8 +1894,19 @@ async function saveItem() {
     if (f.type === 'checkbox') val = el.checked;
     else if (f.type === 'number') val = el.value === '' ? null : Number(el.value);
     else val = el.value.trim();
+    /* URL-type fields must not hold inline data: URLs. Force the user to use the
+       upload button (which stores the image in Supabase) so we don't bloat the DB
+       with 300KB+ base64 blobs that break rendering. */
+    if (f.type === 'url' && typeof val === 'string' && val.startsWith('data:')) {
+      badDataUrls.push(f.label || f.id);
+      val = '';
+    }
     if (f.required && (val === '' || val == null)) missing.push(f.label);
     if (val !== '' && val != null) payload[f.id] = val;
+  }
+  if (badDataUrls.length) {
+    msg.innerHTML = '<div class="msg msg-error">❌ مينفعش تحط الصورة كنص — لازم ترفعها لـ Supabase Storage.<br>الحقول دي فيها data URL: <b>' + escapeHtml(badDataUrls.join('، ')) + '</b><br>اضغط زر "📤 رفع صورة من جهازك" تحت كل حقل، أو الصق رابط الصورة من الإنترنت.</div>';
+    return;
   }
   if (ent.key === 'news') {
     ['seoTitle', 'metaDescription', 'slug', 'ogImage', 'metaKeywords'].forEach(k => {
