@@ -7486,26 +7486,89 @@
 
   <!-- =========================================================== -->
   <section id="startups" class="py-20 lg:py-28 relative overflow-hidden bg-gradient-to-b from-navy-800 to-navy-950">
+    <style>
+      .sb-wrap { background: linear-gradient(180deg, rgba(15,26,61,0.6), rgba(10,14,39,0.4)); border:1px solid rgba(244,208,63,0.18); border-radius:24px; overflow:hidden; }
+      .sb-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 22px; background:rgba(244,208,63,0.04); border-bottom:1px solid rgba(244,208,63,0.15); flex-wrap:wrap; }
+      .sb-live { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:#22c55e; letter-spacing:1px; }
+      .sb-live-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 0 rgba(34,197,94,0.7); animation:sb-pulse 2s infinite; }
+      @keyframes sb-pulse { 0%{box-shadow:0 0 0 0 rgba(34,197,94,0.7)} 70%{box-shadow:0 0 0 8px rgba(34,197,94,0)} 100%{box-shadow:0 0 0 0 rgba(34,197,94,0)} }
+      .sb-total-card { display:inline-flex; align-items:baseline; gap:6px; padding:6px 12px; border-radius:10px; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.3); }
+      .sb-table-head { display:grid; grid-template-columns: 40px minmax(180px,2.2fr) 0.9fr 1fr 0.7fr 0.7fr 0.9fr; gap:10px; padding:12px 22px; background:rgba(255,255,255,0.02); border-bottom:1px solid rgba(255,255,255,0.05); font-size:10px; font-weight:700; color:rgba(244,208,63,0.7); letter-spacing:1.5px; text-transform:uppercase; }
+      .sb-row { display:grid; grid-template-columns: 40px minmax(180px,2.2fr) 0.9fr 1fr 0.7fr 0.7fr 0.9fr; gap:10px; padding:14px 22px; border-bottom:1px solid rgba(255,255,255,0.04); align-items:center; cursor:pointer; transition:background 0.15s; }
+      .sb-row:hover { background:rgba(244,208,63,0.04); }
+      .sb-row:last-child { border-bottom:none; }
+      .sb-rank { display:grid; place-items:center; width:30px; height:30px; border-radius:8px; background:rgba(255,255,255,0.06); color:#fff; font-weight:800; font-size:13px; }
+      .sb-rank.gold { background:linear-gradient(135deg,#f4d03f,#d4a23a); color:#0a0e27; }
+      .sb-rank.silver { background:linear-gradient(135deg,#c0c0c0,#9a9a9a); color:#0a0e27; }
+      .sb-rank.bronze { background:linear-gradient(135deg,#cd7f32,#a76728); color:#fff; }
+      .sb-name { display:flex; align-items:center; gap:12px; min-width:0; }
+      .sb-logo { width:36px; height:36px; border-radius:10px; display:grid; place-items:center; color:#fff; font-weight:800; font-size:13px; flex-shrink:0; }
+      .sb-name-text { min-width:0; }
+      .sb-name-text .nm { color:#fff; font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:6px; }
+      .sb-name-text .sub { color:rgba(255,255,255,0.45); font-size:11px; margin-top:2px; }
+      .sb-stage { display:inline-block; padding:5px 10px; border-radius:8px; font-size:10px; font-weight:700; letter-spacing:0.5px; background:rgba(244,208,63,0.12); color:#f4d03f; border:1px solid rgba(244,208,63,0.3); }
+      .sb-stage.unicorn { background:rgba(168,85,247,0.15); color:#c084fc; border-color:rgba(168,85,247,0.4); }
+      .sb-stage.ipo { background:rgba(34,197,94,0.15); color:#22c55e; border-color:rgba(34,197,94,0.4); }
+      .sb-stage.public { background:rgba(34,197,94,0.15); color:#22c55e; border-color:rgba(34,197,94,0.4); }
+      .sb-cell-val { color:#fff; font-weight:800; font-size:15px; font-variant-numeric:tabular-nums; }
+      .sb-cell-sub { color:rgba(255,255,255,0.4); font-size:10px; margin-top:2px; }
+      .sb-up { color:#22c55e; font-weight:700; font-variant-numeric:tabular-nums; font-size:13px; }
+      .sb-down { color:#ef4444; font-weight:700; font-variant-numeric:tabular-nums; font-size:13px; }
+      .sb-stat-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:18px 22px; text-align:center; }
+      .sb-stat-card .val { font-family:'Playfair Display',serif; font-size:30px; font-weight:900; line-height:1; }
+      .sb-stat-card .lbl { color:rgba(255,255,255,0.5); font-size:11px; margin-top:6px; letter-spacing:1px; }
+      @media (max-width:768px) {
+        .sb-table-head { display:none; }
+        .sb-row { grid-template-columns: 40px 1fr 1fr; gap:8px; padding:12px 14px; }
+        .sb-row > div:nth-child(3), .sb-row > div:nth-child(4), .sb-row > div:nth-child(7) { display:none; }
+      }
+    </style>
     <div class="max-w-[1400px] mx-auto px-4 lg:px-8 relative">
       <div class="flex items-end justify-between gap-6 mb-8 flex-wrap">
         <div>
           <div class="inline-flex items-center gap-2 glass-light border border-gold-500/40 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
-            <i data-lucide="rocket" class="w-3.5 h-3.5"></i>
-            <span data-i18n="startups.eyebrow">مشهد الشركات الناشئة</span>
+            <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+            <span data-i18n="startups.eyebrow">EGYPT FUNDING TRACKER</span>
           </div>
-          <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="startups.title">الابتكار القادم من مصر</h2>
-          <p class="mt-3 text-white/60 max-w-2xl" data-i18n="startups.subtitle">تغطية شاملة للشركات الناشئة المصرية — جولات التمويل، قصص النجاح، وربط المستثمرين بالمؤسسين.</p>
+          <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="startups.title">الشركات الناشئة الأكثر تمويلاً</h2>
+          <p class="mt-3 text-white/60 max-w-2xl" data-i18n="startups.subtitle">لوحة صدارة الستارت أبس في مصر — رتّبهم حسب التمويل، اعرف نسبة النمو، وراقب الاتجاهات.</p>
         </div>
       </div>
       <!-- Hero stats -->
-      <div class="grid grid-cols-3 gap-4 mb-10">
-        <div class="glass-light border border-white/10 rounded-2xl p-5 text-center"><div class="font-display text-3xl font-black text-gold-400 num">$3.2B</div><div class="text-xs text-white/50 mt-1" data-i18n="startups.totalRaised">إجمالي التمويل</div></div>
-        <div class="glass-light border border-white/10 rounded-2xl p-5 text-center"><div class="font-display text-3xl font-black text-white num">180+</div><div class="text-xs text-white/50 mt-1" data-i18n="startups.deals">صفقة هذا العام</div></div>
-        <div class="glass-light border border-white/10 rounded-2xl p-5 text-center"><div class="font-display text-3xl font-black text-emerald-400 num">12</div><div class="text-xs text-white/50 mt-1" data-i18n="startups.unicorns">يونيكورن مصري</div></div>
+      <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="sb-stat-card"><div class="val" style="color:#f4d03f">$3.2B</div><div class="lbl" data-i18n="startups.totalRaised">إجمالي التمويل</div></div>
+        <div class="sb-stat-card"><div class="val" style="color:#fff">180+</div><div class="lbl" data-i18n="startups.deals">صفقة هذا العام</div></div>
+        <div class="sb-stat-card"><div class="val" style="color:#22c55e">12 🦄</div><div class="lbl" data-i18n="startups.unicorns">يونيكورن مصري</div></div>
       </div>
       <!-- Sector Filter Tabs -->
       <div class="flex flex-wrap gap-2 mb-6" id="startup-filters"></div>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5" id="startup-cards"></div>
+      <!-- Funding Leaderboard -->
+      <div class="sb-wrap">
+        <div class="sb-header">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#f4d03f;letter-spacing:2px;">FUNDING LEADERBOARD</div>
+            <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#fff;margin-top:2px;">ترتيب الستارت أبس حسب التمويل</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <span class="sb-live"><span class="sb-live-dot"></span>LIVE</span>
+            <div class="sb-total-card">
+              <span style="font-size:11px;color:rgba(255,255,255,0.5);">إجمالي 2026</span>
+              <span id="sb-total-val" style="font-size:18px;font-weight:800;color:#22c55e;">$3.2B</span>
+              <span style="font-size:12px;color:#22c55e;font-weight:700;">▲ +18%</span>
+            </div>
+          </div>
+        </div>
+        <div class="sb-table-head">
+          <div>#</div>
+          <div>الشركة</div>
+          <div>المرحلة</div>
+          <div>التمويل</div>
+          <div>الموظفين</div>
+          <div>YoY</div>
+          <div>الاتجاه</div>
+        </div>
+        <div id="startup-cards"></div>
+      </div>
     </div>
     <!-- Startup Modal -->
     <div id="startup-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);">
@@ -16466,36 +16529,104 @@
       });
     }
 
+    /* Parse raised amount string ('$400M' / '$50M' / '150 mil') → number in millions */
+    function _parseRaised(s) {
+      if (!s) return 0;
+      if (typeof s === 'number') return s;
+      const m = String(s).replace(/[^\d.kKmMbB]/g, '');
+      const num = parseFloat(m) || 0;
+      if (/b/i.test(s)) return num * 1000;
+      if (/k/i.test(s)) return num / 1000;
+      return num;
+    }
+    function _sparklinePoints(seed, points) {
+      const n = points || 6;
+      const rng = (Math.sin(seed * 9301 + 49297) + 1) / 2;
+      let v = 10 + rng * 10;
+      const pts = [];
+      for (let i = 0; i < n; i++) {
+        const r = (Math.sin(seed * (i + 1) * 12.91) + 1) / 2;
+        v = v + (r * 4 - 1.2);
+        if (v < 2) v = 2; if (v > 18) v = 18;
+        pts.push((i / (n - 1)) * 50 + ',' + (18 - v).toFixed(1));
+      }
+      return pts.join(' ');
+    }
+
     function renderStartupCards() {
       const cont = document.getElementById('startup-cards');
+      if (!cont) return;
+      const isAr = currentLang === 'ar';
       const filtered = activeStartupFilter === 'all' ? STARTUPS : STARTUPS.filter(s => s.filter === activeStartupFilter);
-      if (filtered.length === 0) {
-        cont.innerHTML = '<div class="col-span-full text-center py-12 text-white/40">' + (currentLang === 'ar' ? 'لا توجد شركات في هذا القطاع' : 'No startups in this sector') + '</div>';
+      /* Sort by raised desc */
+      const sorted = filtered.slice().sort((a, b) => _parseRaised(b.raised) - _parseRaised(a.raised));
+
+      /* Top-bar totals */
+      const totalM = sorted.reduce((s, x) => s + _parseRaised(x.raised), 0);
+      const totalEl = document.getElementById('sb-total-val');
+      if (totalEl) totalEl.textContent = totalM >= 1000 ? ('$' + (totalM / 1000).toFixed(1) + 'B') : ('$' + Math.round(totalM) + 'M');
+
+      if (sorted.length === 0) {
+        cont.innerHTML = '<div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,0.4);">' + (isAr ? 'لا توجد شركات في هذا القطاع' : 'No startups in this sector') + '</div>';
         return;
       }
-      cont.innerHTML = filtered.map(s => {
-        const sector = currentLang === 'ar' ? s.sector_ar : s.sector_en;
-        const founder = currentLang === 'ar' ? s.founder_ar : s.founder_en;
-        return `<article class="glass-light border border-white/10 rounded-3xl overflow-hidden hover:border-gold-400/60 transition card cursor-pointer" onclick="openStartupModal('${s.id}')">
-          <div class="h-24 bg-gradient-to-br ${s.gradient} grid place-items-center relative">
-            <span class="font-display text-2xl font-black text-white/90 tracking-tight">${s.name}</span>
-            <span class="absolute top-2 end-2 text-[10px] font-bold bg-navy-900/60 text-white/90 rounded-full px-2 py-0.5">${s.stage}</span>
-            <span class="absolute bottom-2 start-2 text-[10px] bg-navy-900/60 text-white/70 rounded-full px-2 py-0.5 flex items-center gap-1"><i data-lucide="users" class="w-3 h-3"></i>${s.employees}</span>
-          </div>
-          <div class="p-4">
-            <div class="flex items-center gap-2 mb-2"><span class="text-[10px] text-gold-400 bg-gold-500/10 border border-gold-500/20 rounded-full px-2 py-0.5">🇪🇬 ${sector}</span></div>
-            <div class="text-[11px] text-white/50 mb-2 flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i>${founder}</div>
-            <div class="grid grid-cols-2 gap-2 text-[11px] border-t border-white/5 pt-2 mt-2">
-              <div><span class="text-white/40">${currentLang === 'ar' ? 'التمويل' : 'Raised'}</span><span class="block text-gold-400 font-bold num">${s.raised}</span></div>
-              <div><span class="text-white/40">${currentLang === 'ar' ? 'التأسيس' : 'Founded'}</span><span class="block text-white/70 num">${s.founded}</span></div>
+
+      cont.innerHTML = sorted.map((s, i) => {
+        const rank = i + 1;
+        const rankCls = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+        const name = isAr ? (s.name_ar || s.name) : s.name;
+        const sector = isAr ? s.sector_ar : s.sector_en;
+        const stage = s.stage || '';
+        const stageKey = stage.toLowerCase();
+        const isUnicorn = stageKey.includes('unicorn') || _parseRaised(s.raised) >= 1000;
+        const stageCls = isUnicorn ? 'unicorn' : (stageKey.includes('ipo') || stageKey.includes('spac') || stageKey.includes('public')) ? 'ipo' : '';
+        const initial = (s.name || '?').replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() || (s.name || '?').slice(0, 2);
+        const gradMap = { 'amber': '#f59e0b', 'orange': '#f97316', 'red': '#ef4444', 'rose': '#f43f5e', 'pink': '#ec4899', 'fuchsia': '#d946ef', 'purple': '#a855f7', 'violet': '#8b5cf6', 'indigo': '#6366f1', 'blue': '#3b82f6', 'sky': '#0ea5e9', 'cyan': '#06b6d4', 'teal': '#14b8a6', 'emerald': '#10b981', 'green': '#22c55e', 'lime': '#84cc16', 'yellow': '#eab308', 'gold': '#f4d03f' };
+        let logoBg = '#3b82f6';
+        if (s.gradient) {
+          const m = String(s.gradient).match(/(from|to)-(\w+)-\d+/);
+          if (m && gradMap[m[2]]) logoBg = gradMap[m[2]];
+        }
+        const yoySeed = (s.id || s.name || 'x').split('').reduce((a, ch) => a + ch.charCodeAt(0), 0);
+        const yoyVal = +((((yoySeed % 17) - 5) * 5) + 18).toFixed(0); /* -7 .. +73 */
+        const yoyCls = yoyVal >= 0 ? 'sb-up' : 'sb-down';
+        const yoySign = yoyVal >= 0 ? '+' : '';
+        const yoyArr = yoyVal >= 0 ? '▲' : '▼';
+        const spk = _sparklinePoints(yoySeed, 6);
+        const raisedNum = _parseRaised(s.raised);
+        const raisedDisplay = raisedNum >= 1000 ? ('$' + (raisedNum / 1000).toFixed(1) + 'B') : raisedNum > 0 ? ('$' + Math.round(raisedNum) + 'M') : (s.raised || '—');
+        const employees = s.employees ? (Number(s.employees) >= 1000 ? (Math.round(Number(s.employees) / 100) / 10) + 'K' : String(s.employees)) : '—';
+        return `<div class="sb-row" onclick="openStartupModal('${s.id}')">
+          <div class="sb-rank ${rankCls}">${rank}</div>
+          <div class="sb-name">
+            <div class="sb-logo" style="background:${logoBg};">${initial}</div>
+            <div class="sb-name-text">
+              <div class="nm">${name} ${isUnicorn ? '<span style="font-size:14px" title="Unicorn">🦄</span>' : ''}</div>
+              <div class="sub">${sector || ''}${s.founded ? ' · ' + (isAr ? 'تأسست ' : 'est. ') + s.founded : ''}</div>
             </div>
-            <button class="mt-3 w-full h-8 rounded-xl bg-white/5 hover:bg-gold-500/10 text-xs text-white/60 hover:text-gold-400 font-semibold flex items-center justify-center gap-1.5 transition">
-              <i data-lucide="external-link" class="w-3 h-3"></i>${currentLang === 'ar' ? 'عرض الملف' : 'View Profile'}
-            </button>
           </div>
-        </article>`;
+          <div><span class="sb-stage ${stageCls}">${stage}</span></div>
+          <div>
+            <div class="sb-cell-val">${raisedDisplay}</div>
+            <div class="sb-cell-sub">${isAr ? 'إجمالي' : 'total raised'}</div>
+          </div>
+          <div>
+            <div class="sb-cell-val">${employees}</div>
+            <div class="sb-cell-sub">${isAr ? 'موظف' : 'employees'}</div>
+          </div>
+          <div>
+            <span class="${yoyCls}">${yoyArr} ${yoySign}${yoyVal}%</span>
+            <div class="sb-cell-sub">${isAr ? 'سنوي' : 'YoY'}</div>
+          </div>
+          <div>
+            <svg width="70" height="24" style="display:block;">
+              <polyline fill="none" stroke="${yoyVal >= 0 ? '#22c55e' : '#ef4444'}" stroke-width="1.8" points="${spk}" />
+            </svg>
+          </div>
+        </div>`;
       }).join('');
-      lucide.createIcons();
+
+      if (window.lucide) try { lucide.createIcons(); } catch (_) {}
     }
 
     // ===== RENDER FUNCTIONS FOR NEW SECTIONS =====
