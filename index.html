@@ -12503,6 +12503,86 @@
     function renderClub(){ /* stub */ }
     function renderMore(){ /* stub */ }
     function renderAibot(){ /* stub */ }
+    /* ═════════════════════════════════════════════════════════════
+       COMPETITOR INTEL — Live monitoring of MENA competitors.
+       Seed data is shown by default. The renderCompetitorFromAPI hook
+       (see below) overwrites window.COMPETITORS when admin adds entries
+       via /admin → content-blocks?section=competitor-intel.
+       ═════════════════════════════════════════════════════════════ */
+    let COMPETITORS = [
+      { id:'cib', name_ar:'البنك التجاري الدولي', name_en:'CIB Egypt', sector_ar:'بنوك', sector_en:'Banking', logo:'CIB', cc:'#10b981', score:94, scoreDir:'up', revenue:'3.2B', growth:'+21%', employees:'7,500', lastMove:'5h ago' },
+      { id:'tmg', name_ar:'طلعت مصطفى', name_en:'TMG Holding', sector_ar:'عقارات', sector_en:'Real Estate', logo:'TMG', cc:'#f4d03f', score:92, scoreDir:'up', revenue:'2.1B', growth:'+35%', employees:'5,400', lastMove:'2h ago' },
+      { id:'vodafone', name_ar:'فودافون مصر', name_en:'Vodafone Egypt', sector_ar:'اتصالات', sector_en:'Telecom', logo:'VOD', cc:'#ef4444', score:89, scoreDir:'down', revenue:'3.8B', growth:'+15%', employees:'6,500', lastMove:'1d ago' },
+      { id:'orascom', name_ar:'أوراسكوم للإنشاءات', name_en:'Orascom Construction', sector_ar:'إنشاءات', sector_en:'Construction', logo:'OC', cc:'#f97316', score:90, scoreDir:'up', revenue:'5.2B', growth:'+12%', employees:'12,000', lastMove:'3h ago' },
+      { id:'fawry', name_ar:'فوري', name_en:'Fawry', sector_ar:'فنتك', sector_en:'FinTech', logo:'FAW', cc:'#a78bfa', score:91, scoreDir:'up', revenue:'0.9B', growth:'+42%', employees:'2,200', lastMove:'30m ago' },
+      { id:'edita', name_ar:'إيديتا', name_en:'Edita Food Industries', sector_ar:'أغذية', sector_en:'FMCG', logo:'EDF', cc:'#60a5fa', score:85, scoreDir:'up', revenue:'1.2B', growth:'+24%', employees:'3,800', lastMove:'6h ago' }
+    ];
+    let CI_FEED = [
+      { id:'f1', kind:'HIRE',  cc:'#34d399', logo:'CIB', who_ar:'البنك التجاري الدولي', who_en:'CIB Egypt', txt_ar:'عيّن أحمد عبد الفتاح في منصب رئيس الخدمات المصرفية الإلكترونية',                     txt_en:'Appointed Ahmed Abdelfattah as Head of Digital Banking',                            time:'منذ 30 دقيقة', time_en:'30m ago' },
+      { id:'f2', kind:'FUND',  cc:'#a78bfa', logo:'FAW', who_ar:'فوري للمدفوعات',          who_en:'Fawry',         txt_ar:'أعلنت عن جولة تمويلية بقيمة 120 مليون دولار لتوسيع شبكة المدفوعات إقليمياً',     txt_en:'Closed a $120M funding round to expand its payments network across MENA',         time:'منذ ساعتين',  time_en:'2h ago' },
+      { id:'f3', kind:'DEAL',  cc:'#f4d03f', logo:'TMG', who_ar:'مجموعة طلعت مصطفى',       who_en:'TMG Holding',    txt_ar:'وقّعت صفقة شراء أرض بمساحة 1,200 فدان شمال العاصمة الإدارية',                    txt_en:'Signed a 1,200-acre land acquisition north of the New Capital',                    time:'منذ 3 ساعات', time_en:'3h ago' },
+      { id:'f4', kind:'NEWS',  cc:'#60a5fa', logo:'VOD', who_ar:'فودافون مصر',              who_en:'Vodafone Egypt', txt_ar:'أطلقت خدمة 5G لأول مرة في 8 محافظات بمصر مع شركاء جدد للبنية التحتية',          txt_en:'Launched commercial 5G across 8 governorates with new infrastructure partners',    time:'منذ 5 ساعات', time_en:'5h ago' },
+      { id:'f5', kind:'DEAL',  cc:'#f4d03f', logo:'OC',  who_ar:'أوراسكوم للإنشاءات',      who_en:'Orascom Construction', txt_ar:'فازت بعقد بنية تحتية بقيمة 480 مليون دولار في السعودية ضمن مشروع نيوم',  txt_en:'Won a $480M infrastructure contract in Saudi Arabia as part of NEOM',              time:'منذ 6 ساعات', time_en:'6h ago' },
+      { id:'f6', kind:'HIRE',  cc:'#34d399', logo:'EDF', who_ar:'إيديتا للصناعات الغذائية', who_en:'Edita Food Industries', txt_ar:'تعيّن مايا حمدي كأول CMO امرأة في تاريخ الشركة',                                txt_en:'Appointed Maya Hamdy as the first female CMO in company history',                   time:'منذ 8 ساعات', time_en:'8h ago' },
+      { id:'f7', kind:'NEWS',  cc:'#60a5fa', logo:'CIB', who_ar:'البنك التجاري الدولي',     who_en:'CIB Egypt',     txt_ar:'حصل على ترخيص جديد من البنك المركزي لإطلاق خدمات الأصول الرقمية',                txt_en:'Received CBE license to launch digital asset services',                            time:'منذ يوم',      time_en:'1d ago' },
+      { id:'f8', kind:'FUND',  cc:'#a78bfa', logo:'TMG', who_ar:'مجموعة طلعت مصطفى',       who_en:'TMG Holding',    txt_ar:'أصدرت سندات بقيمة 5 مليار جنيه لتمويل المشاريع المستقبلية',                       txt_en:'Issued EGP 5 billion bonds to fund future projects',                                time:'منذ يومين',   time_en:'2d ago' }
+    ];
+
+    function renderCompetitorIntel() {
+      const isAr = (typeof currentLang !== 'undefined') ? (currentLang === 'ar') : true;
+      const grid = document.getElementById('ci-grid');
+      const feed = document.getElementById('ci-feed');
+      if (grid) {
+        grid.innerHTML = (COMPETITORS || []).map(c => {
+          const name = isAr ? (c.name_ar || c.name_en) : (c.name_en || c.name_ar);
+          const sector = isAr ? (c.sector_ar || c.sector_en) : (c.sector_en || c.sector_ar);
+          const logoTxt = c.logo || String(name || '?').replace(/[^a-zA-Z]/g,'').slice(0,3).toUpperCase();
+          const dirCls = (c.scoreDir === 'down') ? 'down' : 'up';
+          const dirArr = (c.scoreDir === 'down') ? '▼' : '▲';
+          const lastMove = isAr ? (c.lastMove || '—') : (c.lastMove || '—');
+          return '<div class="ci-card" style="--cc:' + (c.cc || '#F4D03F') + ';">'
+            + '<div class="ci-card-head">'
+            +   '<div class="ci-logo">' + logoTxt + '</div>'
+            +   '<div><div class="ci-name">' + name + '</div><div class="ci-sector">' + sector + '</div></div>'
+            +   '<span class="ci-score-pill ' + dirCls + '">' + dirArr + ' ' + (c.score || 0) + '</span>'
+            + '</div>'
+            + '<div class="ci-metrics">'
+            +   '<div class="ci-metric"><div class="ci-metric-val">' + (c.revenue || '—') + '</div><div class="ci-metric-lbl">' + (isAr ? 'إيراد' : 'Revenue') + '</div></div>'
+            +   '<div class="ci-metric"><div class="ci-metric-val">' + (c.growth || '—') + '</div><div class="ci-metric-lbl">' + (isAr ? 'نمو' : 'Growth') + '</div></div>'
+            +   '<div class="ci-metric"><div class="ci-metric-val">' + (c.employees || '—') + '</div><div class="ci-metric-lbl">' + (isAr ? 'موظفين' : 'Staff') + '</div></div>'
+            + '</div>'
+            + '<div class="ci-last"><span class="ci-last-dot"></span>' + (isAr ? 'آخر تحرك' : 'Last move') + ' · ' + lastMove + '</div>'
+            + '</div>';
+        }).join('');
+      }
+      if (feed) {
+        const tagClsMap = { HIRE:'ci-tag-hire', DEAL:'ci-tag-deal', NEWS:'ci-tag-news', FUND:'ci-tag-fund' };
+        const tagLblAr = { HIRE:'تعيين', DEAL:'صفقة', NEWS:'خبر', FUND:'تمويل' };
+        feed.innerHTML = (CI_FEED || []).map(it => {
+          const txt = isAr ? (it.txt_ar || it.txt_en) : (it.txt_en || it.txt_ar);
+          const who = isAr ? (it.who_ar || it.who_en) : (it.who_en || it.who_ar);
+          const time = isAr ? (it.time || it.time_en) : (it.time_en || it.time);
+          const tagLabel = isAr ? (tagLblAr[it.kind] || it.kind) : it.kind;
+          return '<div class="ci-feed-item" style="--cc:' + (it.cc || '#F4D03F') + ';">'
+            + '<span class="ci-feed-tag ' + (tagClsMap[it.kind] || 'ci-tag-news') + '">' + tagLabel + '</span>'
+            + '<div class="ci-feed-logo">' + (it.logo || 'XX') + '</div>'
+            + '<div><div class="ci-feed-text"><strong>' + who + '</strong> — ' + txt + '</div><div class="ci-feed-text-meta">' + time + '</div></div>'
+            + '<i data-lucide="chevron-right" class="w-4 h-4 text-white/30"></i>'
+            + '</div>';
+        }).join('');
+      }
+      if (window.lucide) try { lucide.createIcons(); } catch (_) {}
+      try { (window.LAZY_RENDERED = window.LAZY_RENDERED || {}).renderCompetitorIntel = true; } catch (_) {}
+    }
+    window.renderCompetitorIntel = renderCompetitorIntel;
+
+    /* Initial render on load + re-render on lang switch (handled by applyLang loop) */
+    (function bootCI() {
+      const start = () => { try { renderCompetitorIntel(); } catch (_) {} };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+      else setTimeout(start, 200);
+    })();
+
     function renderAskAction(){ /* stub */ }
     function renderFooter(){ /* stub */ }
     function renderBriefing(){ /* stub */ }
