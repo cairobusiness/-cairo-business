@@ -16888,6 +16888,34 @@
     }
 
     // ===== RENDER FUNCTIONS FOR NEW SECTIONS =====
+    /* Convert Arabic financial value strings to English for the EN UI.
+       e.g. "29.23 مليار درهم" → "AED 29.23B" */
+    function translateArabicValue(s) {
+      if (!s) return s;
+      const str = String(s);
+      /* If already mostly English, leave it alone */
+      if (!/[؀-ۿ]/.test(str)) return str;
+      const unitsMap = [
+        [/مليار/g, 'B'], [/مليون/g, 'M'], [/ألف/g, 'K'],
+        [/درهم(?:\s*إماراتي)?/g, 'AED'],
+        [/جنيه(?:\s*مصري)?/g, 'EGP'],
+        [/ريال(?:\s*سعودي)?/g, 'SAR'],
+        [/دينار(?:\s*كويتي)?/g, 'KWD'],
+        [/ريال(?:\s*قطري)?/g, 'QAR'],
+        [/دولار/g, 'USD'],
+        [/يورو/g, 'EUR'],
+        [/جنيه(?:\s*استرليني)?/g, 'GBP']
+      ];
+      let out = str;
+      for (const [re, en] of unitsMap) out = out.replace(re, en);
+      /* Strip any remaining Arabic letters + extra whitespace */
+      out = out.replace(/[؀-ۿ]/g, '').replace(/\s+/g, ' ').trim();
+      /* Move currency to the front if number comes first (Arabic → English convention) */
+      const m = out.match(/^([\d.,]+\s*[BMK]?)\s+([A-Z]{3})$/);
+      if (m) return m[2] + ' ' + m[1];
+      return out;
+    }
+
     function renderMorningBriefing() {
       const wrap = document.getElementById('briefing-items');
       if (!wrap) return;
@@ -16918,7 +16946,11 @@
       const dealScore = document.getElementById('briefing-deal-score');
       const dealScoreFill = document.getElementById('briefing-deal-score-fill');
       if (dealTitle) dealTitle.textContent = isAr ? (deal.name_ar || '—') : (deal.name_en || deal.name_ar || '—');
-      if (dealValue) dealValue.textContent = deal.value || '—';
+      if (dealValue) {
+        const dealValRaw = (isAr ? (deal.value_ar || deal.value) : (deal.value_en || deal.value)) || '—';
+        dealValue.textContent = isAr ? dealValRaw : translateArabicValue(dealValRaw);
+        dealValue.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+      }
       if (dealSector) dealSector.textContent = isAr ? (deal.sector_ar || deal.sector_en || '—') : (deal.sector_en || deal.sector_ar || '—');
       if (dealScore) dealScore.textContent = (deal.score != null) ? (deal.score + '/100') : '—';
       if (dealScoreFill) dealScoreFill.style.width = (deal.score != null ? Math.max(0, Math.min(100, deal.score)) : 0) + '%';
