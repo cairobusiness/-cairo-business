@@ -9595,7 +9595,7 @@
       <div id="woi-hero" class="reveal" style="display:none; margin-bottom:48px;">
         <div style="display:grid; grid-template-columns:1fr 1.3fr; gap:32px; align-items:stretch;">
           <div style="position:relative;">
-            <div id="woi-hero-img" style="background:linear-gradient(135deg,#2c1810,#4a2c1a); aspect-ratio:3/4; border-radius:8px; position:relative; overflow:hidden; background-size:cover; background-position:center;">
+            <div id="woi-hero-img" style="background-color:#1a1027; background-image:linear-gradient(135deg,#2c1810,#4a2c1a); aspect-ratio:3/4; border-radius:8px; position:relative; overflow:hidden; background-size:contain; background-position:center; background-repeat:no-repeat;">
               <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(to top, rgba(0,0,0,0.85), transparent); padding:24px 20px 16px;">
                 <div style="font-size:10px; letter-spacing:4px; color:#d4af37; font-weight:700; margin-bottom:6px;">FEATURED · #01</div>
                 <h3 id="woi-hero-name" style="font-family:'Playfair Display', serif; color:#fff; font-size:26px; font-weight:900; line-height:1.1;">—</h3>
@@ -9647,7 +9647,7 @@
       <div style="min-height:100%; display:flex; align-items:flex-start; justify-content:center; padding:40px 20px;" onclick="if(event.target===this)closeWoiModal()">
       <div style="background:linear-gradient(155deg,#0f1a3d,#0a0e27); border:1px solid rgba(244,208,63,0.3); border-radius:24px; max-width:860px; width:100%; position:relative; overflow:hidden;">
         <button onclick="closeWoiModal()" style="position:absolute; top:18px; inset-inline-end:18px; z-index:2; width:38px; height:38px; border-radius:50%; background:rgba(10,14,39,0.8); border:1px solid rgba(255,255,255,0.15); color:#fff; cursor:pointer; font-size:22px;">×</button>
-        <div id="woi-modal-img" style="height:280px; background:#1a2b4d center/cover no-repeat; background-image:linear-gradient(135deg,#d4af37,#8b6914);"></div>
+        <div id="woi-modal-img" style="height:380px; background-color:#0f0a1f; background-position:center; background-size:contain; background-repeat:no-repeat; background-image:linear-gradient(135deg,#d4af37,#8b6914);"></div>
         <div style="padding:28px 32px; color:#fff;">
           <div style="display:flex; gap:12px; align-items:center; margin-bottom:14px; flex-wrap:wrap;">
             <span id="woi-modal-rank" style="background:rgba(244,208,63,0.15); color:#F4D03F; border:1px solid rgba(244,208,63,0.4); padding:4px 12px; border-radius:999px; font-size:11px; font-weight:700;">#1</span>
@@ -13261,9 +13261,13 @@
 
       const heroImg = document.getElementById('woi-hero-img');
       if (item.imageUrl) {
+        /* Use contain so the full portrait shows (no head/feet cropping).
+           A solid dark backdrop fills any letterbox space. */
         heroImg.style.backgroundImage = 'url("' + item.imageUrl.replace(/"/g, '\\"') + '")';
-        heroImg.style.backgroundSize = 'cover';
+        heroImg.style.backgroundColor = '#0f0a1f';
+        heroImg.style.backgroundSize = 'contain';
         heroImg.style.backgroundPosition = 'center';
+        heroImg.style.backgroundRepeat = 'no-repeat';
       }
       document.getElementById('woi-hero-readmore').onclick = function () { openWoiModal(item.id); };
       document.getElementById('woi-hero').style.display = 'block';
@@ -13325,7 +13329,7 @@
           if (imgDiv) {
             imgDiv.style.backgroundImage = 'url("' + it.imageUrl.replace(/"/g, '\\"') + '")';
             imgDiv.style.backgroundSize = 'cover';
-            imgDiv.style.backgroundPosition = 'center';
+            imgDiv.style.backgroundPosition = 'center 18%'; /* keep faces visible */
             imgDiv.textContent = ''; /* hide initials when image present */
           }
         }
@@ -13365,6 +13369,8 @@
           const av = el.querySelector('.woi-card-avatar');
           if (av) {
             av.style.backgroundImage = 'url("' + it.imageUrl.replace(/"/g, '\\"') + '")';
+            av.style.backgroundPosition = 'center 18%';
+            av.style.backgroundSize = 'cover';
             av.textContent = '';
           }
         }
@@ -13441,15 +13447,15 @@
     }
     window.closeWoiModal = closeWoiModal;
 
-    /* Lazy-load when the section is near-visible */
+    /* Eager-prefetch: start loading immediately after page boot,
+       so the section is ready by the time the user scrolls to it. */
     (function () {
-      if (!('IntersectionObserver' in window)) { loadWomenOfImpact(); return; }
-      const sec = document.getElementById('women-of-impact');
-      if (!sec) return;
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) { loadWomenOfImpact(); io.disconnect(); } });
-      }, { rootMargin: '200px 0px' });
-      io.observe(sec);
+      const start = () => { try { loadWomenOfImpact(); } catch (_) {} };
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(start, 300));
+      } else {
+        setTimeout(start, 300);
+      }
     })();
 
     /* ───────── Comments section for news articles ───────── */
