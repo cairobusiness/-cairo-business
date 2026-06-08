@@ -15992,25 +15992,41 @@
         const j = await r.json();
         const arr = (j.data || j.items || []);
         if (!arr.length) return;
-        STARTUPS = arr.map(s => ({
-          id: s.id,
-          name_ar: s.nameAr || '',
-          name_en: s.nameEn || '',
-          sector: s.sector || 'tech',
-          sector_ar: s.sector || '',
-          sector_en: s.sector || '',
-          stage_ar: s.stage || '',
-          stage_en: s.stage || '',
-          raised: s.raised ? '$' + s.raised + 'M' : '',
-          raisedNum: s.raised || 0,
-          founded: s.founded || 2020,
-          employees: s.employees || 0,
-          desc_ar: s.description || '',
-          desc_en: s.description || '',
-          investors: (s.investors || '').split(',').map(x => x.trim()).filter(Boolean),
-          milestones_ar: (s.milestones || '').split(',').map(x => x.trim()).filter(Boolean),
-          milestones_en: (s.milestones || '').split(',').map(x => x.trim()).filter(Boolean),
-        }));
+        STARTUPS = arr.map(s => {
+          /* Normalize raised: admin enters value in millions ($USD).
+             Auto-detect if user typed raw dollars instead and convert. */
+          const rawRaised = Number(s.raised) || 0;
+          const raisedM = rawRaised >= 10000 ? rawRaised / 1000000 : rawRaised; /* if >= $10K it's raw dollars */
+          const raisedDisplay = raisedM > 0
+            ? (raisedM >= 1000 ? '$' + (raisedM / 1000).toFixed(1) + 'B' : '$' + (raisedM % 1 === 0 ? raisedM : raisedM.toFixed(1)) + 'M')
+            : '';
+          const name = s.nameEn || s.nameAr || '—';
+          return {
+            id: s.id,
+            name: name,
+            name_ar: s.nameAr || name,
+            name_en: s.nameEn || name,
+            sector: s.sector || 'tech',
+            sector_ar: s.sector || '',
+            sector_en: s.sector || '',
+            stage: s.stage || '',
+            stage_ar: s.stage || '',
+            stage_en: s.stage || '',
+            raised: raisedDisplay,
+            raisedNum: raisedM,
+            founded: s.founded || 2020,
+            employees: s.employees || 0,
+            founder_ar: s.founder || '',
+            founder_en: s.founder || '',
+            filter: (s.sector || 'all').toLowerCase().replace(/\s+/g, ''),
+            gradient: 'from-cyan-400 to-blue-700',
+            desc_ar: s.description || '',
+            desc_en: s.description || '',
+            investors: (s.investors || '').split(',').map(x => x.trim()).filter(Boolean),
+            milestones_ar: (s.milestones || '').split(',').map(x => x.trim()).filter(Boolean),
+            milestones_en: (s.milestones || '').split(',').map(x => x.trim()).filter(Boolean),
+          };
+        });
         if (typeof renderStartups === 'function') renderStartups();
       } catch (_) { /* keep fallback */ }
     }
