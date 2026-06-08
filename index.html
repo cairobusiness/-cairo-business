@@ -16590,13 +16590,14 @@
       cont.innerHTML = sorted.map((s, i) => {
         const rank = i + 1;
         const rankCls = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
-        const name = isAr ? (s.name_ar || s.name) : s.name;
+        const name = isAr ? (s.name_ar || s.name_en || s.name || '—') : (s.name_en || s.name_ar || s.name || '—');
         const sector = isAr ? s.sector_ar : s.sector_en;
         const stage = s.stage || '';
         const stageKey = stage.toLowerCase();
         const isUnicorn = stageKey.includes('unicorn') || _parseRaised(s.raised) >= 1000;
         const stageCls = isUnicorn ? 'unicorn' : (stageKey.includes('ipo') || stageKey.includes('spac') || stageKey.includes('public')) ? 'ipo' : '';
-        const initial = (s.name || '?').replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() || (s.name || '?').slice(0, 2);
+        const initialSrc = s.name_en || s.name || s.name_ar || '?';
+        const initial = String(initialSrc).replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() || String(initialSrc).slice(0, 2);
         const gradMap = { 'amber': '#f59e0b', 'orange': '#f97316', 'red': '#ef4444', 'rose': '#f43f5e', 'pink': '#ec4899', 'fuchsia': '#d946ef', 'purple': '#a855f7', 'violet': '#8b5cf6', 'indigo': '#6366f1', 'blue': '#3b82f6', 'sky': '#0ea5e9', 'cyan': '#06b6d4', 'teal': '#14b8a6', 'emerald': '#10b981', 'green': '#22c55e', 'lime': '#84cc16', 'yellow': '#eab308', 'gold': '#f4d03f' };
         let logoBg = '#3b82f6';
         if (s.gradient) {
