@@ -3292,12 +3292,40 @@
         <span class="hidden md:inline num">24°C</span>
       </div>
       <div class="flex items-center gap-4 num">
-        <span class="flex items-center gap-1.5 text-white/70"><span data-i18n="utility.usd">USD/EGP</span><span id="util-usd-val" class="text-emerald-400 font-semibold">48.32</span><span id="util-usd-chg" class="text-emerald-400 text-[10px]">▲ 0.4%</span></span>
-        <span class="hidden sm:flex items-center gap-1.5 text-white/70"><span data-i18n="utility.egx">EGX30</span><span id="util-egx-val" class="text-red-400 font-semibold">31,842</span><span id="util-egx-chg" class="text-red-400 text-[10px]">▼ 0.8%</span></span>
+        <span class="flex items-center gap-1.5 text-white/70"><span data-i18n="utility.usd">USD/EGP</span><span id="util-usd-val" class="text-emerald-400 font-semibold">—</span><span id="util-usd-chg" class="text-emerald-400 text-[10px]"></span></span>
+        <span class="hidden sm:flex items-center gap-1.5 text-white/70"><span data-i18n="utility.egx">EGX30</span><span id="util-egx-val" class="text-red-400 font-semibold">—</span><span id="util-egx-chg" class="text-red-400 text-[10px]"></span></span>
         <span class="hidden md:flex items-center gap-1.5 text-white/70"><span data-i18n="utility.cbi">CB Index</span><span id="util-cbi-val" class="text-gold-400 font-semibold">142.7</span><span id="util-cbi-chg" class="text-emerald-400 text-[10px]">▲ 1.2%</span></span>
       </div>
     </div>
   </div>
+
+  <!-- Hydrate utility bar with last-known cached values BEFORE API call.
+       Prevents flash of stale hardcoded values. Cache is written after each
+       successful API sync (see pullHomepageDataFromApi step 4b). -->
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('cb_util_cache');
+        if (!raw) return;
+        var c = JSON.parse(raw);
+        if (!c || (Date.now() - (c.t || 0)) > 7 * 24 * 60 * 60 * 1000) return; /* drop cache > 7 days old */
+        if (c.usd) {
+          var uv = document.getElementById('util-usd-val'); var uc = document.getElementById('util-usd-chg');
+          if (uv) uv.textContent = c.usd.val;
+          if (uc) { uc.textContent = c.usd.chg; uc.className = (c.usd.up ? 'text-emerald-400' : 'text-red-400') + ' text-[10px]'; }
+          var uvp = document.getElementById('util-usd-val');
+          if (uvp) uvp.className = (c.usd.up ? 'text-emerald-400' : 'text-red-400') + ' font-semibold';
+        }
+        if (c.egx) {
+          var ev = document.getElementById('util-egx-val'); var ec = document.getElementById('util-egx-chg');
+          if (ev) ev.textContent = c.egx.val;
+          if (ec) { ec.textContent = c.egx.chg; ec.className = (c.egx.up ? 'text-emerald-400' : 'text-red-400') + ' text-[10px] num'; }
+          var evp = document.getElementById('util-egx-val');
+          if (evp) evp.className = (c.egx.up ? 'text-emerald-400' : 'text-red-400') + ' font-semibold num';
+        }
+      } catch (_) {}
+    })();
+  </script>
 
   <!-- =========================================================== -->
   <!--                            HEADER                            -->
@@ -18950,27 +18978,34 @@
         if (typeof renderTicker === 'function') try { renderTicker(); } catch(_){}
       }
 
-      // 4b) Sync to the top utility bar (USD/EGP, EGX30, CB Index)
+      // 4b) Sync to the top utility bar (USD/EGP, EGX30, CB Index) + persist to localStorage
       try {
+        const cache = {};
         const usdD = DASHBOARD_DATA && DASHBOARD_DATA.find(d => d.symbol === 'USD/EGP');
         if (usdD) {
           const el = document.getElementById('util-usd-val'); const ch = document.getElementById('util-usd-chg');
-          if (el) el.textContent = (typeof usdD.value === 'number' ? usdD.value.toFixed(2) : usdD.value);
-          if (ch) {
-            const cn = Number(usdD.change) || 0;
-            ch.textContent = (cn >= 0 ? '▲' : '▼') + ' ' + Math.abs(cn).toFixed(2) + '%';
-            ch.className = (cn >= 0 ? 'text-emerald-400' : 'text-red-400') + ' text-[10px]';
-          }
+          const valTxt = (typeof usdD.value === 'number' ? usdD.value.toFixed(2) : usdD.value);
+          const cn = Number(usdD.change) || 0;
+          const chgTxt = (cn >= 0 ? '▲' : '▼') + ' ' + Math.abs(cn).toFixed(2) + '%';
+          const chgCls = (cn >= 0 ? 'text-emerald-400' : 'text-red-400') + ' text-[10px]';
+          if (el) el.textContent = valTxt;
+          if (ch) { ch.textContent = chgTxt; ch.className = chgCls; }
+          cache.usd = { val: valTxt, chg: chgTxt, up: cn >= 0 };
         }
         const egxD = DASHBOARD_DATA && DASHBOARD_DATA.find(d => d.symbol === 'EGX30');
         if (egxD) {
           const el = document.getElementById('util-egx-val'); const ch = document.getElementById('util-egx-chg');
-          if (el) el.textContent = (typeof egxD.value === 'number' ? Math.round(egxD.value).toLocaleString() : egxD.value);
-          if (ch) {
-            const cn = Number(egxD.change) || 0;
-            ch.textContent = (cn >= 0 ? '▲' : '▼') + ' ' + Math.abs(cn).toFixed(2) + '%';
-            ch.className = (cn >= 0 ? 'text-emerald-400' : 'text-red-400') + ' text-[10px] num';
-          }
+          const valTxt = (typeof egxD.value === 'number' ? Math.round(egxD.value).toLocaleString() : egxD.value);
+          const cn = Number(egxD.change) || 0;
+          const chgTxt = (cn >= 0 ? '▲' : '▼') + ' ' + Math.abs(cn).toFixed(2) + '%';
+          const chgCls = (cn >= 0 ? 'text-emerald-400' : 'text-red-400') + ' text-[10px] num';
+          if (el) el.textContent = valTxt;
+          if (ch) { ch.textContent = chgTxt; ch.className = chgCls; }
+          cache.egx = { val: valTxt, chg: chgTxt, up: cn >= 0 };
+        }
+        if (Object.keys(cache).length) {
+          cache.t = Date.now();
+          try { localStorage.setItem('cb_util_cache', JSON.stringify(cache)); } catch(_){}
         }
       } catch(_){}
 
