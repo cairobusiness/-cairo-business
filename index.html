@@ -12576,9 +12576,46 @@
     }
     window.renderCompetitorIntel = renderCompetitorIntel;
 
-    /* Initial render on load + re-render on lang switch (handled by applyLang loop) */
+    /* Pull live feed from API (Groq AI refreshes daily). Falls back to seed. */
+    async function loadCompetitorMoves() {
+      try {
+        const r = await fetch('https://cairo-business-backend.vercel.app/api/competitor-moves?limit=12', { cache: 'no-store' });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (!j || !j.success || !Array.isArray(j.data) || !j.data.length) return;
+        /* Map API rows → CI_FEED shape used by renderer */
+        CI_FEED = j.data.map(m => {
+          const occ = new Date(m.occurredAt || m.createdAt || Date.now());
+          const diffMin = Math.max(0, Math.round((Date.now() - occ.getTime()) / 60000));
+          const time_en = diffMin < 60 ? (diffMin + 'm ago')
+                         : diffMin < 1440 ? (Math.round(diffMin/60) + 'h ago')
+                         : (Math.round(diffMin/1440) + 'd ago');
+          const time_ar = diffMin < 60 ? ('منذ ' + diffMin + ' دقيقة')
+                         : diffMin < 1440 ? ('منذ ' + Math.round(diffMin/60) + ' ساعة')
+                         : ('منذ ' + Math.round(diffMin/1440) + ' يوم');
+          return {
+            id: m.id,
+            kind: m.kind || 'NEWS',
+            cc: m.cc || '#F4D03F',
+            logo: m.logo || (m.companyEn || '?').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase(),
+            who_ar: m.companyAr || m.companyEn,
+            who_en: m.companyEn || m.companyAr,
+            txt_ar: m.textAr || m.textEn,
+            txt_en: m.textEn || m.textAr,
+            time: time_ar,
+            time_en: time_en
+          };
+        });
+        renderCompetitorIntel();
+      } catch (_) {}
+    }
+
+    /* Initial render on load (seed) + then pull fresh AI moves */
     (function bootCI() {
-      const start = () => { try { renderCompetitorIntel(); } catch (_) {} };
+      const start = () => {
+        try { renderCompetitorIntel(); } catch (_) {}
+        setTimeout(loadCompetitorMoves, 400);
+      };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
       else setTimeout(start, 200);
     })();
