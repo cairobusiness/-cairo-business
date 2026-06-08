@@ -4528,8 +4528,9 @@
         box-shadow: 0 14px 40px -16px rgba(0,0,0,.4);
       }
       .bm-detail-meta-chapter {
-        font-family: 'Playfair Display',serif; font-size: 11px;
-        letter-spacing: .4em; color: #8b7355; font-weight: 700;
+        font-family: 'Playfair Display',serif; font-size: clamp(15px, 1.4vw, 19px);
+        letter-spacing: 0.01em; color: #0a0e27; font-weight: 700;
+        margin-bottom: 4px;
       }
       .bm-detail-name {
         font-family: 'Playfair Display','Cairo',serif; font-size: clamp(28px, 4vw, 44px);
@@ -14271,7 +14272,7 @@
       const quote = b.quote || '';
 
       const labels = {
-        chapter: isAr ? 'فصل' : 'CHAPTER',
+        sectionTitle: isAr ? 'أقوى رجال الأعمال في الشرق الأوسط' : 'Most Powerful Businessmen in the Middle East',
         net: isAr ? 'الثروة' : 'NET WORTH',
         rank: isAr ? 'الترتيب' : 'RANK',
         comps: isAr ? 'الشركات' : 'COMPANIES',
@@ -14299,7 +14300,7 @@
           <div class="bm-detail-head">
             <div class="bm-detail-photo" style="${photoStyle}">${!hasPhoto ? `<div class="bm-book-photo-initials">${initials}</div>` : ''}</div>
             <div>
-              <div class="bm-detail-meta-chapter">${labels.chapter} ${rank}${sector ? ' · ' + sector : ''}</div>
+              <div class="bm-detail-meta-chapter">${labels.sectionTitle}</div>
               <h2 class="bm-detail-name">${name}</h2>
               <div class="bm-detail-title-line">${title}</div>
               <div class="bm-detail-stats">
