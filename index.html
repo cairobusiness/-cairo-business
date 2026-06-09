@@ -18536,9 +18536,11 @@
         const badge = isAr ? v.badge_ar : v.badge_en;
         fw.style.setProperty('--vc1', v.vc1);
         fw.style.setProperty('--vc2', v.vc2);
+        const bgStyle = v.thumb ? `style="background-image:url('${v.thumb}');background-size:cover;background-position:center"` : '';
+        const monoHide = v.thumb ? 'style="display:none"' : '';
         fw.innerHTML = `
-          <div class="vid-featured-bg"></div>
-          <div class="vid-featured-monogram">${v.monogram}</div>
+          <div class="vid-featured-bg" ${bgStyle}></div>
+          <div class="vid-featured-monogram" ${monoHide}>${v.monogram}</div>
           <div class="vid-featured-meta"><i data-lucide="circle-dot" class="w-3 h-3"></i>${cat}</div>
           <div class="vid-featured-badge">${badge}</div>
           <button type="button" class="vid-featured-play" aria-label="Play">
@@ -18581,12 +18583,14 @@
       if (rw) {
         rw.innerHTML = VIDEO_REELS.map(r => {
           const title = isAr ? r.title_ar : r.title_en;
+          const bgStyle = r.thumb ? `style="background-image:url('${r.thumb}');background-size:cover;background-position:center"` : '';
+          const monoHide = r.thumb ? 'style="display:none"' : '';
           return `
             <div class="vid-reel" style="--vc1:${r.vc1};--vc2:${r.vc2}">
-              <div class="vid-reel-bg"></div>
+              <div class="vid-reel-bg" ${bgStyle}></div>
               <span class="vid-reel-badge">${r.badge}</span>
               <span class="vid-reel-views"><i data-lucide="eye" class="w-3 h-3"></i>${r.views}</span>
-              <div class="vid-reel-mono">${r.mono}</div>
+              <div class="vid-reel-mono" ${monoHide}>${r.mono}</div>
               <button class="vid-reel-play" aria-label="Play">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
               </button>
@@ -18616,11 +18620,13 @@
             const cat = isAr ? v.cat_ar : v.cat_en;
             const presenter = isAr ? v.presenter_name_ar : v.presenter_name_en;
             const age = isAr ? v.age_ar : v.age_en;
+            const bgStyle = v.thumb ? `style="background-image:url('${v.thumb}');background-size:cover;background-position:center"` : '';
+            const monoHide = v.thumb ? 'style="display:none"' : '';
             return `
               <article class="vid-card" style="--vc1:${v.vc1};--vc2:${v.vc2}">
                 <div class="vid-card-thumb">
-                  <div class="vid-card-thumb-bg"></div>
-                  <div class="vid-card-mono">${v.mono}</div>
+                  <div class="vid-card-thumb-bg" ${bgStyle}></div>
+                  <div class="vid-card-mono" ${monoHide}>${v.mono}</div>
                   <span class="vid-card-cat">${cat}</span>
                   <button class="vid-card-play" aria-label="Play">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg>
@@ -18650,13 +18656,15 @@
         sw.innerHTML = VIDEO_SERIES.map(s => {
           const name = isAr ? s.name_ar : s.name_en;
           const desc = isAr ? s.desc_ar : s.desc_en;
+          const bgStyle = s.thumb ? `style="background-image:url('${s.thumb}');background-size:cover;background-position:center"` : '';
+          const monoHide = s.thumb ? 'style="display:none"' : '';
           return `
             <article class="vid-series-card" style="--vc1:${s.vc1};--vc2:${s.vc2}">
               <div class="vid-series-stack">
                 <div class="vid-series-thumb vid-series-thumb-3"></div>
                 <div class="vid-series-thumb vid-series-thumb-2"></div>
-                <div class="vid-series-thumb vid-series-thumb-1">
-                  <div class="vid-series-thumb-mono">${s.mono}</div>
+                <div class="vid-series-thumb vid-series-thumb-1" ${bgStyle}>
+                  <div class="vid-series-thumb-mono" ${monoHide}>${s.mono}</div>
                   <span class="vid-series-badge">${s.episodes} ${t('videos.series.episodes')}</span>
                 </div>
               </div>
@@ -18721,6 +18729,16 @@
       return new Date(d).toLocaleDateString('en-US');
     }
 
+    /* Resolve a video's cover image: admin-set thumbnailUrl wins, then YouTube auto-thumb,
+       then null (card falls back to gradient + initials). */
+    function vidThumbOf(v) {
+      if (!v) return null;
+      if (v.thumbnailUrl && typeof v.thumbnailUrl === 'string' && v.thumbnailUrl.trim() && !v.thumbnailUrl.startsWith('data:')) {
+        return v.thumbnailUrl.trim();
+      }
+      if (v.youtubeId) return 'https://i.ytimg.com/vi/' + v.youtubeId + '/hqdefault.jpg';
+      return null;
+    }
     async function fetchVideosFromAPI(){
       try {
         const backend = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND)
@@ -18739,6 +18757,7 @@
             id: v.id,
             youtubeId: v.youtubeId,
             youtubeUrl: v.youtubeUrl,
+            thumb: vidThumbOf(v),
             title_ar: v.titleAr, title_en: v.titleEn,
             presenter_ar: v.presenterAr ? 'تقديم: ' + v.presenterAr : '',
             presenter_en: v.presenterEn ? 'Hosted by: ' + v.presenterEn : '',
@@ -18758,6 +18777,7 @@
             id: v.id,
             youtubeId: v.youtubeId,
             youtubeUrl: v.youtubeUrl,
+            thumb: vidThumbOf(v),
             title_ar: v.titleAr, title_en: v.titleEn,
             views: v.views || '',
             age_ar: vidRelativeDate(v.publishedAt),
@@ -18773,6 +18793,7 @@
               id: v.id,
               youtubeId: v.youtubeId,
               youtubeUrl: v.youtubeUrl,
+              thumb: vidThumbOf(v),
               title_ar: v.titleAr, title_en: v.titleEn,
               duration: vidDurationFromSec(v.durationSec),
               views: v.views || '',
@@ -18801,6 +18822,7 @@
               id: v.id,
               youtubeId: v.youtubeId,
               youtubeUrl: v.youtubeUrl,
+              thumb: vidThumbOf(v),
               cat_ar: c[0], cat_en: c[1],
               title_ar: v.titleAr, title_en: v.titleEn,
               presenter: vidInitials(v.presenterAr || v.presenterEn || 'CB'),
@@ -18824,6 +18846,7 @@
               id: v.id,
               youtubeId: v.youtubeId,
               youtubeUrl: v.youtubeUrl,
+              thumb: vidThumbOf(v),
               name_ar: v.titleAr, name_en: v.titleEn,
               desc_ar: v.descriptionAr || '', desc_en: v.descriptionEn || '',
               episodes: v.seriesEpisodes || 0,
