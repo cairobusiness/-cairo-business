@@ -9386,16 +9386,25 @@
         </div>
       </div>
 
-      <!-- Risk categories -->
-      <div class="sc-cats" id="sc-cats"></div>
+      <!-- Risk categories — skeleton until loadSupplyChain populates -->
+      <div class="sc-cats" id="sc-cats">
+        <div class="sc-cat sc-skel"><div class="sc-cat-icon"></div><div class="sc-cat-name">&nbsp;</div><div class="sc-cat-count">—</div><div class="sc-cat-trend">&nbsp;</div></div>
+        <div class="sc-cat sc-skel"><div class="sc-cat-icon"></div><div class="sc-cat-name">&nbsp;</div><div class="sc-cat-count">—</div><div class="sc-cat-trend">&nbsp;</div></div>
+        <div class="sc-cat sc-skel"><div class="sc-cat-icon"></div><div class="sc-cat-name">&nbsp;</div><div class="sc-cat-count">—</div><div class="sc-cat-trend">&nbsp;</div></div>
+        <div class="sc-cat sc-skel"><div class="sc-cat-icon"></div><div class="sc-cat-name">&nbsp;</div><div class="sc-cat-count">—</div><div class="sc-cat-trend">&nbsp;</div></div>
+      </div>
 
       <!-- Active alerts feed -->
       <div class="sc-alerts-wrap">
         <div class="sc-alerts-head">
           <div class="lux-eyebrow"><i data-lucide="alarm-clock" class="w-3.5 h-3.5"></i><span data-i18n="sc.alertsTitle">تنبيهات نشطة</span></div>
-          <span class="sc-count-pill" id="sc-count-pill">12 <span data-i18n="sc.alerts">تنبيه</span></span>
+          <span class="sc-count-pill" id="sc-count-pill">— <span data-i18n="sc.alerts">تنبيه</span></span>
         </div>
-        <div class="sc-alerts" id="sc-alerts"></div>
+        <div class="sc-alerts" id="sc-alerts">
+          <div class="sc-alert sc-skel"><div class="sc-alert-bar med"></div><div class="sc-alert-icon"></div><div class="sc-alert-body"><div class="sc-alert-title">&nbsp;</div><div class="sc-alert-meta">&nbsp;</div></div><span class="sc-impact-pill med">—</span></div>
+          <div class="sc-alert sc-skel"><div class="sc-alert-bar med"></div><div class="sc-alert-icon"></div><div class="sc-alert-body"><div class="sc-alert-title">&nbsp;</div><div class="sc-alert-meta">&nbsp;</div></div><span class="sc-impact-pill med">—</span></div>
+          <div class="sc-alert sc-skel"><div class="sc-alert-bar med"></div><div class="sc-alert-icon"></div><div class="sc-alert-body"><div class="sc-alert-title">&nbsp;</div><div class="sc-alert-meta">&nbsp;</div></div><span class="sc-impact-pill med">—</span></div>
+        </div>
       </div>
     </div>
 
@@ -9435,6 +9444,20 @@
       .sc-impact-pill.high { background:rgba(239,68,68,.15); color:#f87171; border:1px solid rgba(239,68,68,.30); }
       .sc-impact-pill.med  { background:rgba(251,191,36,.12); color:#fbbf24; border:1px solid rgba(251,191,36,.30); }
       .sc-impact-pill.low  { background:rgba(96,165,250,.12); color:#60a5fa; border:1px solid rgba(96,165,250,.30); }
+      /* Skeleton shimmer while loadSupplyChain fetches commodity data */
+      .sc-skel { position:relative; overflow:hidden; }
+      .sc-skel::before {
+        content:''; position:absolute; inset:0; pointer-events:none;
+        background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+        animation: sc-shimmer 1.4s ease-in-out infinite;
+      }
+      .sc-skel .sc-cat-icon, .sc-skel .sc-alert-icon { background:rgba(255,255,255,.05); }
+      .sc-skel .sc-cat-name, .sc-skel .sc-cat-trend,
+      .sc-skel .sc-alert-title, .sc-skel .sc-alert-meta {
+        background:rgba(255,255,255,.04); border-radius:4px; min-height:10px;
+      }
+      .sc-skel .sc-cat-count { opacity:.4; }
+      @keyframes sc-shimmer { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }
     </style>
   </section>
 
@@ -13346,9 +13369,13 @@
        ═════════════════════════════════════════════════════════════ */
     async function loadSupplyChain() {
       try {
-        const r = await fetch('https://cairo-business-backend.vercel.app/api/scrape/supply-chain', { cache: 'no-store' });
+        /* 8s timeout — if backend is slow, fall through to clear skeleton with empty state */
+        const ctrl = new AbortController();
+        const tmo = setTimeout(() => ctrl.abort(), 8000);
+        const r = await fetch('https://cairo-business-backend.vercel.app/api/scrape/supply-chain', { cache: 'no-store', signal: ctrl.signal });
+        clearTimeout(tmo);
         const j = await r.json();
-        if (!j || !j.success || !j.data) return;
+        if (!j || !j.success || !j.data) { supplyChainShowEmpty(); return; }
         const d = j.data;
         const sec = document.getElementById('supply-chain');
         if (!sec) return;
@@ -13423,19 +13450,38 @@
           }).join('');
           if (window.lucide) try { lucide.createIcons(); } catch (_) {}
         }
-      } catch (e) { console.warn('Supply chain load failed:', e); }
+      } catch (e) { console.warn('Supply chain load failed:', e); supplyChainShowEmpty(); }
     }
 
-    /* Lazy-load + auto-refresh every 10 min */
+    /* Clear skeleton + show graceful empty state if backend is unreachable */
+    function supplyChainShowEmpty() {
+      const cats = document.getElementById('sc-cats');
+      const alerts = document.getElementById('sc-alerts');
+      const countPill = document.getElementById('sc-count-pill');
+      const isAr = (typeof currentLang !== 'undefined' ? currentLang : 'ar') === 'ar';
+      if (cats && cats.querySelector('.sc-skel')) {
+        cats.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,0.45);font-size:12px">' + (isAr ? 'البيانات اللحظية مش متاحة الآن — هنحدث تلقائي بعد دقيقة' : 'Live data unavailable — auto-refresh in a minute') + '</div>';
+      }
+      if (alerts && alerts.querySelector('.sc-skel')) {
+        alerts.innerHTML = '<div style="text-align:center;padding:16px;color:rgba(255,255,255,0.45);font-size:12px">' + (isAr ? 'لا توجد تنبيهات نشطة الآن' : 'No active alerts right now') + '</div>';
+      }
+      if (countPill) countPill.innerHTML = '0 <span data-i18n="sc.alerts">' + (isAr ? 'تنبيه' : 'alerts') + '</span>';
+    }
+
+    /* Eager load on page boot + auto-refresh every 10 min. IntersectionObserver fallback
+       kept for old browsers, but we no longer wait for scroll — the section was looking
+       empty for users who scrolled directly to it before fetch completed. */
     (function () {
       const sec = document.getElementById('supply-chain');
       if (!sec) return;
       let loaded = false;
       const trigger = () => { if (loaded) return; loaded = true; loadSupplyChain(); };
-      if ('IntersectionObserver' in window) {
-        const io = new IntersectionObserver((es) => { es.forEach(e => { if (e.isIntersecting) { trigger(); io.disconnect(); } }); }, { rootMargin: '300px 0px' });
-        io.observe(sec);
-      } else { trigger(); }
+      /* Kick off immediately after first paint */
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(trigger, 200));
+      } else {
+        setTimeout(trigger, 200);
+      }
       setInterval(() => { if (loaded && !document.hidden) loadSupplyChain(); }, 10 * 60 * 1000);
       document.addEventListener('visibilitychange', () => { if (!document.hidden && loaded) loadSupplyChain(); });
     })();
