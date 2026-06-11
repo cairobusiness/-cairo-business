@@ -13015,8 +13015,10 @@
         + '.news-modal-card::-webkit-scrollbar-thumb{background:rgba(212,175,55,.35);border-radius:4px}'
         + '.news-modal-card::-webkit-scrollbar-thumb:hover{background:rgba(212,175,55,.55)}'
         + '@keyframes nm-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}'
-        + '.news-modal-header{position:relative;height:280px;background:#1a2b4d center/cover no-repeat;flex-shrink:0}'
-        + '.news-modal-header::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(10,14,39,.95) 0%,rgba(10,14,39,.4) 50%,transparent 100%)}'
+        + '.news-modal-header{position:relative;background:#1a2b4d;flex-shrink:0}'
+        + '.news-modal-header img{display:block;width:100%;height:auto;max-height:65vh;object-fit:contain;margin:0 auto}'
+        + '.news-modal-header.no-image{height:160px;background:linear-gradient(135deg,#1a2b4d,#0a0e27)}'
+        + '.news-modal-header::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(10,14,39,.55) 0%,transparent 30%);pointer-events:none}'
         + '.news-modal-close{position:absolute;top:18px;inset-inline-end:18px;z-index:2;width:38px;height:38px;border-radius:50%;background:rgba(10,14,39,.8);border:1px solid rgba(255,255,255,.15);color:#fff;display:grid;place-items:center;cursor:pointer;font-size:22px;transition:all .2s}'
         + '.news-modal-close:hover{background:#d4af37;color:#0A0E27}'
         + '.news-modal-body{padding:28px 32px;color:#fff}'
@@ -13105,7 +13107,13 @@
         }
         const elImg = document.getElementById('news-modal-image');
         if (elImg) {
-          elImg.style.backgroundImage = img ? `url("${img}")` : 'linear-gradient(135deg, #1a2b4d, #0a0e27)';
+          if (img) {
+            elImg.classList.remove('no-image');
+            elImg.innerHTML = '<img src="' + img.replace(/"/g, '&quot;') + '" alt="" loading="lazy">';
+          } else {
+            elImg.classList.add('no-image');
+            elImg.innerHTML = '';
+          }
         }
         const elAi = document.getElementById('news-modal-ai-body');
         if (elAi) elAi.textContent = isAr ? 'اضغط "جدّد الملخص" لتوليد ملخص AI من النص.' : 'Click "Refresh Summary" to generate an AI summary.';
