@@ -211,6 +211,11 @@
       display: block; width: 100%; height: auto;
       max-height: 65vh; object-fit: contain; margin: 0 auto;
     }
+    .article-brandbar { background:#000; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:5px; padding:12px 24px; }
+    .article-brandbar .ab-wm { font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:24px; font-weight:900; letter-spacing:-1px; color:#fff; line-height:1; }
+    .article-brandbar .ab-sub { display:flex; align-items:center; gap:8px; }
+    .article-brandbar .ab-sub span.line { height:1px; width:36px; background:rgba(255,255,255,.4); }
+    .article-brandbar .ab-sub span.txt { font-size:8px; letter-spacing:4px; color:rgba(255,255,255,.85); font-weight:700; }
     .article-body { padding: 28px 32px 36px; }
     .article-meta { font-size: 12px; color: rgba(255,255,255,.5); margin-bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
     .article-title { font-family: 'Cairo', 'Playfair Display', serif; font-weight: 900; font-size: 28px; color: #fff; line-height: 1.25; margin-bottom: 14px; }
@@ -275,6 +280,7 @@
     <article class="article-paper" id="article-paper">
       <button class="article-close" onclick="closeArticle()" aria-label="إغلاق"><i data-lucide="x" class="w-4 h-4"></i></button>
       <div class="article-hero" id="article-hero"></div>
+      <div class="article-brandbar"><div class="ab-wm">Cairo Business</div><div class="ab-sub"><span class="line"></span><span class="txt">BUSINESS INTELLIGENCE</span><span class="line"></span></div></div>
       <div class="article-body">
         <div class="article-meta" id="article-meta"></div>
         <h2 class="article-title" id="article-title"></h2>
