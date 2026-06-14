@@ -12883,7 +12883,7 @@
       if (titleEl) titleEl.textContent = isAr ? (item.titleAr || item.titleEn) : (item.titleEn || item.titleAr);
       if (excerptEl) excerptEl.textContent = isAr ? (item.excerptAr || item.excerptEn || '') : (item.excerptEn || item.excerptAr || '');
       if (catEl) catEl.textContent = cat;
-      if (timeEl) timeEl.textContent = newsTimeAgo(item.publishedAt, currentLang);
+      if (timeEl) timeEl.textContent = newsTimeAgo(item.createdAt, currentLang);
       if (authorEl) authorEl.textContent = item.author || (isAr ? 'فريق التحرير' : 'Editorial Team');
       if (scoreEl) scoreEl.textContent = newsAiScore(item);
       // Wire the imageUrl to the hero background
@@ -12921,7 +12921,7 @@
         const catSlug = (n.category || '').toLowerCase();
         const cat = (NEWS_CAT_LABELS[isAr ? 'ar' : 'en'][catSlug]) || n.category || '';
         const title = isAr ? (n.titleAr || n.titleEn) : (n.titleEn || n.titleAr);
-        const time = newsTimeAgo(n.publishedAt, currentLang);
+        const time = newsTimeAgo(n.createdAt, currentLang);
         const score = newsAiScore(n);
         // If imageUrl is present, render an actual image thumbnail; otherwise show the AI score badge
         const thumbCell = n.imageUrl
@@ -13098,7 +13098,7 @@
         const excerpt = isAr ? (item.excerptAr || item.excerptEn || '') : (item.excerptEn || item.excerptAr || '');
         const catSlug = (item.category || '').toLowerCase();
         const cat = (typeof NEWS_CAT_LABELS !== 'undefined' && NEWS_CAT_LABELS[isAr ? 'ar' : 'en'][catSlug]) || item.category || '';
-        const time = (typeof newsTimeAgo === 'function') ? newsTimeAgo(item.publishedAt, currentLang) : '';
+        const time = (typeof newsTimeAgo === 'function') ? newsTimeAgo(item.createdAt, currentLang) : '';
         const author = item.author || (isAr ? 'فريق التحرير' : 'Editorial Team');
         const score = (typeof newsAiScore === 'function') ? newsAiScore(item) : '';
         const img = item.imageUrl || '';
