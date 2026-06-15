@@ -5833,7 +5833,7 @@
             ${c.country ? '<div class="ceos-modal-meta-item"><div class="ceos-modal-meta-label">COUNTRY</div><div class="ceos-modal-meta-value">' + c.country + '</div></div>' : ''}
             ${c.company ? '<div class="ceos-modal-meta-item"><div class="ceos-modal-meta-label">COMPANY</div><div class="ceos-modal-meta-value">' + c.company + '</div></div>' : ''}
           </div>
-          ${(c.linkedinUrl || c.twitterUrl) ? '<div class="ceos-modal-socials">' + (c.linkedinUrl ? '<a class="ceos-modal-social" href="' + c.linkedinUrl + '" target="_blank" aria-label="LinkedIn"><i data-lucide="linkedin" class="w-5 h-5"></i></a>' : '') + (c.twitterUrl ? '<a class="ceos-modal-social" href="' + c.twitterUrl + '" target="_blank" aria-label="Twitter"><i data-lucide="twitter" class="w-5 h-5"></i></a>' : '') + '</div>' : ''}
+          ${(c.linkedinUrl || c.twitterUrl) ? '<div class="ceos-modal-socials">' + (c.linkedinUrl ? '<a class="ceos-modal-social" href="' + c.linkedinUrl + '" target="_blank" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21H20v-5.6c0-1.33-.02-3.05-1.86-3.05-1.86 0-2.14 1.45-2.14 2.95V21H9z"/></svg></a>' : '') + (c.twitterUrl ? '<a class="ceos-modal-social" href="' + c.twitterUrl + '" target="_blank" aria-label="Twitter"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h6.9l4.8 6.3zM17.7 20.1h1.7L7.2 3.8H5.4z"/></svg></a>' : '') + '</div>' : ''}
         `;
         const modal = document.getElementById('ceos-modal');
         if (modal) {
@@ -6618,7 +6618,7 @@
     <div class="max-w-[1400px] mx-auto px-4 lg:px-8">
       <div class="mb-10">
         <div class="inline-flex items-center gap-2 glass-light border border-gold-500/40 rounded-full px-3 py-1 text-[11px] font-bold tracking-widest text-gold-300 mb-3">
-          <i data-lucide="pulse" class="w-3.5 h-3.5"></i>
+          <i data-lucide="activity" class="w-3.5 h-3.5"></i>
           <span data-i18n="pulse.eyebrow">WEEKLY PULSE</span>
         </div>
         <h2 class="font-display text-4xl lg:text-5xl font-black text-white leading-[1.05]" data-i18n="pulse.title">نبض القطاعات</h2>
@@ -8483,7 +8483,7 @@
       <div class="vid-cta reveal">
         <div class="vid-cta-bg" aria-hidden="true"></div>
         <div class="vid-cta-content">
-          <div class="vid-cta-icon"><i data-lucide="youtube" class="w-7 h-7"></i></div>
+          <div class="vid-cta-icon"><svg viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7"><path d="M23 7.5a3 3 0 0 0-2.1-2.1C19 4.9 12 4.9 12 4.9s-7 0-8.9.5A3 3 0 0 0 1 7.5 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.5a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5A3 3 0 0 0 23 16.5 31 31 0 0 0 23.5 12 31 31 0 0 0 23 7.5zM9.8 15.3V8.7l5.7 3.3z"/></svg></div>
           <div class="vid-cta-text">
             <div class="vid-cta-eyebrow" data-i18n="videos.cta.eyebrow">شارك في القناة</div>
             <h4 class="vid-cta-title" data-i18n="videos.cta.title">+250K مشترك يشاهدوننا أسبوعياً</h4>
@@ -9974,10 +9974,10 @@
           </div>
           <p class="text-white/60 text-sm max-w-md" data-i18n="footer.about">منصة ذكاء الأعمال الرائدة في مصر. أخبار، عقارات، ذكاء اصطناعي، تصنيفات، وبودكاست — بالعربي والإنجليزي.</p>
           <div class="flex gap-3 mt-5">
-            <a href="#" class="w-10 h-10 grid place-items-center rounded-full bg-white/5 hover:bg-gold-500 hover:text-navy-900 transition"><i data-lucide="instagram" class="w-4 h-4"></i></a>
-            <a href="#" class="w-10 h-10 grid place-items-center rounded-full bg-white/5 hover:bg-gold-500 hover:text-navy-900 transition"><i data-lucide="linkedin" class="w-4 h-4"></i></a>
-            <a href="#" class="w-10 h-10 grid place-items-center rounded-full bg-white/5 hover:bg-gold-500 hover:text-navy-900 transition"><i data-lucide="twitter" class="w-4 h-4"></i></a>
-            <a href="#" class="w-10 h-10 grid place-items-center rounded-full bg-white/5 hover:bg-gold-500 hover:text-navy-900 transition"><i data-lucide="youtube" class="w-4 h-4"></i></a>
+            <a href="#" class="w-10 h-10 grid place-items-center rounded-full bg-white/5 hover:bg-gold-500 hover:text-navy-900 transition"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg></a>
+            <a href="#" class="w-10 h-10 grid place-items-center rounded-full bg-white/5 hover:bg-gold-500 hover:text-navy-900 transition"><svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21H20v-5.6c0-1.33-.02-3.05-1.86-3.05-1.86 0-2.14 1.45-2.14 2.95V21H9z"/></svg></a>
+            <a href="#" class="w-10 h-10 grid place-items-center rounded-full bg-white/5 hover:bg-gold-500 hover:text-navy-900 transition"><svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h6.9l4.8 6.3zM17.7 20.1h1.7L7.2 3.8H5.4z"/></svg></a>
+            <a href="#" class="w-10 h-10 grid place-items-center rounded-full bg-white/5 hover:bg-gold-500 hover:text-navy-900 transition"><svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M23 7.5a3 3 0 0 0-2.1-2.1C19 4.9 12 4.9 12 4.9s-7 0-8.9.5A3 3 0 0 0 1 7.5 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.5a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5A3 3 0 0 0 23 16.5 31 31 0 0 0 23.5 12 31 31 0 0 0 23 7.5zM9.8 15.3V8.7l5.7 3.3z"/></svg></a>
           </div>
         </div>
 
