@@ -602,15 +602,17 @@ const ENTITIES = {
     key: 'carousel', icon: '🖼️', nameAr: 'كاروسيل', singularAr: 'صورة',
     endpoint: '/api/admin/content-blocks', sectionFilter: 'carousel',
     fields: [
+      { id: 'titleAr', label: 'اسم الكاروسيل * (الصور اللي ليها نفس الاسم بتتجمع في كاروسيل واحد)', type: 'text', required: true, full: true, placeholder: 'مثال: فعاليات THE SHIFT' },
+      { id: 'titleEn', label: 'Carousel name EN *', type: 'text', required: true, dir: 'ltr', full: true },
+      { id: 'subtitleAr', label: 'كابشن الكاروسيل (يظهر تحت العنوان فوق الصور)', type: 'text', nullable: true, full: true },
+      { id: 'subtitleEn', label: 'Caption EN', type: 'text', nullable: true, dir: 'ltr', full: true },
       { id: 'imageUrl', label: 'الصورة (URL) *', type: 'url', required: true, dir: 'ltr', full: true, placeholder: 'https://...' },
-      { id: 'titleAr', label: 'العنوان بالعربية *', type: 'text', required: true },
-      { id: 'titleEn', label: 'Title EN *', type: 'text', required: true, dir: 'ltr' },
-      { id: 'descAr', label: 'الوصف بالعربية', type: 'textarea', nullable: true, full: true },
-      { id: 'descEn', label: 'Description EN', type: 'textarea', nullable: true, dir: 'ltr', full: true },
-      { id: 'sortOrder', label: 'ترتيب العرض (الأصغر أولاً)', type: 'number', default: 0 }
+      { id: 'descAr', label: 'تعليق يظهر على الصورة نفسها (اختياري)', type: 'textarea', nullable: true, full: true },
+      { id: 'descEn', label: 'Caption on image EN', type: 'textarea', nullable: true, dir: 'ltr', full: true },
+      { id: 'sortOrder', label: 'ترتيب الصورة داخل الكاروسيل (الأصغر أولاً)', type: 'number', default: 0 }
     ],
-    list: { title: c => c.titleAr || c.titleEn || 'صورة', excerpt: c => (c.descAr || c.descEn || ''), thumb: c => c.imageUrl, emoji: '🖼️', badges: c => [], meta: c => [] },
-    stats: items => ({ 'إجمالي الصور': items.length })
+    list: { title: c => (c.titleAr || c.titleEn || 'صورة'), excerpt: c => (c.subtitleAr || c.descAr || c.descEn || ''), thumb: c => c.imageUrl, emoji: '🖼️', badges: c => (c.titleAr ? [{ text: c.titleAr, kind: 'gold' }] : []), meta: c => [] },
+    stats: items => ({ 'إجمالي الصور': items.length, 'عدد الكاروسيلات': new Set(items.map(i => (i.titleAr || i.titleEn || '').trim())).size })
   },
   competitor: {
     key: 'competitor', icon: '🎯', nameAr: 'تحليل المنافسين', singularAr: 'منافس',

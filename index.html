@@ -8404,19 +8404,7 @@
   <!--                    VIDEO STUDIO                              -->
   <!-- =========================================================== -->
   <section id="carousel-section" dir="rtl" style="max-width:560px;margin:48px auto;padding:0 16px;display:none;">
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-    <span style="color:#F4D03F;font-size:12px;font-weight:700;letter-spacing:.06em;">CAROUSEL · لحظات</span>
-    <span style="color:rgba(255,255,255,.45);font-size:12px;margin-inline-start:auto;" id="cbc-count"></span>
-  </div>
-
-  <div id="cbc-viewport" style="position:relative;overflow:hidden;border-radius:16px;background:#0f1535;touch-action:pan-y;">
-    <div id="cbc-track" style="display:flex;transition:transform .35s ease;"></div>
-
-    <button id="cbc-next" aria-label="السابق" style="position:absolute;top:50%;right:8px;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:none;background:rgba(2,6,23,.5);color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:22px;">‹</button>
-    <button id="cbc-prev" aria-label="التالي" style="position:absolute;top:50%;left:8px;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:none;background:rgba(2,6,23,.5);color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:22px;">›</button>
-  </div>
-
-  <div id="cbc-dots" style="display:flex;gap:7px;justify-content:center;margin-top:14px;"></div>
+  <div id="cbc-wrap"></div>
 </section>
 
 <script>
@@ -8424,69 +8412,98 @@
   var BACKEND = (typeof CB_BACKEND !== 'undefined' && CB_BACKEND) || 'https://cairo-business-backend.vercel.app';
   var sec = document.getElementById('carousel-section');
   if (!sec) return;
-  var track = document.getElementById('cbc-track');
-  var dotsWrap = document.getElementById('cbc-dots');
-  var countEl = document.getElementById('cbc-count');
-  var prevBtn = document.getElementById('cbc-prev');
-  var nextBtn = document.getElementById('cbc-next');
-  var i = 0, n = 0, timer = null;
+  var wrap = document.getElementById('cbc-wrap');
   var isAr = (typeof currentLang === 'undefined') || currentLang === 'ar';
 
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
   function slideHtml(b) {
-    var title = isAr ? (b.titleAr || b.titleEn || '') : (b.titleEn || b.titleAr || '');
     var desc = isAr ? (b.descAr || b.descEn || '') : (b.descEn || b.descAr || '');
     var bg = b.imageUrl
-      ? "background-image:url('" + b.imageUrl + "');background-size:cover;background-position:center;"
+      ? "background-image:url('" + esc(b.imageUrl) + "');background-size:cover;background-position:center;"
       : "background:#1d2a4d;";
-    var cap = (title || desc)
+    var cap = desc
       ? '<div style="position:absolute;inset-inline:0;bottom:0;background:rgba(2,6,23,.55);padding:14px 16px;">'
-        + (title ? '<h3 style="margin:0;color:#fff;font-size:17px;font-weight:700;">' + title + '</h3>' : '')
-        + (desc ? '<p style="margin:5px 0 0;color:rgba(255,255,255,.75);font-size:13px;line-height:1.6;">' + desc + '</p>' : '')
-        + '</div>'
+        + '<p style="margin:0;color:rgba(255,255,255,.9);font-size:14px;line-height:1.6;">' + esc(desc) + '</p></div>'
       : '';
     return '<div style="flex:0 0 100%;aspect-ratio:4/5;position:relative;' + bg + '">' + cap + '</div>';
   }
 
-  function go(k) {
-    i = (k + n) % n;
-    track.style.transform = 'translateX(' + (i * 100) + '%)';
-    for (var x = 0; x < n; x++) {
-      var on = x === i;
-      dots[x].style.background = on ? '#F4D03F' : 'rgba(255,255,255,.3)';
-      dots[x].style.width = on ? '22px' : '8px';
-      dots[x].style.borderRadius = on ? '4px' : '50%';
-    }
-    if (countEl) countEl.textContent = (i + 1) + ' / ' + n;
+  function buildOne(group, gi) {
+    var slides = group.slides;
+    var n = slides.length;
+    var block = document.createElement('div');
+    block.style.cssText = 'margin:0 0 44px;';
+    var head =
+      '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px;">'
+      + '<h2 style="margin:0;color:#fff;font-size:20px;font-weight:800;">' + esc(group.title) + '</h2>'
+      + '<span class="cbc-counter" style="color:rgba(255,255,255,.45);font-size:12px;margin-inline-start:auto;"></span></div>'
+      + (group.caption ? '<p style="margin:-6px 0 14px;color:rgba(255,255,255,.6);font-size:13px;line-height:1.6;">' + esc(group.caption) + '</p>' : '');
+    block.innerHTML = head
+      + '<div class="cbc-vp" style="position:relative;overflow:hidden;border-radius:16px;background:#0f1535;touch-action:pan-y;">'
+      +   '<div class="cbc-track" style="display:flex;transition:transform .35s ease;">' + slides.map(slideHtml).join('') + '</div>'
+      +   '<button class="cbc-next" aria-label="next" style="position:absolute;top:50%;right:8px;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:none;background:rgba(2,6,23,.5);color:#fff;cursor:pointer;align-items:center;justify-content:center;font-size:22px;' + (n>1?'display:flex;':'display:none;') + '">‹</button>'
+      +   '<button class="cbc-prev" aria-label="prev" style="position:absolute;top:50%;left:8px;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:none;background:rgba(2,6,23,.5);color:#fff;cursor:pointer;align-items:center;justify-content:center;font-size:22px;' + (n>1?'display:flex;':'display:none;') + '">›</button>'
+      + '</div>'
+      + '<div class="cbc-dots" style="display:flex;gap:7px;justify-content:center;margin-top:14px;"></div>';
+    wrap.appendChild(block);
+    wire(block, n);
   }
-  function resetTimer() { if (timer) clearInterval(timer); if (n > 1) timer = setInterval(function () { go(i + 1); }, 4500); }
 
-  var dots = [];
-  function build(items) {
-    n = items.length;
-    if (!n) { sec.style.display = 'none'; return; }
-    sec.style.display = 'block';
-    track.innerHTML = items.map(slideHtml).join('');
-    dotsWrap.innerHTML = '';
-    dots = [];
+  function wire(block, n) {
+    var track = block.querySelector('.cbc-track');
+    var dotsWrap = block.querySelector('.cbc-dots');
+    var counter = block.querySelector('.cbc-counter');
+    var vp = block.querySelector('.cbc-vp');
+    var i = 0, timer = null, dots = [];
     for (var d = 0; d < n; d++) {
       var btn = document.createElement('button');
-      btn.setAttribute('aria-label', 'سلايد ' + (d + 1));
+      btn.setAttribute('aria-label', 'slide ' + (d + 1));
       btn.style.cssText = 'width:8px;height:8px;border-radius:50%;border:none;cursor:pointer;padding:0;background:rgba(255,255,255,.3);transition:all .25s;';
-      btn.dataset.k = d;
-      btn.onclick = function (e) { go(+e.currentTarget.dataset.k); resetTimer(); };
-      dotsWrap.appendChild(btn);
-      dots.push(btn);
+      (function (k) { btn.onclick = function () { go(k); reset(); }; })(d);
+      dotsWrap.appendChild(btn); dots.push(btn);
     }
-    if (n > 1) { prevBtn.style.display = 'flex'; nextBtn.style.display = 'flex'; }
-    nextBtn.onclick = function () { go(i + 1); resetTimer(); };
-    prevBtn.onclick = function () { go(i - 1); resetTimer(); };
-    var vp = document.getElementById('cbc-viewport'), sx = null;
+    function go(k) {
+      i = (k + n) % n;
+      track.style.transform = 'translateX(' + (i * 100) + '%)';
+      for (var x = 0; x < n; x++) {
+        var on = x === i;
+        dots[x].style.background = on ? '#F4D03F' : 'rgba(255,255,255,.3)';
+        dots[x].style.width = on ? '22px' : '8px';
+        dots[x].style.borderRadius = on ? '4px' : '50%';
+      }
+      if (counter) counter.textContent = (i + 1) + ' / ' + n;
+    }
+    function reset() { if (timer) clearInterval(timer); if (n > 1) timer = setInterval(function () { go(i + 1); }, 4500); }
+    block.querySelector('.cbc-next').onclick = function () { go(i + 1); reset(); };
+    block.querySelector('.cbc-prev').onclick = function () { go(i - 1); reset(); };
+    var sx = null;
     vp.addEventListener('pointerdown', function (e) { sx = e.clientX; });
-    vp.addEventListener('pointerup', function (e) { if (sx === null) return; var dx = e.clientX - sx; if (Math.abs(dx) > 40) { go(dx < 0 ? i + 1 : i - 1); resetTimer(); } sx = null; });
+    vp.addEventListener('pointerup', function (e) { if (sx === null) return; var dx = e.clientX - sx; if (Math.abs(dx) > 40) { go(dx < 0 ? i + 1 : i - 1); reset(); } sx = null; });
     vp.addEventListener('mouseenter', function () { if (timer) clearInterval(timer); });
-    vp.addEventListener('mouseleave', resetTimer);
-    go(0);
-    resetTimer();
+    vp.addEventListener('mouseleave', reset);
+    go(0); reset();
+  }
+
+  function build(items) {
+    if (!items.length) { sec.style.display = 'none'; return; }
+    var groups = [], map = {};
+    items.forEach(function (b) {
+      var key = (b.titleAr || b.titleEn || '').trim() || '__ungrouped__';
+      if (!map[key]) {
+        map[key] = {
+          title: isAr ? (b.titleAr || b.titleEn || 'كاروسيل') : (b.titleEn || b.titleAr || 'Carousel'),
+          caption: isAr ? (b.subtitleAr || b.subtitleEn || '') : (b.subtitleEn || b.subtitleAr || ''),
+          slides: []
+        };
+        groups.push(map[key]);
+      }
+      if (!map[key].caption) map[key].caption = isAr ? (b.subtitleAr || b.subtitleEn || '') : (b.subtitleEn || b.subtitleAr || '');
+      map[key].slides.push(b);
+    });
+    wrap.innerHTML = '';
+    sec.style.display = 'block';
+    groups.forEach(buildOne);
   }
 
   fetch(BACKEND + '/api/content-blocks?section=carousel', { cache: 'default' })
