@@ -2415,7 +2415,7 @@ async function publishDraft(id) {
   if (!confirm('تأكد إنك راجعت الخبر؟ هينتشر على cairobusiness.net فوراً.')) return;
   const r = await fetch('https://cairo-business-backend.vercel.app/api/admin/news/' + encodeURIComponent(id) + '/publish?refreshDate=true', {
     method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('cb_admin_token') || '') }
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('cb_auth_token') || '') }
   });
   const j = await r.json();
   if (j.success) await loadDraftsUI();
@@ -2437,7 +2437,7 @@ async function regenerateDraft(id) {
   try {
     const res = await fetch('https://cairo-business-backend.vercel.app/api/admin/news/' + encodeURIComponent(id) + '/regenerate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('cb_admin_token') || '') },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('cb_auth_token') || '') },
       body: JSON.stringify({ language: lang, creativity })
     });
     const j = await res.json();
@@ -2580,7 +2580,7 @@ async function saveArticle(id, publishAlso) {
   if (publishAlso) {
     const pub = await fetch('https://cairo-business-backend.vercel.app/api/admin/news/' + encodeURIComponent(id) + '/publish?refreshDate=true', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('cb_admin_token') || '') }
+      headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('cb_auth_token') || '') }
     });
     const pj = await pub.json();
     if (!pj.success) { alert('تم الحفظ لكن فشل النشر: ' + (pj.error || 'unknown')); return; }
