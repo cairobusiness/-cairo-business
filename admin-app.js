@@ -598,6 +598,20 @@ const ENTITIES = {
     list: { title: p => p.titleAr, excerpt: p => (p.descAr||'').replace(/<[^>]+>/g,'').slice(0,140), thumb: p => p.thumbnailUrl, emoji: '🎙️', badges: p => [...(p.isFeatured?[{text:'⭐',kind:'gold'}]:[]), ...(p.numericValue?[{text:'#'+p.numericValue,kind:'blue'}]:[])], meta: p => [p.authorAr || '—', ...(p.durationSec?[Math.floor(p.durationSec/60)+' دقيقة']:[]), formatDate(p.publishedAt)] },
     stats: items => ({ 'إجمالي الحلقات': items.length, 'مميّز': items.filter(p=>p.isFeatured).length })
   },
+  carousel: {
+    key: 'carousel', icon: '🖼️', nameAr: 'كاروسيل', singularAr: 'صورة',
+    endpoint: '/api/admin/content-blocks', sectionFilter: 'carousel',
+    fields: [
+      { id: 'imageUrl', label: 'الصورة (URL) *', type: 'url', required: true, dir: 'ltr', full: true, placeholder: 'https://...' },
+      { id: 'titleAr', label: 'العنوان بالعربية *', type: 'text', required: true },
+      { id: 'titleEn', label: 'Title EN *', type: 'text', required: true, dir: 'ltr' },
+      { id: 'descAr', label: 'الوصف بالعربية', type: 'textarea', nullable: true, full: true },
+      { id: 'descEn', label: 'Description EN', type: 'textarea', nullable: true, dir: 'ltr', full: true },
+      { id: 'sortOrder', label: 'ترتيب العرض (الأصغر أولاً)', type: 'number', default: 0 }
+    ],
+    list: { title: c => c.titleAr || c.titleEn || 'صورة', excerpt: c => (c.descAr || c.descEn || ''), thumb: c => c.imageUrl, emoji: '🖼️', badges: c => [], meta: c => [] },
+    stats: items => ({ 'إجمالي الصور': items.length })
+  },
   competitor: {
     key: 'competitor', icon: '🎯', nameAr: 'تحليل المنافسين', singularAr: 'منافس',
     endpoint: '/api/admin/content-blocks', sectionFilter: 'competitor-intel',
