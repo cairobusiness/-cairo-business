@@ -1573,6 +1573,7 @@ async function switchToAnalytics() {
 async function switchEntity(key) {
   if (!ENTITIES[key]) return;
   currentEntityKey = key;
+  _listPage = 1;
   document.getElementById('search-input').value = '';
   document.getElementById('search-input').style.display = '';
   document.querySelector('.actions button.btn-primary').style.display = '';
@@ -1584,16 +1585,33 @@ async function switchEntity(key) {
 }
 
 function onSearch() {
+  _listPage = 1;
   if (searchTimer) clearTimeout(searchTimer);
   searchTimer = setTimeout(loadList, 300);
 }
 
+let _listPage = 1;
+function goListPage(delta) { _listPage = Math.max(1, _listPage + delta); loadList(); try{window.scrollTo(0,0);}catch(_){} }
+function renderListPagination(count, pageSize) {
+  var c = document.getElementById('list-container'); if (!c) return;
+  var old = document.getElementById('list-pagination'); if (old) old.remove();
+  if (_listPage <= 1 && count < pageSize) return;
+  var hasNext = count >= pageSize;
+  var bar = document.createElement('div'); bar.id='list-pagination';
+  bar.style.cssText='display:flex;gap:10px;align-items:center;justify-content:center;margin:18px 0;';
+  bar.innerHTML = '<button class="btn btn-ghost" '+(_listPage<=1?'disabled':'')+' onclick="goListPage(-1)">\u2039 \u0627\u0644\u0633\u0627\u0628\u0642</button>'
+    + '<span style="font-size:13px;opacity:.7;">\u0635\u0641\u062d\u0629 '+_listPage+'</span>'
+    + '<button class="btn btn-ghost" '+(hasNext?'':'disabled')+' onclick="goListPage(1)">\u0627\u0644\u062a\u0627\u0644\u064a \u203a</button>';
+  c.appendChild(bar);
+}
 async function loadList() {
   const container = document.getElementById('list-container');
   container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   const ent = currentEntity();
   const search = document.getElementById('search-input').value.trim();
-  let qs = search ? '?search=' + encodeURIComponent(search) + '&limit=100' : '?limit=100';
+  const PAGE_SIZE = 50;
+  let qs = '?limit=' + PAGE_SIZE + '&page=' + _listPage;
+  if (search) qs += '&search=' + encodeURIComponent(search);
   /* Section-filtered entities (ContentBlock-backed) append &section=slug */
   if (ent.sectionFilter) qs += '&section=' + encodeURIComponent(ent.sectionFilter);
   const r = await api(ent.endpoint + qs);
@@ -1610,6 +1628,7 @@ async function loadList() {
   renderList();
   /* Render section-level links if entity exposes them */
   renderEntityLinks();
+  renderListPagination(items.length, PAGE_SIZE);
 }
 
 function renderEntityLinks() {
