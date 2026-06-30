@@ -1646,6 +1646,9 @@ function renderEntityLinks() {
     stats.parentElement.insertBefore(host, stats.nextSibling);
   }
   host.innerHTML = '';
+  if (ent.key === 'carousel') {
+    host.innerHTML += '<button class="btn btn-primary btn-sm" onclick="openCarouselBulk()" style="font-weight:700;">\uD83D\uDCE4 \u0631\u0641\u0639 \u0645\u062a\u0639\u062f\u062f (\u0644\u062d\u062f 12 \u0635\u0648\u0631\u0629)</button>';
+  }
   if (ent.sectionLink) {
     host.innerHTML += '<span style="font-size:12px;opacity:.7">رابط السكشن الكامل:</span>' +
       '<input readonly value="' + ent.sectionLink + '" onclick="this.select()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border,#333);background:transparent;color:inherit;min-width:280px;border-radius:6px" />' +
@@ -3809,3 +3812,76 @@ async function uploadFileFor(fieldId, fileInput) {
 const _lp = document.getElementById('login-password');
 if (_lp) _lp.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 boot();
+
+/* ===================== Bulk carousel uploader (up to 12 images) ===================== */
+function cbVal(id){ var e=document.getElementById(id); return e ? e.value.trim() : ''; }
+function cbBulkInput(id,label,ph,ltr){
+  return '<label style="display:block;margin:12px 0 5px;font-size:13px;color:rgba(255,255,255,.85);">'+label+'</label>'
+    +'<input id="'+id+'" type="text" placeholder="'+(ph||'')+'" '+(ltr?'dir="ltr"':'')
+    +' style="width:100%;padding:10px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;" />';
+}
+function cbCloseBulk(){ var o=document.getElementById('cb-bulk-overlay'); if(o) o.remove(); }
+function cbBulkFilesPicked(){
+  var inp=document.getElementById('cbb_files'); var c=document.getElementById('cbb_filecount');
+  if(!inp||!c) return;
+  var n=(inp.files||[]).length;
+  if(n===0){ c.textContent=''; c.style.color='rgba(255,255,255,.6)'; return; }
+  if(n>12){ c.textContent='اخترتِ '+n+' صورة — الحد الأقصى 12. هيتاخد أول 12 بس.'; c.style.color='#f59e0b'; }
+  else { c.textContent='تم اختيار '+n+' صورة ✓'; c.style.color='#22c55e'; }
+}
+async function cbUploadOne(file){
+  var f = (typeof optimizeImage==='function') ? await optimizeImage(file) : file;
+  var fd = new FormData(); fd.append('file', f);
+  var base = (typeof CB_API!=='undefined' && CB_API.baseUrl) ? CB_API.baseUrl : 'https://cairo-business-backend.vercel.app';
+  var res = await fetch(base+'/api/admin/upload', { method:'POST', headers:{'Authorization':'Bearer '+getToken()}, body:fd });
+  var j = await res.json().catch(function(){return {};});
+  if(!res.ok || !j.success || !j.url) throw new Error(j.error || 'فشل رفع الصورة');
+  return j.url;
+}
+function openCarouselBulk(){
+  cbCloseBulk();
+  var ov=document.createElement('div');
+  ov.id='cb-bulk-overlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(2,6,23,.72);z-index:99999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:40px 16px;';
+  ov.onclick=function(e){ if(e.target===ov) cbCloseBulk(); };
+  ov.innerHTML='<div dir="rtl" style="background:#0f1535;border:1px solid rgba(255,255,255,.12);border-radius:16px;max-width:560px;width:100%;padding:24px;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);">'
+    +'<h3 style="margin:0 0 4px;font-size:20px;">📤 رفع متعدد للكاروسيل</h3>'
+    +'<p style="margin:0 0 16px;color:rgba(255,255,255,.6);font-size:13px;">اختاري لحد 12 صورة مرة واحدة — هتتجمّع كلها في كاروسيل واحد بنفس العنوان والكابشن.</p>'
+    +cbBulkInput('cbb_titleAr','اسم الكاروسيل (عربي) *','مثال: فعاليات THE SHIFT')
+    +cbBulkInput('cbb_titleEn','Carousel name (EN) *','e.g. THE SHIFT events',true)
+    +cbBulkInput('cbb_subAr','كابشن الكاروسيل (اختياري)','يظهر تحت العنوان')
+    +cbBulkInput('cbb_subEn','Caption EN (optional)','',true)
+    +'<label style="display:block;margin:14px 0 6px;font-size:13px;color:rgba(255,255,255,.85);">الصور (لحد 12) *</label>'
+    +'<input type="file" id="cbb_files" accept="image/*" multiple onchange="cbBulkFilesPicked()" style="width:100%;padding:12px;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.3);border-radius:8px;color:#fff;box-sizing:border-box;" />'
+    +'<div id="cbb_filecount" style="margin-top:6px;font-size:12px;color:rgba(255,255,255,.6);"></div>'
+    +'<div id="cbb_status" style="margin-top:14px;font-size:13px;min-height:18px;"></div>'
+    +'<div style="display:flex;gap:10px;margin-top:20px;">'
+    +'<button class="btn btn-primary" id="cbb_submit" onclick="cbBulkSubmit()" style="font-weight:700;">رفع وحفظ</button>'
+    +'<button class="btn btn-ghost" onclick="cbCloseBulk()">إلغاء</button>'
+    +'</div></div>';
+  document.body.appendChild(ov);
+}
+async function cbBulkSubmit(){
+  var titleAr=cbVal('cbb_titleAr'), titleEn=cbVal('cbb_titleEn'), subAr=cbVal('cbb_subAr'), subEn=cbVal('cbb_subEn');
+  var inp=document.getElementById('cbb_files');
+  var files=Array.prototype.slice.call((inp&&inp.files)||[]).slice(0,12);
+  var status=document.getElementById('cbb_status'), submit=document.getElementById('cbb_submit');
+  if(!titleAr||!titleEn){ status.innerHTML='<span style="color:#ef4444">❌ لازم تكتبي اسم الكاروسيل بالعربي والإنجليزي.</span>'; return; }
+  if(!files.length){ status.innerHTML='<span style="color:#ef4444">❌ اختاري صورة واحدة على الأقل.</span>'; return; }
+  submit.disabled=true;
+  var ok=0, fail=0;
+  for(var i=0;i<files.length;i++){
+    status.innerHTML='<span style="color:#F4D03F">⏳ جاري رفع صورة '+(i+1)+' من '+files.length+'...</span>';
+    try{
+      var url=await cbUploadOne(files[i]);
+      var body={ section:'carousel', titleAr:titleAr, titleEn:titleEn, imageUrl:url, sortOrder:i+1 };
+      if(subAr) body.subtitleAr=subAr;
+      if(subEn) body.subtitleEn=subEn;
+      var r=await api('/api/admin/content-blocks',{method:'POST',body:JSON.stringify(body)});
+      if(r.ok) ok++; else fail++;
+    }catch(e){ fail++; }
+  }
+  status.innerHTML='<span style="color:'+(fail?'#f59e0b':'#22c55e')+'">تم حفظ '+ok+' صورة'+(fail?(' — فشل '+fail):'')+' ✅</span>';
+  submit.disabled=false;
+  setTimeout(function(){ cbCloseBulk(); if(typeof loadList==='function') loadList(); }, 1300);
+}
