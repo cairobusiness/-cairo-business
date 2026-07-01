@@ -602,16 +602,10 @@ const ENTITIES = {
     key: 'carousel', icon: '🖼️', nameAr: 'كاروسيل', singularAr: 'صورة',
     endpoint: '/api/admin/content-blocks', sectionFilter: 'carousel',
     fields: [
-      { id: 'titleAr', label: 'اسم الكاروسيل * (الصور اللي ليها نفس الاسم بتتجمع في كاروسيل واحد)', type: 'text', required: true, full: true, placeholder: 'مثال: فعاليات THE SHIFT' },
-      { id: 'titleEn', label: 'Carousel name EN *', type: 'text', required: true, dir: 'ltr', full: true },
-      { id: 'subtitleAr', label: 'كابشن الكاروسيل (يظهر تحت العنوان فوق الصور)', type: 'text', nullable: true, full: true },
-      { id: 'subtitleEn', label: 'Caption EN', type: 'text', nullable: true, dir: 'ltr', full: true },
-      { id: 'imageUrl', label: 'الصورة (URL) *', type: 'url', required: true, dir: 'ltr', full: true, placeholder: 'https://...' },
-      { id: 'descAr', label: 'تعليق يظهر على الصورة نفسها (اختياري)', type: 'textarea', nullable: true, full: true },
-      { id: 'descEn', label: 'Caption on image EN', type: 'textarea', nullable: true, dir: 'ltr', full: true },
-      { id: 'sortOrder', label: 'ترتيب الصورة داخل الكاروسيل (الأصغر أولاً)', type: 'number', default: 0 }
+      { id: 'titleAr', label: 'عنوان الكاروسيل *', type: 'text', required: true, full: true, placeholder: 'مثال: فعاليات THE SHIFT' },
+      { id: 'imageUrl', label: 'الصورة *', type: 'url', required: true, dir: 'ltr', full: true, placeholder: 'ارفعي صورة من جهازك' }
     ],
-    list: { title: c => (c.titleAr || c.titleEn || 'صورة'), excerpt: c => (c.subtitleAr || c.descAr || c.descEn || ''), thumb: c => c.imageUrl, emoji: '🖼️', badges: c => (c.titleAr ? [{ text: c.titleAr, kind: 'gold' }] : []), meta: c => [] },
+    list: { title: c => (c.titleAr || 'صورة'), excerpt: c => '', thumb: c => c.imageUrl, emoji: '🖼️', badges: c => [], meta: c => [] },
     stats: items => ({ 'إجمالي الصور': items.length, 'عدد الكاروسيلات': new Set(items.map(i => (i.titleAr || i.titleEn || '').trim())).size })
   },
   competitor: {
@@ -1954,6 +1948,7 @@ async function saveItem() {
   }
   if (missing.length) { msg.innerHTML = '<div class="msg msg-error">يرجى ملء: ' + escapeHtml(missing.join('، ')) + '</div>'; return; }
   /* Section-filtered entities (ContentBlock-backed) need `section` in body */
+  if (ent.key === 'carousel' && payload.titleAr && !payload.titleEn) payload.titleEn = payload.titleAr;
   if (ent.sectionFilter && !editingId) payload.section = ent.sectionFilter;
   btn.disabled = true; btn.textContent = 'جاري الحفظ...';
   try {
@@ -3847,10 +3842,7 @@ function openCarouselBulk(){
   ov.innerHTML='<div dir="rtl" style="background:#0f1535;border:1px solid rgba(255,255,255,.12);border-radius:16px;max-width:560px;width:100%;padding:24px;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);">'
     +'<h3 style="margin:0 0 4px;font-size:20px;">📤 رفع متعدد للكاروسيل</h3>'
     +'<p style="margin:0 0 16px;color:rgba(255,255,255,.6);font-size:13px;">اختاري لحد 12 صورة مرة واحدة — هتتجمّع كلها في كاروسيل واحد بنفس العنوان والكابشن.</p>'
-    +cbBulkInput('cbb_titleAr','اسم الكاروسيل (عربي) *','مثال: فعاليات THE SHIFT')
-    +cbBulkInput('cbb_titleEn','Carousel name (EN) *','e.g. THE SHIFT events',true)
-    +cbBulkInput('cbb_subAr','كابشن الكاروسيل (اختياري)','يظهر تحت العنوان')
-    +cbBulkInput('cbb_subEn','Caption EN (optional)','',true)
+    +cbBulkInput('cbb_titleAr','عنوان الكاروسيل *','مثال: فعاليات THE SHIFT')
     +'<label style="display:block;margin:14px 0 6px;font-size:13px;color:rgba(255,255,255,.85);">الصور (لحد 12) *</label>'
     +'<input type="file" id="cbb_files" accept="image/*" multiple onchange="cbBulkFilesPicked()" style="width:100%;padding:12px;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.3);border-radius:8px;color:#fff;box-sizing:border-box;" />'
     +'<div id="cbb_filecount" style="margin-top:6px;font-size:12px;color:rgba(255,255,255,.6);"></div>'
@@ -3862,11 +3854,11 @@ function openCarouselBulk(){
   document.body.appendChild(ov);
 }
 async function cbBulkSubmit(){
-  var titleAr=cbVal('cbb_titleAr'), titleEn=cbVal('cbb_titleEn'), subAr=cbVal('cbb_subAr'), subEn=cbVal('cbb_subEn');
+  var titleAr=cbVal('cbb_titleAr');
   var inp=document.getElementById('cbb_files');
   var files=Array.prototype.slice.call((inp&&inp.files)||[]).slice(0,12);
   var status=document.getElementById('cbb_status'), submit=document.getElementById('cbb_submit');
-  if(!titleAr||!titleEn){ status.innerHTML='<span style="color:#ef4444">❌ لازم تكتبي اسم الكاروسيل بالعربي والإنجليزي.</span>'; return; }
+  if(!titleAr){ status.innerHTML='<span style="color:#ef4444">❌ لازم تكتبي عنوان الكاروسيل.</span>'; return; }
   if(!files.length){ status.innerHTML='<span style="color:#ef4444">❌ اختاري صورة واحدة على الأقل.</span>'; return; }
   submit.disabled=true;
   var ok=0, fail=0;
@@ -3874,9 +3866,7 @@ async function cbBulkSubmit(){
     status.innerHTML='<span style="color:#F4D03F">⏳ جاري رفع صورة '+(i+1)+' من '+files.length+'...</span>';
     try{
       var url=await cbUploadOne(files[i]);
-      var body={ section:'carousel', titleAr:titleAr, titleEn:titleEn, imageUrl:url, sortOrder:i+1 };
-      if(subAr) body.subtitleAr=subAr;
-      if(subEn) body.subtitleEn=subEn;
+      var body={ section:'carousel', titleAr:titleAr, titleEn:titleAr, imageUrl:url, sortOrder:i+1 };
       var r=await api('/api/admin/content-blocks',{method:'POST',body:JSON.stringify(body)});
       if(r.ok) ok++; else fail++;
     }catch(e){ fail++; }
