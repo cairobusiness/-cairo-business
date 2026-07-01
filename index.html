@@ -20276,3 +20276,60 @@
 
 </body>
 </html>
+
+<!-- ============================================================
+     CMS CAROUSEL HOTFIX (Claude 2026-07-01)
+     The live homepage never fetched/rendered the CMS "carousel" section,
+     so admin-added carousel images never appeared. This self-contained
+     block injects the section (before the footer), then fetches and renders
+     carousel data grouped by title. Purely additive — safe to append to
+     the end of index.html (just before </body> is ideal, but anywhere works).
+     ============================================================ -->
+<style>
+  #cms-carousel{ padding:64px 0; position:relative; background:linear-gradient(to bottom,#0a0e27,#0f1535); }
+  #cms-carousel .cbc-wrap{ max-width:1280px; margin:0 auto; padding:0 16px; }
+  #cms-carousel .cbc-group{ margin-bottom:48px; }
+  #cms-carousel .cbc-head{ text-align:center; margin-bottom:20px; }
+  #cms-carousel .cbc-eyebrow{ display:inline-block; font-size:11px; letter-spacing:.25em; font-weight:800; color:#D4AF37; margin-bottom:8px; }
+  #cms-carousel .cbc-title{ font-size:26px; font-weight:900; color:#fff; margin:0; }
+  #cms-carousel .cbc-track{ display:flex; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory; padding:6px 2px 16px; }
+  #cms-carousel .cbc-track::-webkit-scrollbar{ height:6px; }
+  #cms-carousel .cbc-track::-webkit-scrollbar-thumb{ background:rgba(212,175,55,.4); border-radius:10px; }
+  #cms-carousel .cbc-slide{ flex:0 0 auto; width:300px; scroll-snap-align:start; border-radius:16px; overflow:hidden; background:#0f1535; border:1px solid rgba(255,255,255,.1); display:block; text-decoration:none; }
+  #cms-carousel .cbc-img{ width:100%; height:360px; object-fit:cover; display:block; }
+  #cms-carousel .cbc-cap{ padding:12px 14px; font-size:13px; color:rgba(255,255,255,.8); }
+</style>
+<section id="cms-carousel" style="display:none;"><div class="cbc-wrap"><div id="cms-carousel-root"></div></div></section>
+<script>
+(function(){
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];}); }
+  function render(blocks){
+    var root=document.getElementById('cms-carousel-root'), section=document.getElementById('cms-carousel');
+    if(!root||!section||!blocks||!blocks.length) return;
+    var isAr=(typeof currentLang==='undefined'||currentLang==='ar');
+    var groups={},order=[];
+    blocks.forEach(function(b){ var k=((isAr?(b.titleAr||b.titleEn):(b.titleEn||b.titleAr))||'').trim()||'—'; if(!groups[k]){groups[k]=[];order.push(k);} groups[k].push(b); });
+    var html='';
+    order.forEach(function(title){
+      var slides=groups[title].slice().sort(function(a,b){return (a.sortOrder||0)-(b.sortOrder||0);});
+      var cards=slides.map(function(s){
+        var img=s.imageUrl||s.thumbnailUrl||''; if(!img) return '';
+        var cap=(isAr?(s.descAr||s.subtitleAr):(s.descEn||s.subtitleEn))||'';
+        var inner='<img src="'+esc(img)+'" class="cbc-img" loading="lazy"/>'+(cap?'<div class="cbc-cap">'+esc(cap)+'</div>':'');
+        return s.linkUrl?'<a href="'+esc(s.linkUrl)+'" target="_blank" rel="noopener" class="cbc-slide">'+inner+'</a>':'<div class="cbc-slide">'+inner+'</div>';
+      }).join('');
+      if(!cards) return;
+      html+='<div class="cbc-group"><div class="cbc-head"><span class="cbc-eyebrow">GALLERY</span><h3 class="cbc-title">'+esc(title)+'</h3></div><div class="cbc-track">'+cards+'</div></div>';
+    });
+    if(!html) return;
+    root.innerHTML=html; section.style.display='';
+  }
+  function boot(){
+    var sec=document.getElementById('cms-carousel'), footer=document.querySelector('footer');
+    if(sec && footer && footer.parentNode){ footer.parentNode.insertBefore(sec, footer); }
+    var base=(typeof CB_BACKEND!=='undefined'&&CB_BACKEND)?CB_BACKEND:'https://cairo-business-backend.vercel.app';
+    fetch(base+'/api/content-blocks?section=carousel').then(function(r){return r.json();}).then(function(j){ if(j&&j.success) render(j.data||[]); }).catch(function(){});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+})();
+</script>
