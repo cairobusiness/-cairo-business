@@ -3932,3 +3932,79 @@ async function cbBulkSubmit(){
   submit.disabled=false;
   setTimeout(function(){ if(typeof cbCloseBulk==='function') cbCloseBulk(); if(typeof loadList==='function') loadList(); }, 1300);
 }
+
+/* ==== CB-HOTFIX-START (Claude) — regenerated on each deploy; safe to append ==== */
+/* ============================================================
+   Carousel bulk uploader — two fixes:
+   1) Upload fix: deployed optimizeImage() returns {dataUrl,...} (a base64
+      STRING), not a File/Blob. Normalize it to a Blob before upload.
+   2) REPLACE mode: each new bulk upload clears the OLD carousel first, so
+      only the newest set shows. Old images are deleted ONLY after at least
+      one new image saves (never ends up empty on a failed upload).
+   These re-declarations override the originals (last declaration wins).
+   ============================================================ */
+async function cbUploadOne(file){
+  var f = (typeof optimizeImage==='function') ? await optimizeImage(file) : file;
+  if (f && !(f instanceof Blob) && typeof f.dataUrl === 'string') {
+    f = await (await fetch(f.dataUrl)).blob();
+  }
+  if (!(f instanceof Blob)) f = file;
+  var fd = new FormData();
+  fd.append('file', f, (file && file.name) || 'upload.jpg');
+  var base = (typeof CB_API!=='undefined' && CB_API && CB_API.baseUrl) ? CB_API.baseUrl : 'https://cairo-business-backend.vercel.app';
+  var tok  = (typeof getToken==='function' ? getToken() : localStorage.getItem('cb_auth_token')) || '';
+  var res  = await fetch(base+'/api/admin/upload', { method:'POST', headers:{'Authorization':'Bearer '+tok}, body:fd });
+  var j = await res.json().catch(function(){ return {}; });
+  if (res.status===401) throw new Error('انتهت صلاحية الجلسة — سجّلي الدخول من جديد وحاولي تاني');
+  if (!res.ok || !j.success || !j.url) throw new Error(j.error || ('فشل رفع الصورة (HTTP '+res.status+')'));
+  return j.url;
+}
+
+async function cbBulkSubmit(){
+  var titleAr = (typeof cbVal==='function') ? cbVal('cbb_titleAr') : (document.getElementById('cbb_titleAr')||{}).value;
+  var inp = document.getElementById('cbb_files');
+  var files = Array.prototype.slice.call((inp && inp.files) || []).slice(0,12);
+  var status = document.getElementById('cbb_status'), submit = document.getElementById('cbb_submit');
+  var E = function(s){ return (window.escapeHtml ? escapeHtml(s) : String(s==null?'':s)); };
+  if (!titleAr){ status.innerHTML='<span style="color:#ef4444">❌ لازم تكتبي عنوان الكاروسيل.</span>'; return; }
+  if (!files.length){ status.innerHTML='<span style="color:#ef4444">❌ اختاري صورة واحدة على الأقل.</span>'; return; }
+  submit.disabled=true;
+
+  /* REPLACE mode: remember the CURRENT carousel images so we can delete them
+     AFTER the new ones upload successfully (avoids ending up empty). */
+  var oldIds=[];
+  try {
+    var er = await api('/api/admin/content-blocks?section=carousel&limit=500');
+    var ex = (er && er.data && er.data.data) || [];
+    oldIds = ex.map(function(x){ return x.id; });
+  } catch(e){}
+
+  var ok=0, fail=0, lastErr='';
+  for (var i=0;i<files.length;i++){
+    status.innerHTML='<span style="color:#F4D03F">⏳ جاري رفع صورة '+(i+1)+' من '+files.length+'...</span>';
+    try{
+      var url = await cbUploadOne(files[i]);
+      var body = { section:'carousel', titleAr:titleAr, titleEn:titleAr, imageUrl:url, sortOrder:i+1 };
+      var r = await api('/api/admin/content-blocks', { method:'POST', body:JSON.stringify(body) });
+      if (r.ok){ ok++; } else { fail++; lastErr=(r.data&&r.data.error)||('خطأ الحفظ HTTP '+r.status); }
+    }catch(e){ fail++; lastErr=(e&&e.message)||'خطأ غير معروف'; }
+  }
+
+  if (ok===0){
+    status.innerHTML='<span style="color:#ef4444">❌ لم يتم حفظ أي صورة.<br>السبب: '+E(lastErr)+'</span>';
+    submit.disabled=false; return;
+  }
+
+  /* Replace: now that new images are saved, remove the previous carousel set. */
+  if (oldIds.length){
+    status.innerHTML='<span style="color:#F4D03F">⏳ جاري استبدال المحتوى القديم...</span>';
+    for (var d=0; d<oldIds.length; d++){
+      try{ await api('/api/admin/content-blocks/'+oldIds[d], { method:'DELETE' }); }catch(e){}
+    }
+  }
+
+  status.innerHTML='<span style="color:'+(fail?'#f59e0b':'#22c55e')+'">✅ تم حفظ '+ok+' صورة'+(oldIds.length?' (واستبدلنا القديم)':'')+(fail?(' — وفشل '+fail+' ('+E(lastErr)+')'):'')+'</span>';
+  submit.disabled=false;
+  setTimeout(function(){ if(typeof cbCloseBulk==='function') cbCloseBulk(); if(typeof loadList==='function') loadList(); }, 1400);
+}
+/* ==== CB-HOTFIX-END ==== */

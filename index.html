@@ -20276,14 +20276,11 @@
 
 </body>
 </html>
-
+<!--CB-CAROUSEL-START-->
 <!-- ============================================================
-     CMS CAROUSEL HOTFIX (Claude 2026-07-01)
-     The live homepage never fetched/rendered the CMS "carousel" section,
-     so admin-added carousel images never appeared. This self-contained
-     block injects the section (before the footer), then fetches and renders
-     carousel data grouped by title. Purely additive — safe to append to
-     the end of index.html (just before </body> is ideal, but anywhere works).
+     CMS CAROUSEL (Claude) — static gallery, arrow navigation only.
+     No autoplay / no auto-scroll. User moves slides with ‹ › arrows.
+     Self-contained; injected before the footer. Regenerated on each deploy.
      ============================================================ -->
 <style>
   #cms-carousel{ padding:64px 0; position:relative; background:linear-gradient(to bottom,#0a0e27,#0f1535); }
@@ -20292,25 +20289,35 @@
   #cms-carousel .cbc-head{ text-align:center; margin-bottom:20px; }
   #cms-carousel .cbc-eyebrow{ display:inline-block; font-size:11px; letter-spacing:.25em; font-weight:800; color:#D4AF37; margin-bottom:8px; }
   #cms-carousel .cbc-title{ font-size:26px; font-weight:900; color:#fff; margin:0; }
-  #cms-carousel .cbc-track{ display:flex; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory; padding:6px 2px 16px; }
-  #cms-carousel .cbc-track::-webkit-scrollbar{ height:6px; }
-  #cms-carousel .cbc-track::-webkit-scrollbar-thumb{ background:rgba(212,175,55,.4); border-radius:10px; }
+  #cms-carousel .cbc-viewport{ position:relative; }
+  /* Track: scrollable programmatically only (no free auto-movement, scrollbar hidden) */
+  #cms-carousel .cbc-track{ display:flex; gap:16px; overflow-x:auto; scroll-behavior:smooth; scroll-snap-type:x mandatory; padding:6px 2px; scrollbar-width:none; -ms-overflow-style:none; }
+  #cms-carousel .cbc-track::-webkit-scrollbar{ display:none; }
   #cms-carousel .cbc-slide{ flex:0 0 auto; width:300px; scroll-snap-align:start; border-radius:16px; overflow:hidden; background:#0f1535; border:1px solid rgba(255,255,255,.1); display:block; text-decoration:none; }
   #cms-carousel .cbc-img{ width:100%; height:360px; object-fit:cover; display:block; }
   #cms-carousel .cbc-cap{ padding:12px 14px; font-size:13px; color:rgba(255,255,255,.8); }
+  /* Arrow buttons */
+  #cms-carousel .cbc-arrow{ position:absolute; top:50%; transform:translateY(-50%); z-index:5; width:44px; height:44px; border-radius:50%; border:1px solid rgba(212,175,55,.5); background:rgba(10,14,39,.85); color:#F4D03F; font-size:24px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s, transform .2s; }
+  #cms-carousel .cbc-arrow:hover{ background:#D4AF37; color:#0a0e27; }
+  #cms-carousel .cbc-prev{ left:-6px; }
+  #cms-carousel .cbc-next{ right:-6px; }
+  #cms-carousel .cbc-arrow.cbc-hidden{ display:none; }
+  @media (max-width:640px){ #cms-carousel .cbc-slide{ width:82vw; } #cms-carousel .cbc-img{ height:300px; } }
 </style>
 <section id="cms-carousel" style="display:none;"><div class="cbc-wrap"><div id="cms-carousel-root"></div></div></section>
 <script>
 (function(){
-  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];}); }
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+  window.cbcScroll=function(id,dir){ var t=document.getElementById(id); if(!t) return; var step=Math.min(t.clientWidth*0.9, 316); t.scrollBy({left:dir*step, behavior:'smooth'}); };
   function render(blocks){
     var root=document.getElementById('cms-carousel-root'), section=document.getElementById('cms-carousel');
     if(!root||!section||!blocks||!blocks.length) return;
     var isAr=(typeof currentLang==='undefined'||currentLang==='ar');
     var groups={},order=[];
     blocks.forEach(function(b){ var k=((isAr?(b.titleAr||b.titleEn):(b.titleEn||b.titleAr))||'').trim()||'—'; if(!groups[k]){groups[k]=[];order.push(k);} groups[k].push(b); });
-    var html='';
+    var html='', gi=0;
     order.forEach(function(title){
+      var trackId='cbc-track-'+(gi++);
       var slides=groups[title].slice().sort(function(a,b){return (a.sortOrder||0)-(b.sortOrder||0);});
       var cards=slides.map(function(s){
         var img=s.imageUrl||s.thumbnailUrl||''; if(!img) return '';
@@ -20319,7 +20326,14 @@
         return s.linkUrl?'<a href="'+esc(s.linkUrl)+'" target="_blank" rel="noopener" class="cbc-slide">'+inner+'</a>':'<div class="cbc-slide">'+inner+'</div>';
       }).join('');
       if(!cards) return;
-      html+='<div class="cbc-group"><div class="cbc-head"><span class="cbc-eyebrow">GALLERY</span><h3 class="cbc-title">'+esc(title)+'</h3></div><div class="cbc-track">'+cards+'</div></div>';
+      var multi = slides.length>1;
+      html+='<div class="cbc-group">'
+        +'<div class="cbc-head"><span class="cbc-eyebrow">GALLERY</span><h3 class="cbc-title">'+esc(title)+'</h3></div>'
+        +'<div class="cbc-viewport">'
+        +(multi?'<button class="cbc-arrow cbc-prev" onclick="cbcScroll(\''+trackId+'\',-1)" aria-label="prev">‹</button>':'')
+        +'<div class="cbc-track" id="'+trackId+'">'+cards+'</div>'
+        +(multi?'<button class="cbc-arrow cbc-next" onclick="cbcScroll(\''+trackId+'\',1)" aria-label="next">›</button>':'')
+        +'</div></div>';
     });
     if(!html) return;
     root.innerHTML=html; section.style.display='';
@@ -20333,3 +20347,4 @@
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
 </script>
+<!--CB-CAROUSEL-END-->
