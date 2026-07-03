@@ -3933,14 +3933,16 @@ async function cbBulkSubmit(){
   setTimeout(function(){ if(typeof cbCloseBulk==='function') cbCloseBulk(); if(typeof loadList==='function') loadList(); }, 1300);
 }
 
+
 /* ==== CB-HOTFIX-START (Claude) — regenerated on each deploy; safe to append ==== */
 /* ============================================================
    Carousel bulk uploader — two fixes:
    1) Upload fix: deployed optimizeImage() returns {dataUrl,...} (a base64
       STRING), not a File/Blob. Normalize it to a Blob before upload.
-   2) REPLACE mode: each new bulk upload clears the OLD carousel first, so
-      only the newest set shows. Old images are deleted ONLY after at least
-      one new image saves (never ends up empty on a failed upload).
+   2) SAME-TITLE replace: uploading with a title that already exists
+      replaces ONLY that carousel's old slides. Carousels with OTHER
+      titles are never touched (multi-carousel safe). Old slides are
+      deleted ONLY after at least one new image saves.
    These re-declarations override the originals (last declaration wins).
    ============================================================ */
 async function cbUploadOne(file){
@@ -3970,13 +3972,16 @@ async function cbBulkSubmit(){
   if (!files.length){ status.innerHTML='<span style="color:#ef4444">❌ اختاري صورة واحدة على الأقل.</span>'; return; }
   submit.disabled=true;
 
-  /* REPLACE mode: remember the CURRENT carousel images so we can delete them
-     AFTER the new ones upload successfully (avoids ending up empty). */
+  /* SAME-TITLE replace: only remember slides whose title matches the one
+     being uploaded — other carousels must NEVER be deleted. */
   var oldIds=[];
   try {
     var er = await api('/api/admin/content-blocks?section=carousel&limit=500');
     var ex = (er && er.data && er.data.data) || [];
-    oldIds = ex.map(function(x){ return x.id; });
+    var newT = String(titleAr).trim();
+    oldIds = ex.filter(function(x){
+      return String((x && x.titleAr) || '').trim() === newT;
+    }).map(function(x){ return x.id; });
   } catch(e){}
 
   var ok=0, fail=0, lastErr='';
@@ -3995,16 +4000,111 @@ async function cbBulkSubmit(){
     submit.disabled=false; return;
   }
 
-  /* Replace: now that new images are saved, remove the previous carousel set. */
+  /* Replace ONLY the old slides of this same carousel (same title). */
   if (oldIds.length){
-    status.innerHTML='<span style="color:#F4D03F">⏳ جاري استبدال المحتوى القديم...</span>';
+    status.innerHTML='<span style="color:#F4D03F">⏳ جاري استبدال النسخة القديمة من نفس الكاروسيل...</span>';
     for (var d=0; d<oldIds.length; d++){
       try{ await api('/api/admin/content-blocks/'+oldIds[d], { method:'DELETE' }); }catch(e){}
     }
   }
 
-  status.innerHTML='<span style="color:'+(fail?'#f59e0b':'#22c55e')+'">✅ تم حفظ '+ok+' صورة'+(oldIds.length?' (واستبدلنا القديم)':'')+(fail?(' — وفشل '+fail+' ('+E(lastErr)+')'):'')+'</span>';
+  status.innerHTML='<span style="color:'+(fail?'#f59e0b':'#22c55e')+'">✅ تم حفظ '+ok+' صورة'+(oldIds.length?' (واستبدلنا النسخة القديمة من نفس الكاروسيل)':'')+(fail?(' — وفشل '+fail+' ('+E(lastErr)+')'):'')+'</span>';
   submit.disabled=false;
   setTimeout(function(){ if(typeof cbCloseBulk==='function') cbCloseBulk(); if(typeof loadList==='function') loadList(); }, 1400);
+}
+/* ============================================================
+   RECOVERY: restore carousel images whose DB rows were deleted.
+   Adds a "استرجاع صور من الأرشيف" button inside the bulk-upload
+   modal. It lists bucket images not referenced by the DB (orphans),
+   lets the admin pick some + type a title, and recreates the rows.
+   Requires backend route: GET /api/admin/storage-recovery
+   ============================================================ */
+(function(){
+  var orig = window.openCarouselBulk;
+  if (typeof orig !== 'function') return;
+  window.openCarouselBulk = function(){
+    orig();
+    var box = document.querySelector('#cb-bulk-overlay > div');
+    if (!box || document.getElementById('cbb_recover')) return;
+    var btn = document.createElement('button');
+    btn.id = 'cbb_recover';
+    btn.className = 'btn btn-ghost';
+    btn.style.cssText = 'margin-top:14px;width:100%;font-size:13px;';
+    btn.textContent = '🔁 استرجاع صور قديمة من الأرشيف';
+    btn.onclick = cbOpenRecovery;
+    box.appendChild(btn);
+  };
+})();
+
+function cbCloseRecovery(){ var o=document.getElementById('cb-rec-overlay'); if(o) o.remove(); }
+
+async function cbOpenRecovery(){
+  if(typeof cbCloseBulk==='function') cbCloseBulk();
+  cbCloseRecovery();
+  var ov=document.createElement('div');
+  ov.id='cb-rec-overlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(2,6,23,.72);z-index:99999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:40px 16px;';
+  ov.onclick=function(e){ if(e.target===ov) cbCloseRecovery(); };
+  ov.innerHTML='<div dir="rtl" style="background:#0f1535;border:1px solid rgba(255,255,255,.12);border-radius:16px;max-width:760px;width:100%;padding:24px;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);">'
+    +'<h3 style="margin:0 0 4px;font-size:20px;">🔁 استرجاع صور من الأرشيف</h3>'
+    +'<p style="margin:0 0 16px;color:rgba(255,255,255,.6);font-size:13px;">دي الصور الموجودة في التخزين ومش ظاهرة في أي قسم حالياً. علّم على اللي عايز ترجّعها واكتب عنوان الكاروسيل.</p>'
+    +'<label style="display:block;margin:0 0 5px;font-size:13px;color:rgba(255,255,255,.85);">عنوان الكاروسيل *</label>'
+    +'<input id="cbr_title" type="text" placeholder="مثال: فعاليات THE SHIFT" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;" />'
+    +'<div id="cbr_grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:16px;min-height:60px;"><span style="color:rgba(255,255,255,.6);font-size:13px;">⏳ جاري تحميل الأرشيف...</span></div>'
+    +'<div id="cbr_status" style="margin-top:14px;font-size:13px;min-height:18px;"></div>'
+    +'<div style="display:flex;gap:10px;margin-top:18px;">'
+    +'<button class="btn btn-primary" id="cbr_save" onclick="cbRecoverySave()" style="font-weight:700;">استرجاع المحدد</button>'
+    +'<button class="btn btn-ghost" onclick="cbCloseRecovery()">إلغاء</button>'
+    +'</div></div>';
+  document.body.appendChild(ov);
+
+  var grid=document.getElementById('cbr_grid');
+  try{
+    var r=await api('/api/admin/storage-recovery');
+    var files=(r&&r.data&&r.data.files)||[];
+    var orphans=files.filter(function(f){ return !f.used; });
+    if(!r.ok){ grid.innerHTML='<span style="color:#ef4444;font-size:13px;">❌ '+((r.data&&r.data.error)||('HTTP '+r.status))+'</span>'; return; }
+    if(!orphans.length){ grid.innerHTML='<span style="color:rgba(255,255,255,.6);font-size:13px;">مفيش صور غير مستخدمة في الأرشيف.</span>'; return; }
+    grid.innerHTML='';
+    orphans.forEach(function(f){
+      var d=document.createElement('div');
+      d.className='cbr-item';
+      d.dataset.url=f.url;
+      d.dataset.sel='0';
+      d.style.cssText='position:relative;border:2px solid rgba(255,255,255,.15);border-radius:10px;overflow:hidden;cursor:pointer;aspect-ratio:4/5;background:#1d2a4d url(\''+f.url+'\') center/cover no-repeat;transition:border-color .15s;';
+      d.onclick=function(){
+        var on=d.dataset.sel!=='1';
+        d.dataset.sel=on?'1':'0';
+        d.style.borderColor=on?'#F4D03F':'rgba(255,255,255,.15)';
+        d.style.boxShadow=on?'0 0 0 2px rgba(244,208,63,.35)':'none';
+      };
+      grid.appendChild(d);
+    });
+  }catch(e){
+    grid.innerHTML='<span style="color:#ef4444;font-size:13px;">❌ '+((e&&e.message)||'فشل تحميل الأرشيف')+'</span>';
+  }
+}
+
+async function cbRecoverySave(){
+  var status=document.getElementById('cbr_status'), save=document.getElementById('cbr_save');
+  var titleEl=document.getElementById('cbr_title');
+  var titleAr=(titleEl&&titleEl.value||'').trim();
+  var picked=Array.prototype.slice.call(document.querySelectorAll('#cbr_grid .cbr-item[data-sel="1"]'));
+  if(!titleAr){ status.innerHTML='<span style="color:#ef4444">❌ اكتب عنوان الكاروسيل الأول.</span>'; return; }
+  if(!picked.length){ status.innerHTML='<span style="color:#ef4444">❌ اختار صورة واحدة على الأقل.</span>'; return; }
+  save.disabled=true;
+  var ok=0, fail=0, lastErr='';
+  for(var i=0;i<picked.length;i++){
+    status.innerHTML='<span style="color:#F4D03F">⏳ جاري استرجاع '+(i+1)+' من '+picked.length+'...</span>';
+    try{
+      var body={ section:'carousel', titleAr:titleAr, titleEn:titleAr, imageUrl:picked[i].dataset.url, sortOrder:i+1 };
+      var r=await api('/api/admin/content-blocks',{ method:'POST', body:JSON.stringify(body) });
+      if(r.ok) ok++; else { fail++; lastErr=(r.data&&r.data.error)||('HTTP '+r.status); }
+    }catch(e){ fail++; lastErr=(e&&e.message)||'خطأ غير معروف'; }
+  }
+  if(ok===0){ status.innerHTML='<span style="color:#ef4444">❌ فشل الاسترجاع: '+lastErr+'</span>'; save.disabled=false; return; }
+  status.innerHTML='<span style="color:'+(fail?'#f59e0b':'#22c55e')+'">✅ تم استرجاع '+ok+' صورة'+(fail?(' — وفشل '+fail):'')+'</span>';
+  save.disabled=false;
+  setTimeout(function(){ cbCloseRecovery(); if(typeof loadList==='function') loadList(); },1400);
 }
 /* ==== CB-HOTFIX-END ==== */
