@@ -20303,19 +20303,37 @@
   #cms-carousel .cbc-next{ right:-6px; }
   #cms-carousel .cbc-arrow.cbc-hidden{ display:none; }
   @media (max-width:640px){ #cms-carousel .cbc-slide{ width:82vw; } #cms-carousel .cbc-img{ height:300px; } }
+  /* Show-more: only first 3 carousels visible, rest behind a toggle */
+  #cbc-more{ display:none; }
+  #cbc-more.cbc-open{ display:block; }
+  #cbc-more-btn{ display:flex; align-items:center; justify-content:center; gap:10px; margin:8px auto 0; padding:12px 28px; border-radius:999px; border:1px solid rgba(212,175,55,.5); background:rgba(10,14,39,.85); color:#F4D03F; font-size:15px; font-weight:800; cursor:pointer; transition:background .2s; font-family:inherit; }
+  #cbc-more-btn:hover{ background:#D4AF37; color:#0a0e27; }
+  #cbc-more-btn .cbc-chev{ display:inline-block; transition:transform .25s; }
+  #cbc-more-btn.cbc-open .cbc-chev{ transform:rotate(180deg); }
 </style>
 <section id="cms-carousel" style="display:none;"><div class="cbc-wrap"><div id="cms-carousel-root"></div></div></section>
 <script>
 (function(){
   function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
   window.cbcScroll=function(id,dir){ var t=document.getElementById(id); if(!t) return; var step=Math.min(t.clientWidth*0.9, 316); t.scrollBy({left:dir*step, behavior:'smooth'}); };
+  window.cbcToggleMore=function(){
+    var box=document.getElementById('cbc-more'), btn=document.getElementById('cbc-more-btn');
+    if(!box||!btn) return;
+    var open=!box.classList.contains('cbc-open');
+    box.classList.toggle('cbc-open', open);
+    btn.classList.toggle('cbc-open', open);
+    var lbl=btn.querySelector('.cbc-lbl');
+    if(lbl) lbl.textContent = open ? (btn.getAttribute('data-less')||'') : (btn.getAttribute('data-more')||'');
+    if(!open){ var sec=document.getElementById('cms-carousel'); if(sec) sec.scrollIntoView({behavior:'smooth',block:'start'}); }
+  };
   function render(blocks){
     var root=document.getElementById('cms-carousel-root'), section=document.getElementById('cms-carousel');
     if(!root||!section||!blocks||!blocks.length) return;
     var isAr=(typeof currentLang==='undefined'||currentLang==='ar');
     var groups={},order=[];
     blocks.forEach(function(b){ var k=((isAr?(b.titleAr||b.titleEn):(b.titleEn||b.titleAr))||'').trim()||'—'; if(!groups[k]){groups[k]=[];order.push(k);} groups[k].push(b); });
-    var html='', gi=0;
+    var VISIBLE=3; /* how many carousels show before the "more" button */
+    var html='', moreHtml='', gi=0, shown=0;
     order.forEach(function(title){
       var trackId='cbc-track-'+(gi++);
       var slides=groups[title].slice().sort(function(a,b){return (a.sortOrder||0)-(b.sortOrder||0);});
@@ -20327,15 +20345,23 @@
       }).join('');
       if(!cards) return;
       var multi = slides.length>1;
-      html+='<div class="cbc-group">'
+      var groupHtml='<div class="cbc-group">'
         +'<div class="cbc-head"><span class="cbc-eyebrow">GALLERY</span><h3 class="cbc-title">'+esc(title)+'</h3></div>'
         +'<div class="cbc-viewport">'
         +(multi?'<button class="cbc-arrow cbc-prev" onclick="cbcScroll(\''+trackId+'\',-1)" aria-label="prev">‹</button>':'')
         +'<div class="cbc-track" id="'+trackId+'">'+cards+'</div>'
         +(multi?'<button class="cbc-arrow cbc-next" onclick="cbcScroll(\''+trackId+'\',1)" aria-label="next">›</button>':'')
         +'</div></div>';
+      if(shown<VISIBLE){ html+=groupHtml; shown++; } else { moreHtml+=groupHtml; }
     });
     if(!html) return;
+    if(moreHtml){
+      var moreLbl = isAr ? 'عرض باقي الكاروسيلات' : 'Show more carousels';
+      var lessLbl = isAr ? 'عرض أقل' : 'Show less';
+      html+='<div id="cbc-more">'+moreHtml+'</div>'
+        +'<button id="cbc-more-btn" data-more="'+esc(moreLbl)+'" data-less="'+esc(lessLbl)+'" onclick="cbcToggleMore()">'
+        +'<span class="cbc-lbl">'+esc(moreLbl)+'</span><span class="cbc-chev">▼</span></button>';
+    }
     root.innerHTML=html; section.style.display='';
   }
   function boot(){
@@ -20348,3 +20374,229 @@
 })();
 </script>
 <!--CB-CAROUSEL-END-->
+
+<!-- ============================================================
+     SUPPLY CHAIN LANGUAGE FIX (Claude) — the original renderer
+     hard-codes Arabic. This override renders AR/EN based on the
+     current site language and re-renders on language switch.
+     Overrides global loadSupplyChain (last declaration wins).
+     ============================================================ -->
+<script>
+(function(){
+  var CITY={'مصر':'Egypt','القاهرة':'Cairo','دبي':'Dubai','أبوظبي':'Abu Dhabi','جدة':'Jeddah','الكويت':'Kuwait','لندن':'London','الرياض':'Riyadh','الدوحة':'Doha','المنامة':'Manama','مسقط':'Muscat','عمان':'Amman','بيروت':'Beirut','الإسكندرية':'Alexandria','السويس':'Suez','بورسعيد':'Port Said','نيويورك':'New York','باريس':'Paris'};
+  function isArabic(){
+    try{ if(typeof currentLang!=='undefined') return currentLang==='ar'; }catch(_){}
+    return (document.documentElement.lang||'ar')==='ar';
+  }
+  function enTime(s){
+    if(!s) return 'now';
+    var m=String(s).match(/(\d+)/); var n=m?m[1]:'';
+    if(/دقيق/.test(s)) return n+'m ago';
+    if(/ساع/.test(s)) return n+'h ago';
+    if(/يوم/.test(s)) return n+'d ago';
+    if(/أسبوع/.test(s)) return n+'w ago';
+    return String(s).replace('الآن','now');
+  }
+  function cap(s){ s=String(s||''); return s.charAt(0).toUpperCase()+s.slice(1); }
+  var lastData=null;
+
+  function renderSC(d){
+    var sec=document.getElementById('supply-chain'); if(!sec||!d) return;
+    var ar=isArabic();
+    var statusAr={high:'مرتفع',med:'متوسط',low:'منخفض'};
+    var statusEn={high:'HIGH',med:'MEDIUM',low:'LOW'};
+    var scoreVal=sec.querySelector('.sc-score-val');
+    if(scoreVal) scoreVal.innerHTML=d.globalRisk.score.toFixed(1)+' <span class="sc-score-out">/10</span>';
+    var scoreStatus=sec.querySelector('.sc-score-status');
+    if(scoreStatus) scoreStatus.textContent=ar?(statusAr[d.globalRisk.status.code]||''):(statusEn[d.globalRisk.status.code]||d.globalRisk.status.en||'');
+    var scorePill=sec.querySelector('.sc-score-pill');
+    if(scorePill){
+      var colors={high:{bg:'rgba(239,68,68,.15), rgba(248,113,113,.05)',border:'rgba(239,68,68,.40)',text:'#f87171'},med:{bg:'rgba(251,191,36,.15), rgba(251,191,36,.05)',border:'rgba(251,191,36,.40)',text:'#fbbf24'},low:{bg:'rgba(52,211,153,.15), rgba(52,211,153,.05)',border:'rgba(52,211,153,.40)',text:'#34d399'}};
+      var c=colors[d.globalRisk.status.code]||colors.med;
+      scorePill.style.background='linear-gradient(135deg, '+c.bg+')';
+      scorePill.style.borderColor=c.border;
+      if(scoreVal) scoreVal.style.color=c.text;
+      if(scoreStatus) scoreStatus.style.color=c.text;
+    }
+    var arNames={oil:'النفط والطاقة',gas:'الغاز الطبيعي',metals:'المعادن الصناعية',food:'السلع الغذائية'};
+    var arSubs={oil:'برنت / يوم',gas:'NG / MMBtu',metals:'نحاس / رطل',food:'قمح / بوشل'};
+    var cats=document.getElementById('sc-cats');
+    if(cats&&Array.isArray(d.categories)){
+      cats.innerHTML=d.categories.map(function(c2){
+        var up=c2.changePct>=0;
+        var trendColor=(c2.key==='food'||c2.key==='oil'||c2.key==='gas')?(up?'#f87171':'#34d399'):(up?'#fbbf24':'#60a5fa');
+        var name=ar?(arNames[c2.key]||c2.nameAr||''):(c2.nameEn||c2.key||'');
+        var sub=ar?(arSubs[c2.key]||c2.subAr||''):(c2.subEn||'');
+        return '<div class="sc-cat" style="--ic:'+c2.color+'; --bg:'+c2.color+'15; --bc:'+c2.color+'30;">'
+          +'<div class="sc-cat-icon"><i data-lucide="'+c2.icon+'" class="w-5 h-5"></i></div>'
+          +'<div class="sc-cat-name">'+name+'</div>'
+          +'<div class="sc-cat-count">'+c2.value+'</div>'
+          +'<div class="sc-cat-trend '+(up?'up':'down')+'" style="color:'+trendColor+';">'+(up?'▲ +':'▼ ')+Math.abs(c2.changePct).toFixed(1)+'% · '+sub+'</div>'
+          +'</div>';
+      }).join('');
+      if(window.lucide){ try{ lucide.createIcons(); }catch(_){} }
+    }
+    var list=document.getElementById('sc-alerts');
+    var countPill=document.getElementById('sc-count-pill');
+    if(countPill) countPill.innerHTML=((d.alerts&&d.alerts.length)||0)+' <span>'+(ar?'تنبيه':'alerts')+'</span>';
+    if(list&&Array.isArray(d.alerts)){
+      var sevIcon={high:'alert-octagon',med:'alert-triangle',low:'info'};
+      var sevColor={high:'#f87171',med:'#fbbf24',low:'#60a5fa'};
+      var sevArM={high:'مرتفع',med:'متوسط',low:'منخفض'}, sevEnM={high:'High',med:'Med',low:'Low'};
+      list.innerHTML=d.alerts.map(function(a){
+        var sev=(['high','med','low'].indexOf(a.severity)>=0)?a.severity:'med';
+        var color=sevColor[sev];
+        var title=ar?(a.titleAr||a.titleEn||'—'):(a.titleEn||a.titleAr||'—');
+        var loc=ar?(a.location||'—'):(CITY[a.location]||a.location||'—');
+        var tm=ar?(a.timeAgo||'الآن'):enTime(a.timeAgo);
+        var catTxt=ar?(a.categoryAr||''):(a.categoryEn?cap(a.categoryEn):'');
+        return '<div class="sc-alert">'
+          +'<div class="sc-alert-bar '+sev+'"></div>'
+          +'<div class="sc-alert-icon" style="--ic:'+color+'; --ag:'+color+'15;"><i data-lucide="'+sevIcon[sev]+'" class="w-4 h-4"></i></div>'
+          +'<div class="sc-alert-body">'
+          +'<div class="sc-alert-title">'+title+'</div>'
+          +'<div class="sc-alert-meta">'
+          +'<span class="sc-alert-meta-item">📍 '+loc+'</span>'
+          +'<span class="sc-alert-meta-item">·</span>'
+          +'<span class="sc-alert-meta-item">🕐 '+tm+'</span>'
+          +(catTxt?'<span class="sc-alert-meta-item">·</span><span class="sc-alert-meta-item">'+catTxt+'</span>':'')
+          +'</div></div>'
+          +'<span class="sc-impact-pill '+sev+'">'+(ar?sevArM[sev]:sevEnM[sev])+'</span>'
+          +'</div>';
+      }).join('');
+      if(window.lucide){ try{ lucide.createIcons(); }catch(_){} }
+    }
+  }
+
+  window.loadSupplyChain=async function(){
+    try{
+      var ctrl=new AbortController(); var tmo=setTimeout(function(){ctrl.abort();},8000);
+      var r=await fetch('https://cairo-business-backend.vercel.app/api/scrape/supply-chain',{cache:'no-store',signal:ctrl.signal});
+      clearTimeout(tmo);
+      var j=await r.json();
+      if(!j||!j.success||!j.data){ if(typeof supplyChainShowEmpty==='function') supplyChainShowEmpty(); return; }
+      lastData=j.data;
+      renderSC(j.data);
+    }catch(e){ console.warn('Supply chain load failed:',e); if(typeof supplyChainShowEmpty==='function') supplyChainShowEmpty(); }
+  };
+
+  /* Re-render (no refetch) whenever the site language changes */
+  new MutationObserver(function(){ if(lastData) renderSC(lastData); })
+    .observe(document.documentElement,{attributes:true,attributeFilter:['lang','dir']});
+
+  /* If the original Arabic-only renderer already painted, repaint correctly */
+  function kick(){ setTimeout(function(){ try{ window.loadSupplyChain(); }catch(_){} },700); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',kick); else kick();
+})();
+</script>
+<!--CB-SC-LANG-FIX-END-->
+
+<!-- ============================================================
+     ENGLISH VERSION FIX PACK (Claude)
+     1) applyLang used to crash mid-way (renderMarkets null element),
+        leaving half the page in Arabic — patch every render* fn
+        with try/catch so the language switch always completes.
+     2) Dictionary sweeper: translates hard-coded Arabic strings
+        (nav links, table headers, "coming soon" cards, countries,
+        banks, labels) whenever the site is in English mode.
+     ============================================================ -->
+<script>
+(function(){
+  /* ---------- 1) crash-proof all render functions ---------- */
+  try{
+    Object.getOwnPropertyNames(window)
+      .filter(function(n){ return /^render[A-Z]/.test(n) && typeof window[n]==='function'; })
+      .forEach(function(n){
+        var o=window[n];
+        window[n]=function(){ try{ return o.apply(this,arguments); }catch(e){ console.warn(n+' failed:',e&&e.message); } };
+      });
+  }catch(_){}
+
+  /* ---------- 2) EN dictionary sweeper ---------- */
+  var EXACT={
+    /* nav */
+    'غرفة الصفقات':'Deal Room','تنقّلات تنفيذية':'Executive Moves','أصحاب القرار':'Decision Makers','نبض القطاعات':'Sector Pulse','مؤشرات CBI':'CBI Index',
+    /* generic labels */
+    'قريباً':'Coming Soon','فريق التحرير':'Editorial Team','الفيديوهات':'Videos','تنبيه':'alerts','معتدل':'Moderate','تحسن':'Improving','مرتفع':'High','متوسط':'Medium','منخفض':'Low','المنصب':'Position','الدولة':'Country','الشركة':'Company','المرحلة':'Stage','التمويل':'Funding','القطاع':'Sector','المنطقة':'Area','المطور':'Developer','التسليم':'Delivery','جديد':'New','حصري':'Exclusive','مميز':'Featured','عرض الكل':'View All','اقرأ المزيد':'Read More','المزيد':'More','فعّل':'Enable','تابع الأخبار الحصرية':'Follow Exclusive News',
+    'اقرأ القصة الكاملة ←':'Read the Full Story ←','← اقرأ القصة الكاملة':'← Read the Full Story',
+    /* tables */
+    'مؤشر الكمبوندات اليوم':'Compound Index Today','الكمبوند':'Compound','السعر/م²':'Price/m²','التغيّر':'Change','العائد ROI':'ROI','ترتيب الستارت أبس حسب التمويل':'Startups Ranked by Funding','إجمالي 2026':'2026 Total',
+    /* countries */
+    'مصر':'Egypt','السعودية':'Saudi Arabia','الإمارات':'UAE','قطر':'Qatar','الكويت':'Kuwait','البحرين':'Bahrain','عُمان':'Oman','عمان':'Oman','الأردن':'Jordan','لبنان':'Lebanon','المغرب':'Morocco','الجزائر':'Algeria','تونس':'Tunisia','العراق':'Iraq','ليبيا':'Libya','EG مصر':'EG · Egypt',
+    /* places */
+    'الساحل الشمالي':'North Coast','القاهرة':'Cairo','الجيزة':'Giza','الإسكندرية':'Alexandria','العاصمة الإدارية':'New Capital','دبي':'Dubai','أبوظبي':'Abu Dhabi','جدة':'Jeddah','الرياض':'Riyadh',
+    /* banks */
+    'البنك الأهلي المصري':'National Bank of Egypt','CIB البنك التجاري الدولي':'CIB — Commercial Intl. Bank','HSBC مصر':'HSBC Egypt','أبوظبي الإسلامي':'Abu Dhabi Islamic Bank','بنك مصر':'Banque Misr',
+    /* names appearing as-is */
+    'ميرنا عارف':'Mirna Aref',
+    'أخرى':'Other','التوصية':'Recommendation',
+    '— نساء يعدن صياغة الاقتصاد العربي —':'— Women reshaping the Arab economy —'
+  };
+  /* long paragraphs: replace whole node when it starts with the prefix */
+  var PREFIX=[
+    ['نُحضّر','We are building "Capital Connect" — an exclusive deal room for the region\'s most powerful investors. Coming soon.'],
+    ['نُجهّز لكم أفضل الفرص الاستثمارية','We are curating the region\'s best investment opportunities — land, partnerships, and exclusive deals. Coming soon.'],
+    ['بودكاست Cairo Business','The Cairo Business Podcast — candid conversations with the region\'s decision-makers. Coming soon.'],
+    ['شبكة سيدات الأعمال','The Businesswomen Network — an exclusive community of the region\'s most influential female leaders. Coming soon.'],
+    ['فعّل الإشعارات','Enable notifications to get the most important business news as it happens'],
+    /* Top-50 book bios — EN translations keyed by Arabic bio prefix */
+    ['يُعد أحمد السويدي','Ahmed Elsewedy is one of the most prominent industry and energy leaders in Egypt and the region, serving as CEO and Managing Director of Elsewedy Electric — one of the largest energy solutions and electrical infrastructure companies in the Middle East and Africa.'],
+    ['يُعد نجيب ساويرس','Naguib Sawiris is one of the Middle East and Africa\'s most prominent businessmen and investors, and a member of the Sawiris family, one of Egypt\'s most influential business dynasties. He played a pivotal role in founding and building the family\'s telecom empire.'],
+    ['يُعد محمد منصور','Mohamed Mansour is one of the most prominent businessmen and investors in Egypt and the Arab world, chairing Mansour Group — one of the Middle East\'s largest family investment groups, active in automotive, heavy equipment, and beyond.'],
+    ['يُعد ناصف ساويرس','Nassef Sawiris is one of the Middle East and Africa\'s leading businessmen and investors, and a member of the Sawiris family. He leads broad investments across construction, engineering, chemicals, fertilizers, infrastructure, and finance.'],
+    ['يُعد ياسين منصور','Yasseen Mansour is one of Egypt\'s leading businessmen and real estate developers, and a principal shareholder of Mansour Group. He leads Palm Hills Developments, one of Egypt\'s largest real estate companies.'],
+    ['يُعد هشام طلعت مصطفى','Hisham Talaat Moustafa is one of the region\'s foremost real estate leaders, serving as CEO and Managing Director of Talaat Moustafa Group (TMG) — the largest listed real estate developer on the Egyptian Exchange.'],
+    ['يُعد سميح ساويرس','Samih Sawiris is one of the Arab world\'s most prominent tourism and real estate developers and a member of the Sawiris family. He founded Orascom Development Holding, which pioneered fully integrated resort destinations in Egypt and abroad.'],
+    ['يُعد حسن علام','Hassan Allam is one of Egypt\'s leading construction and infrastructure businessmen, heading Hassan Allam Holding — one of the oldest and most reputable construction groups in Egypt and the region, founded in 1936.'],
+    ['يُعد يوسف منصور','Youssef Mansour is one of Egypt\'s most prominent businessmen and a principal shareholder of Mansour Group. He played a pivotal role in founding and growing Mantrac, the exclusive Caterpillar dealer across several markets.'],
+    ['يُعد شريف الجبلي','Sherif El Gabaly is one of Egypt\'s leading industrialists and exporters, with deep experience in chemicals and fertilizers. He leads the El Gabaly Group and chairs Abu Zaabal Fertilizers & Chemicals.'],
+    ['يُعد كريم عوض','Karim Awad is one of the region\'s foremost financial and investment leaders, serving as Group CEO, Chairman of the Executive Committee, and board member of EFG Holding — one of the largest financial institutions in the Middle East.'],
+    ['يُعد أحمد أبو هشيمة','Ahmed Abou Hashima is one of Egypt\'s most prominent businessmen in industrial investment and heavy industries. He started out in banking and steel trading before founding his own industrial ventures.'],
+    ['يُعد أحمد عز','Ahmed Ezz is one of Egypt\'s foremost industrialists — founder and owner of Ezz Steel, the largest steel producer in Egypt and the MENA region. He began in building materials and steel trading before expanding into manufacturing.'],
+    ['يُعد محمد أبو العينين','Mohamed Aboul Enein is one of Egypt\'s leading industrialists and investors — founder and chairman of Cleopatra Group, which began in ceramics and expanded into real estate, tourism, media, agriculture, and technology.'],
+    ['يُعد محمد الأتربي','Mohamed El-Etreby is one of Egypt\'s most prominent banking leaders, with decades of experience in the sector. He serves as CEO of the National Bank of Egypt — the country\'s largest state-owned bank by assets and reach.'],
+    ['يُعد هشام عز العرب','Hisham Ezz Al-Arab is one of the region\'s most respected banking leaders, with more than four decades of experience. He played a pivotal role in developing CIB into Egypt\'s largest private-sector bank.'],
+    ['يُعد طارق توفيق','Tarek Tawfik is one of Egypt\'s leading businessmen in food industries and agriculture, chairing Cairo Poultry Group — one of Egypt\'s largest food and poultry producers.']
+  ];
+  /* Arabic initial → Latin initial (exec-moves avatar letters) */
+  var INITIALS={'أ':'A','ا':'A','ع':'A','ب':'B','ت':'T','ط':'T','ث':'T','ج':'G','ح':'H','ه':'H','خ':'K','ك':'K','د':'D','ر':'R','ز':'Z','س':'S','ص':'S','ش':'S','ف':'F','ق':'K','ل':'L','م':'M','ن':'N','و':'W','ي':'Y','غ':'G','ذ':'Z','ض':'D','ظ':'Z'};
+  var AR=/[؀-ۿ]/;
+
+  function isEn(){
+    try{ if(typeof currentLang!=='undefined') return currentLang==='en'; }catch(_){}
+    return (document.documentElement.lang||'ar')==='en';
+  }
+
+  function sweep(){
+    if(!isEn()) return;
+    var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),n;
+    var inMoves=document.getElementById('moves-timeline');
+    while((n=w.nextNode())){
+      var raw=n.textContent, t=raw.trim();
+      if(!t||!AR.test(t)) continue;
+      var el=n.parentElement; if(!el) continue;
+      if(el.closest('#cms-carousel,#carousel-section')) continue; /* user gallery titles stay as authored */
+      if(EXACT[t]!==undefined){ n.textContent=raw.replace(t,EXACT[t]); continue; }
+      var done=false;
+      for(var i=0;i<PREFIX.length;i++){
+        if(t.indexOf(PREFIX[i][0])===0){ n.textContent=PREFIX[i][1]; done=true; break; }
+      }
+      if(done) continue;
+      /* single Arabic letter avatars inside exec-moves timeline */
+      if(inMoves&&inMoves.contains(el)&&t.length===1&&INITIALS[t]){ n.textContent=INITIALS[t]; }
+    }
+  }
+
+  /* run on language switch + after any dynamic render (debounced) */
+  var tmr=null;
+  function queue(){ if(tmr) clearTimeout(tmr); tmr=setTimeout(sweep,350); }
+  new MutationObserver(queue).observe(document.documentElement,{attributes:true,attributeFilter:['lang','dir']});
+  var bodyObs=new MutationObserver(function(muts){
+    if(!isEn()) return;
+    for(var i=0;i<muts.length;i++){ if(muts[i].addedNodes&&muts[i].addedNodes.length){ queue(); return; } }
+  });
+  function start(){ bodyObs.observe(document.body,{childList:true,subtree:true}); queue(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start); else start();
+})();
+</script>
+<!--CB-EN-FIX-END-->
