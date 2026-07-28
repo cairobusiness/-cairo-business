@@ -20383,19 +20383,21 @@
      ============================================================ -->
 <script>
 (function(){
-  var CITY={'مصر':'Egypt','القاهرة':'Cairo','دبي':'Dubai','أبوظبي':'Abu Dhabi','جدة':'Jeddah','الكويت':'Kuwait','لندن':'London','الرياض':'Riyadh','الدوحة':'Doha','المنامة':'Manama','مسقط':'Muscat','عمان':'Amman','بيروت':'Beirut','الإسكندرية':'Alexandria','السويس':'Suez','بورسعيد':'Port Said','نيويورك':'New York','باريس':'Paris'};
+  var CITY={'مصر':'Egypt','القاهرة':'Cairo','دبي':'Dubai','أبوظبي':'Abu Dhabi','جدة':'Jeddah','الكويت':'Kuwait','لندن':'London','الرياض':'Riyadh','الدوحة':'Doha','المنامة':'Manama','مسقط':'Muscat','عمان':'Amman','بيروت':'Beirut','الإسكندرية':'Alexandria','السويس':'Suez','بورسعيد':'Port Said','نيويورك':'New York','باريس':'Paris','سنغافورة':'Singapore','واشنطن':'Washington','بكين':'Beijing','شنغهاي':'Shanghai','هونغ كونغ':'Hong Kong','طوكيو':'Tokyo','روتردام':'Rotterdam','إسطنبول':'Istanbul','اسطنبول':'Istanbul','موسكو':'Moscow','فرانكفورت':'Frankfurt','جنيف':'Geneva'};
   function isArabic(){
     try{ if(typeof currentLang!=='undefined') return currentLang==='ar'; }catch(_){}
     return (document.documentElement.lang||'ar')==='ar';
   }
   function enTime(s){
     if(!s) return 'now';
-    var m=String(s).match(/(\d+)/); var n=m?m[1]:'';
-    if(/دقيق/.test(s)) return n+'m ago';
+    s=String(s).replace(/منذ\s*/,'');
+    var m=s.match(/(\d+)/); var n=m?m[1]:'1';
+    if(/دقيق|دقائق/.test(s)) return n+'m ago';
     if(/ساع/.test(s)) return n+'h ago';
-    if(/يوم/.test(s)) return n+'d ago';
-    if(/أسبوع/.test(s)) return n+'w ago';
-    return String(s).replace('الآن','now');
+    if(/يوم|أيام/.test(s)) return n+'d ago';
+    if(/أسبوع|أسابيع/.test(s)) return n+'w ago';
+    if(/شهر|شهور|أشهر/.test(s)) return n+'mo ago';
+    return s.replace('الآن','now');
   }
   function cap(s){ s=String(s||''); return s.charAt(0).toUpperCase()+s.slice(1); }
   var lastData=null;
@@ -20529,7 +20531,7 @@
     'البنك الأهلي المصري':'National Bank of Egypt','CIB البنك التجاري الدولي':'CIB — Commercial Intl. Bank','HSBC مصر':'HSBC Egypt','أبوظبي الإسلامي':'Abu Dhabi Islamic Bank','بنك مصر':'Banque Misr',
     /* names appearing as-is */
     'ميرنا عارف':'Mirna Aref',
-    'أخرى':'Other','التوصية':'Recommendation',
+    'أخرى':'Other','التوصية':'Recommendation','الموظفين':'Employees','الاتجاه':'Trend','سنغافورة':'Singapore','واشنطن':'Washington',
     '— نساء يعدن صياغة الاقتصاد العربي —':'— Women reshaping the Arab economy —'
   };
   /* long paragraphs: replace whole node when it starts with the prefix */

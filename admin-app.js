@@ -3936,6 +3936,7 @@ async function cbBulkSubmit(){
 
 
 
+
 /* ==== CB-HOTFIX-START (Claude) — regenerated on each deploy; safe to append ==== */
 /* ============================================================
    Carousel bulk uploader — two fixes:
